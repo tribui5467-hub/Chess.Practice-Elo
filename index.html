@@ -2,65 +2,57 @@
 <html lang="en-AU">
 <head>
     <meta charset="UTF-8">
-    <title>Tactical Analysis Engine | System Boot</title>
+    <title>Tactical Analysis Engine | v4.0.2</title>
     <script src="https://cdnjs.cloudflare.com"></script>
     <style>
         body { margin: 0; background: #0a0b10; overflow: hidden; font-family: 'Segoe UI', sans-serif; color: white; user-select: none; display: flex; justify-content: center; align-items: center; height: 100vh; }
         
-        /* 1. NEON HUD BOX */
+        /* 1. NEON HUD BOOT BOX */
         #boot-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #0a0b10; z-index: 2000;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             transition: all 0.8s cubic-bezier(0.19, 1, 0.22, 1);
         }
-        
-        #boot-screen.loaded { 
-            transform: scale(0.72); 
-            border: 2px solid #00f2ff;
-            border-radius: 15px;
-            box-shadow: 0 0 35px rgba(0, 242, 255, 0.3), inset 0 0 20px rgba(0, 242, 255, 0.1);
-            background: rgba(10, 11, 16, 0.98);
-        }
-
-        #boot-screen.panic { transform: scale(0.72, 0) translateY(1200px); opacity: 0; }
+        #boot-screen.loaded { transform: scale(0.8); border: 2px solid #00f2ff; border-radius: 15px; box-shadow: 0 0 35px rgba(0, 242, 255, 0.3), inset 0 0 20px rgba(0, 242, 255, 0.1); background: rgba(10, 11, 16, 0.98); }
+        #boot-screen.panic { transform: scale(0.8, 0) translateY(1200px); opacity: 0; }
 
         .progress-bar { width: 250px; height: 2px; background: rgba(0, 242, 255, 0.1); position: relative; margin-top: 20px; }
         .progress-fill { position: absolute; height: 100%; background: #00f2ff; width: 0%; transition: width 2s linear; }
-
         .panic-x { position: absolute; top: 25px; right: 30px; font-size: 24px; color: #00f2ff; cursor: pointer; opacity: 0; transition: opacity 0.5s; z-index: 2100; padding: 10px; }
 
         /* 2. HUD CONTENT */
-        #hud-container { display: none; flex-direction: column; align-items: center; text-align: center; padding: 0 50px; }
+        #hud-container { display: none; flex-direction: column; align-items: center; text-align: center; padding: 0 60px; }
         h1 { font-size: 2.2rem; margin: 0 0 15px 0; color: #fff; letter-spacing: 3px; }
-        .description { font-size: 1rem; line-height: 1.6; color: #bbb; max-width: 750px; margin-bottom: 25px; }
+        .description { font-size: 1rem; line-height: 1.6; color: #bbb; max-width: 800px; margin-bottom: 25px; }
 
-        /* 3. CHESS GAME LAYER */
-        #game-layer { display: flex; align-items: flex-start; opacity: 0; transition: opacity 1s; visibility: hidden; width: 95vw; height: 85vh; gap: 20px; }
-        #game-layer.visible { opacity: 1; visibility: visible; }
+        /* 3. GAME INTERFACE (1/4 Settings Bar) */
+        #game-layer { display: none; width: 95vw; height: 80vh; justify-content: center; align-items: center; gap: 30px; opacity: 0; transition: opacity 1s; }
+        #game-layer.visible { display: flex; opacity: 1; }
 
-        .board { width: 500px; height: 500px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 8px solid #1e2530; box-shadow: 0 0 40px rgba(0, 242, 255, 0.1); }
-        .sq { width: 62.5px; height: 62.5px; display: flex; justify-content: center; align-items: center; position: relative; }
+        .board-wrapper { flex: 3; display: flex; justify-content: center; }
+        .board { width: 520px; height: 520px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 8px solid #1e2530; box-shadow: 0 0 40px rgba(0, 242, 255, 0.1); }
+        .sq { width: 65px; height: 65px; display: flex; justify-content: center; align-items: center; position: relative; }
         .w { background: #16212e; } .b { background: #0d1117; }
-        .piece { font-size: 48px; color: white; cursor: grab; z-index: 10; opacity: 0.4; pointer-events: none; }
+        
+        .piece { font-size: 50px; color: white; cursor: grab; z-index: 10; opacity: 0.3; pointer-events: none; }
         .game-active .piece { opacity: 1; pointer-events: auto; }
 
-        /* 4. NEON SETTINGS BAR (1/4 of screen) */
+        /* 4. SETTINGS BAR (Neon Green/Blue) */
         .settings-bar { 
-            flex: 1; height: 100%; background: rgba(10, 11, 16, 0.9);
+            flex: 1; height: 520px; background: rgba(10, 11, 16, 0.9);
             border: 2px solid #00ff00; border-radius: 10px;
             box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
-            padding: 20px; display: flex; flex-direction: column; position: relative;
+            padding: 25px; display: flex; flex-direction: column;
         }
-        .settings-title { color: #00ff00; letter-spacing: 2px; border-bottom: 1px solid #00ff00; padding-bottom: 10px; margin-bottom: 20px; font-weight: bold; }
-        .settings-item { margin-bottom: 15px; font-size: 14px; color: #ccc; }
-        .settings-item b { color: #00ff00; }
+        .st-title { color: #00ff00; letter-spacing: 2px; border-bottom: 1px solid #00ff00; padding-bottom: 10px; margin-bottom: 20px; font-weight: bold; }
+        .st-item { margin-bottom: 18px; font-size: 14px; color: #ccc; }
+        .st-item b { color: #00ff00; font-weight: 800; }
 
         .play-btn {
-            margin-top: auto; width: 100%; padding: 15px;
+            margin-top: auto; width: 100%; padding: 18px;
             background: none; border: 2px solid #00f2ff; color: #00f2ff;
-            font-weight: bold; letter-spacing: 3px; cursor: pointer;
-            transition: 0.3s;
+            font-weight: bold; letter-spacing: 3px; cursor: pointer; transition: 0.3s;
         }
         .play-btn:hover { background: #00f2ff; color: #0a0b10; box-shadow: 0 0 20px #00f2ff; }
 
@@ -70,38 +62,36 @@
 <body>
 
     <div id="boot-screen">
-        <div id="x-btn" class="panic-x" onclick="handleTransition()">✕</div>
-        
+        <div id="x-btn" class="panic-x" onclick="handleStart()">✕</div>
         <div id="boot-content">
-            <div style="letter-spacing: 5px; color: #00f2ff; text-align: center;">SYSTEM CALIBRATION...</div>
+            <div style="letter-spacing: 5px; color: #00f2ff;">SYSTEM CALIBRATION...</div>
             <div class="progress-bar"><div id="bar" class="progress-fill"></div></div>
         </div>
-
         <div id="hud-container">
             <h1>Chess.Practice-Elo</h1>
-            <p class="description">Regular chess practice boosts your <strong>Elo rating</strong> by improving strategic understanding and tactical abilities. Consistency is key to mastering the art of chess.</p>
+            <p class="description">Regular chess practice boosts your <b>Elo rating</b> by improving <b>strategic understanding</b> and <b>tactical abilities</b>. Consistency is key to mastering the art of chess.</p>
         </div>
     </div>
 
     <canvas id="particle-canvas"></canvas>
 
     <div id="game-layer">
-        <div class="board" id="chess-board"></div>
+        <div class="board-wrapper">
+            <div class="board" id="chess-board"></div>
+        </div>
         
-        <!-- NEON SETTINGS BAR -->
         <div class="settings-bar">
-            <div class="settings-title">04 SETTINGS</div>
-            <div class="settings-item">Analysis <b>Precision</b>: 100%</div>
-            <div class="settings-item">Engine <b>Depth</b>: 24</div>
-            <div class="settings-item">Cloud <b>Status</b>: Connected</div>
-            <div class="settings-item">Tactical <b>Engine</b>: Active</div>
-            
-            <button class="play-btn" onclick="startPlay()">01 START PLAY</button>
+            <div class="st-title">04 SYSTEM SETTINGS</div>
+            <div class="st-item">Analysis <b>Precision</b>: Max</div>
+            <div class="st-item">Tactical <b>Depth</b>: 24-Ply</div>
+            <div class="st-item">Cloud <b>Link</b>: SECURE</div>
+            <div class="st-item">Engine <b>Mode</b>: Active</div>
+            <button class="play-btn" onclick="activateEngine()">01 START PLAY</button>
         </div>
     </div>
 
     <script>
-        // --- 1. BOOT & TRANSITION ---
+        // --- 1. BOOT SEQUENCE ---
         window.onload = () => {
             document.getElementById('bar').style.width = '100%';
             setTimeout(() => {
@@ -109,26 +99,27 @@
                 document.getElementById('boot-content').style.display = 'none';
                 document.getElementById('hud-container').style.display = 'flex';
                 document.getElementById('x-btn').style.opacity = '1';
+                createBoard(); // Draw hidden board immediately
             }, 2300);
         };
 
-        function handleTransition() {
+        function handleStart() {
             document.getElementById('boot-screen').classList.add('panic');
             setTimeout(() => {
                 document.getElementById('boot-screen').style.display = 'none';
                 document.getElementById('game-layer').classList.add('visible');
-                createBoard();
-            }, 600);
+            }, 650);
         }
 
-        function startPlay() {
+        function activateEngine() {
             document.getElementById('chess-board').classList.add('game-active');
-            document.querySelector('.play-btn').innerText = "ENGINE ONLINE";
-            document.querySelector('.play-btn').style.borderColor = "#00ff00";
-            document.querySelector('.play-btn').style.color = "#00ff00";
+            const btn = document.querySelector('.play-btn');
+            btn.innerText = "SYSTEM ONLINE";
+            btn.style.borderColor = "#00ff00";
+            btn.style.color = "#00ff00";
         }
 
-        // --- 2. CHESS ENGINE ---
+        // --- 2. CHESS LOGIC ---
         const game = new Chess();
         const pChars = { 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚', 'p': '♟', 'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔', 'P': '♙' };
         let sourceSq = null;

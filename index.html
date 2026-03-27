@@ -2,67 +2,56 @@
 <html lang="en-AU">
 <head>
     <meta charset="UTF-8">
-    <title>Tactical Analysis Engine | v4.0.8</title>
+    <title>Tactical Analysis Engine | v4.1.0</title>
     <script src="https://cdnjs.cloudflare.com"></script>
     <style>
         body { margin: 0; background: #0a0b10; overflow: hidden; font-family: 'Segoe UI', sans-serif; color: white; user-select: none; display: flex; justify-content: center; align-items: center; height: 100vh; }
         
-        /* 1. NEON HUD BOOT BOX */
+        /* 1. BOOT SCREEN */
         #boot-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #0a0b10; z-index: 2000;
+            background: #0a0b10; z-index: 3000;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             transition: all 0.8s cubic-bezier(0.19, 1, 0.22, 1);
         }
-        #boot-screen.loaded { transform: scale(0.82); border: 2px solid #00f2ff; border-radius: 15px; box-shadow: 0 0 35px rgba(0, 242, 255, 0.3), inset 0 0 20px rgba(0, 242, 255, 0.1); background: rgba(10, 11, 16, 0.98); }
-        #boot-screen.panic { transform: scale(0.82, 0) translateY(1200px); opacity: 0; }
-
+        #boot-screen.loaded { transform: scale(0.8); border: 2px solid #00f2ff; border-radius: 15px; box-shadow: 0 0 35px rgba(0, 242, 255, 0.3), inset 0 0 20px rgba(0, 242, 255, 0.1); background: rgba(10, 11, 16, 0.98); }
+        #boot-screen.panic { transform: scale(0.8, 0) translateY(1200px); opacity: 0; }
         .progress-bar { width: 250px; height: 2px; background: rgba(0, 242, 255, 0.1); position: relative; margin-top: 20px; }
         .progress-fill { position: absolute; height: 100%; background: #00f2ff; width: 0%; transition: width 2s linear; }
-        .panic-x { position: absolute; top: 25px; right: 30px; font-size: 24px; color: #00f2ff; cursor: pointer; opacity: 0; transition: opacity 0.5s; z-index: 2100; padding: 10px; }
+        .panic-x { position: absolute; top: 25px; right: 30px; font-size: 24px; color: #00f2ff; cursor: pointer; opacity: 0; transition: opacity 0.5s; z-index: 3100; padding: 10px; }
 
-        /* 2. HUD CONTENT (Full Description) */
+        /* 2. HUD DESCRIPTION */
         #hud-container { display: none; flex-direction: column; align-items: center; text-align: center; padding: 0 60px; }
         h1 { font-size: 2.2rem; margin: 0 0 15px 0; color: #fff; letter-spacing: 3px; }
         .description { font-size: 1rem; line-height: 1.6; color: #bbb; max-width: 800px; margin-bottom: 25px; }
 
-        /* 3. SEMI-TRANSPARENT BOARD & PARTICLE BACKGROUND */
-        #game-layer { display: none; width: 95vw; height: 85vh; justify-content: center; align-items: center; gap: 40px; opacity: 0; transition: opacity 1s; }
+        /* 3. GAME LAYER & BOARD */
+        #game-layer { display: none; width: 95vw; height: 85vh; justify-content: center; align-items: center; gap: 30px; opacity: 0; transition: opacity 1s; }
         #game-layer.visible { display: flex; opacity: 1; }
 
         .board-wrapper { flex: 3; display: flex; justify-content: center; }
-        .board { 
-            width: 520px; height: 520px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); 
-            border: 2px solid rgba(0, 242, 255, 0.3); 
-            background: rgba(10, 11, 16, 0.5); 
-            backdrop-filter: blur(12px); 
-        }
+        .board { width: 520px; height: 520px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 2px solid rgba(0, 242, 255, 0.3); background: rgba(10, 11, 16, 0.5); backdrop-filter: blur(12px); }
         .sq { width: 65px; height: 65px; display: flex; justify-content: center; align-items: center; }
-        .w { background: rgba(255, 255, 255, 0.08); } 
-        .b { background: rgba(0, 0, 0, 0.4); }
-        
-        .piece { font-size: 52px; cursor: grab; z-index: 10; opacity: 0.2; transition: opacity 0.5s; pointer-events: none; }
+        .w { background: rgba(255, 255, 255, 0.05); } .b { background: rgba(0, 0, 0, 0.4); }
+        .piece { font-size: 52px; cursor: grab; z-index: 10; opacity: 0.2; pointer-events: none; }
         .piece.white { color: #ffffff; filter: drop-shadow(0 0 8px #fff); }
-        .piece.black { color: #444444; filter: drop-shadow(0 0 8px #000); }
+        .piece.black { color: #555555; filter: drop-shadow(0 0 8px #000); }
         .game-active .piece { opacity: 1; pointer-events: auto; }
 
-        /* 4. SETTINGS BAR (Neon Green/Blue Controls) */
-        .settings-bar { 
-            flex: 1; height: 520px; background: rgba(10, 11, 16, 0.95);
-            border: 2px solid #00ff00; border-radius: 12px;
-            box-shadow: 0 0 25px rgba(0, 255, 0, 0.25);
-            padding: 30px; display: flex; flex-direction: column;
-        }
-        .st-title { color: #00ff00; letter-spacing: 3px; border-bottom: 2px solid #00ff00; padding-bottom: 15px; margin-bottom: 25px; font-weight: bold; font-size: 1.1rem; }
-        .st-item { margin-bottom: 20px; font-size: 15px; color: #ccc; }
-        .st-item b { color: #00ff00; font-weight: 800; }
+        /* 4. NEON SETTINGS BAR */
+        .settings-bar { flex: 1.2; height: 520px; background: rgba(10, 11, 16, 0.95); border: 2px solid #00ff00; border-radius: 10px; box-shadow: 0 0 20px rgba(0, 255, 0, 0.2); padding: 25px; display: flex; flex-direction: column; position: relative; }
+        .st-title { color: #00ff00; letter-spacing: 2px; border-bottom: 1px solid #00ff00; padding-bottom: 10px; margin-bottom: 20px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .st-item { margin-bottom: 15px; font-size: 14px; color: #ccc; }
+        .st-item b { color: #00ff00; }
+        
+        /* Guide Pop-up */
+        #guide-menu { display: none; position: absolute; right: 110%; top: 0; width: 220px; background: rgba(10, 11, 16, 0.98); border: 2px solid #00f2ff; border-radius: 10px; padding: 15px; box-shadow: 0 0 20px rgba(0, 242, 255, 0.3); }
+        .guide-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 12px; }
+        .toggle-box { width: 15px; height: 15px; border: 1px solid #00f2ff; cursor: pointer; }
+        .toggle-box.active { background: #00f2ff; box-shadow: 0 0 8px #00f2ff; }
 
-        .play-btn {
-            margin-top: auto; width: 100%; padding: 20px;
-            background: none; border: 2px solid #00f2ff; color: #00f2ff;
-            font-weight: bold; letter-spacing: 4px; cursor: pointer; transition: 0.3s;
-        }
-        .play-btn:hover { background: #00f2ff; color: #0a0b10; box-shadow: 0 0 25px #00f2ff; }
+        .play-btn { margin-top: auto; width: 100%; padding: 18px; background: none; border: 2px solid #00f2ff; color: #00f2ff; font-weight: bold; letter-spacing: 3px; cursor: pointer; transition: 0.3s; }
+        .play-btn:hover { background: #00f2ff; color: #0a0b10; }
 
         #particle-canvas { position: absolute; top: 0; left: 0; z-index: -1; }
     </style>
@@ -72,7 +61,7 @@
     <div id="boot-screen">
         <div id="x-btn" class="panic-x" onclick="handleStart()">✕</div>
         <div id="boot-content">
-            <div style="letter-spacing: 5px; color: #00f2ff; text-align: center;">SYSTEM CALIBRATION...</div>
+            <div style="letter-spacing: 5px; color: #00f2ff;">SYSTEM CALIBRATION...</div>
             <div class="progress-bar"><div id="bar" class="progress-fill"></div></div>
         </div>
         <div id="hud-container">
@@ -91,17 +80,20 @@
     <div id="game-layer">
         <div class="board-wrapper"><div class="board" id="chess-board"></div></div>
         <div class="settings-bar">
-            <div class="st-title">04 SYSTEM CONTROLS</div>
-            <div class="st-item">System <b>Volume</b>: 80%</div>
+            <div class="st-title">04 SYSTEM CONTROLS <span style="cursor:pointer;" onclick="toggleGuide()">?</span></div>
+            <div id="guide-menu">
+                <div class="guide-item">!! Brilliant Move <div class="toggle-box active" onclick="this.classList.toggle('active')"></div></div>
+                <div class="guide-item">! Good Move <div class="toggle-box active" onclick="this.classList.toggle('active')"></div></div>
+                <div class="guide-item">📖 Book Move <div class="toggle-box active" onclick="this.classList.toggle('active')"></div></div>
+            </div>
+            <div class="st-item">System <b>Volume</b>: 85%</div>
             <div class="st-item">Move <b>Audio</b>: ON</div>
-            <div class="st-item">Interface <b>Icons</b>: ENABLED</div>
-            <div class="st-item">Visual <b>Particles</b>: PURE WHITE</div>
+            <div class="st-item">Visual <b>Particles</b>: WHITE</div>
             <button class="play-btn" id="start-btn" onclick="activateEngine()">01 START PLAY</button>
         </div>
     </div>
 
     <script>
-        // --- 1. BOOT SEQUENCE ---
         window.onload = () => {
             document.getElementById('bar').style.width = '100%';
             setTimeout(() => {
@@ -109,7 +101,7 @@
                 document.getElementById('boot-content').style.display = 'none';
                 document.getElementById('hud-container').style.display = 'flex';
                 document.getElementById('x-btn').style.opacity = '1';
-                createBoard(); // ENSURES PIECES ARE READY
+                renderBoard(); // Force board generation while hidden
             }, 2300);
         };
 
@@ -123,18 +115,21 @@
 
         function activateEngine() {
             document.getElementById('chess-board').classList.add('game-active');
-            const btn = document.getElementById('start-btn');
-            btn.innerText = "SYSTEM ONLINE";
-            btn.style.borderColor = "#00ff00";
-            btn.style.color = "#00ff00";
+            document.getElementById('start-btn').innerText = "SYSTEM ONLINE";
+            document.getElementById('start-btn').style.borderColor = "#00ff00";
+            document.getElementById('start-btn').style.color = "#00ff00";
         }
 
-        // --- 2. CHESS LOGIC ---
+        function toggleGuide() {
+            const menu = document.getElementById('guide-menu');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+
         const game = new Chess();
         const pChars = { 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚', 'p': '♟', 'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔', 'P': '♙' };
         let sourceSq = null;
 
-        function createBoard() {
+        function renderBoard() {
             const boardEl = document.getElementById('chess-board');
             boardEl.innerHTML = '';
             game.board().forEach((row, rIdx) => {
@@ -155,26 +150,24 @@
                     sq.addEventListener('dragover', (e) => e.preventDefault());
                     sq.addEventListener('drop', (e) => {
                         e.preventDefault();
-                        const move = game.move({ from: sourceSq, to: sq.id, promotion: 'q' });
-                        if (move) createBoard();
+                        if (game.move({ from: sourceSq, to: sq.id, promotion: 'q' })) renderBoard();
                     });
                     boardEl.appendChild(sq);
                 });
             });
         }
 
-        // --- 3. PURE WHITE PARTICLES ---
         const canvas = document.getElementById('particle-canvas');
         const ctx = canvas.getContext('2d');
         let particles = [];
         function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.onresize = resize; resize();
         class Particle {
-            constructor() { this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height; this.size = Math.random() * 3; this.speed = Math.random() * 0.7 + 0.2; }
+            constructor() { this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height; this.size = Math.random() * 2; this.speed = Math.random() * 0.5 + 0.2; }
             update() { this.y += this.speed; if (this.y > canvas.height) this.y = -5; }
-            draw() { ctx.fillStyle = 'rgba(255, 255, 255, 0.7)'; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); }
+            draw() { ctx.fillStyle = 'rgba(255, 255, 255, 0.6)'; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); }
         }
-        for(let i=0; i<250; i++) particles.push(new Particle());
+        for(let i=0; i<150; i++) particles.push(new Particle());
         function animate() { ctx.clearRect(0,0,canvas.width, canvas.height); particles.forEach(p => { p.update(); p.draw(); }); requestAnimationFrame(animate); }
         animate();
 

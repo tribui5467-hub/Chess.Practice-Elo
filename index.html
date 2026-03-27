@@ -2,57 +2,57 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Tactical Analysis Engine | System Boot</title>
+    <title>Chess Strategic Development | Elo Analysis</title>
     <style>
         body { margin: 0; background: #0a0b10; overflow: hidden; font-family: 'Segoe UI', sans-serif; color: white; user-select: none; }
         
-        /* 1. THE BOOT SCREEN (Optimized) */
+        /* 1. BOOT SCREEN */
         #boot-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #0a0b10; z-index: 1000; display: flex; flex-direction: column;
             justify-content: center; align-items: center;
             transition: transform 1s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.5s;
         }
+        #boot-screen.loaded { transform: scale(0.65); border: 2px solid #3498db; border-radius: 20px; box-shadow: 0 0 30px rgba(52, 152, 219, 0.4); }
+        .progress-bar { width: 250px; height: 2px; background: rgba(255,255,255,0.1); margin-top: 20px; position: relative; }
+        .progress-fill { position: absolute; height: 100%; background: #3498db; width: 0%; transition: width 2s linear; }
+        .panic-x { position: absolute; top: 20px; right: 25px; font-size: 22px; color: #3498db; cursor: pointer; opacity: 0; transition: opacity 0.5s; z-index: 1100; }
+
+        /* 2. STEALTH CONTENT LAYER */
+        #game-layer { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            opacity: 0; visibility: hidden; transition: opacity 0.8s; 
+        }
+        #game-layer.visible { opacity: 1; visibility: visible; }
+
+        /* TEXT ANIMATIONS */
+        @keyframes popUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes wipeDown { from { clip-path: inset(0 0 100% 0); opacity: 0; } to { clip-path: inset(0 0 0 0); opacity: 1; } }
         
-        /* The "Special Effect" Inward Shrink */
-        #boot-screen.loaded { 
-            transform: scale(0.6); /* Shrinks inward */
-            border: 2px solid #3498db;
-            border-radius: 20px;
-            box-shadow: 0 0 30px rgba(52, 152, 219, 0.4);
-        }
+        .title-wrapper { overflow: hidden; margin-top: 10px; }
+        h1 { color: #fff; margin: 0; font-size: 1.8rem; letter-spacing: 2px; }
+        .baseline { height: 3px; background: #3498db; width: 100%; max-width: 850px; margin: 10px 0; }
+        .description { max-width: 850px; font-size: 0.95rem; line-height: 1.5; color: #ccc; text-align: center; margin-bottom: 15px; }
 
-        .load-text { letter-spacing: 5px; font-weight: 200; color: #3498db; margin-bottom: 20px; }
-        .progress-bar { width: 250px; height: 2px; background: rgba(255,255,255,0.1); position: relative; }
-        .progress-fill { position: absolute; height: 100%; background: #3498db; width: 0%; box-shadow: 0 0 15px #3498db; transition: width 2s linear; }
+        .animate-title { animation: popUp 0.8s ease-out forwards; }
+        .animate-desc { animation: wipeDown 1s ease-out forwards; animation-delay: 0.5s; }
 
-        /* 2. THE X BUTTON */
-        .panic-x {
-            position: absolute; top: 20px; right: 25px;
-            font-size: 22px; color: #3498db; cursor: pointer;
-            opacity: 0; transition: opacity 0.5s; z-index: 1100;
-        }
-
-        /* 3. THE CHESS GAME (Revealed underneath) */
-        #game-layer {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; align-items: center; justify-content: center;
-            opacity: 0; transform: scale(0.8); transition: all 0.6s ease-out;
-            visibility: hidden;
-        }
-        #game-layer.visible { opacity: 1; transform: scale(1); visibility: visible; }
-
-        .board { 
-            width: 440px; height: 440px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); 
-            border: 8px solid #1e2530; box-shadow: 0 0 50px rgba(52, 152, 219, 0.2);
-        }
-        .sq { width: 55px; height: 55px; display: flex; justify-content: center; align-items: center; }
+        /* 3. THE BOARD & ICONS */
+        .main-content { display: flex; align-items: center; gap: 40px; }
+        .board { width: 440px; height: 440px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 8px solid #1e2530; position: relative; }
+        .sq { width: 55px; height: 55px; display: flex; justify-content: center; align-items: center; position: relative; }
         .w { background: #2c3e50; } .b { background: #1a1a1a; }
-        .piece { font-size: 40px; color: white; }
+        .piece { font-size: 40px; color: white; cursor: grab; z-index: 10; }
 
-        /* 4. SIDE MENU (The "Start" Options) */
-        .side-menu { margin-left: 40px; display: flex; flex-direction: column; gap: 12px; border-left: 2px solid #3498db; padding-left: 20px; }
-        .menu-opt { font-size: 13px; letter-spacing: 2px; color: #3498db; opacity: 0.7; font-weight: bold; }
+        /* ANALYSIS ICONS */
+        @keyframes iconPop { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .analysis-icon { position: absolute; top: -8px; right: -8px; width: 26px; height: 26px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 900; font-size: 12px; border: 1.5px solid white; z-index: 20; animation: iconPop 0.5s 1.5s forwards; opacity: 0; }
+        .brilliant { background: #00e6ff; color: #000; box-shadow: 0 0 15px #00e6ff; }
+        .book { background: #a6db2d; color: #000; box-shadow: 0 0 15px #a6db2d; }
+
+        .side-menu { display: flex; flex-direction: column; gap: 12px; border-left: 2px solid #3498db; padding-left: 20px; }
+        .menu-opt { font-size: 12px; letter-spacing: 2px; color: #3498db; font-weight: bold; }
 
         #particle-canvas { position: absolute; top: 0; left: 0; z-index: -1; }
     </style>
@@ -60,10 +60,9 @@
 <body>
 
     <div id="boot-screen">
-        <!-- Clicking X now launches the game -->
         <div id="x-btn" class="panic-x" onclick="launchGame()">✕</div>
         <div id="load-content">
-            <div class="load-text">SYSTEM BOOTING...</div>
+            <div style="letter-spacing: 5px; color: #3498db;">SYSTEM BOOTING...</div>
             <div class="progress-bar"><div id="bar" class="progress-fill"></div></div>
         </div>
     </div>
@@ -71,12 +70,23 @@
     <canvas id="particle-canvas"></canvas>
 
     <div id="game-layer">
-        <div class="board" id="chess-board"></div>
-        <div class="side-menu">
-            <div class="menu-opt">01 START ANALYSIS</div>
-            <div class="menu-opt">02 STOCKFISH CLOUD</div>
-            <div class="menu-opt">03 ELO PREDICTION</div>
-            <div class="menu-opt">04 SETTINGS</div>
+        <div class="title-wrapper"><h1 id="stealth-title">Chess.Practice-Elo</h1></div>
+        <div class="baseline"></div>
+        <p id="stealth-desc" class="description">
+            Regular chess practice boosts your <strong>Elo rating</strong> by improving strategic understanding, 
+            anticipatory skills, and tactical abilities. It promotes critical thinking and mental agility, 
+            while game analysis helps identify patterns. Practicing with others builds community and motivation. 
+            Consistency is key to mastering chess at any skill level.
+        </p>
+
+        <div class="main-content">
+            <div class="board" id="chess-board"></div>
+            <div class="side-menu">
+                <div class="menu-opt">01 START ANALYSIS</div>
+                <div class="menu-opt">02 STOCKFISH CLOUD</div>
+                <div class="menu-opt">03 ELO PREDICTION</div>
+                <div class="menu-opt">04 SETTINGS</div>
+            </div>
         </div>
     </div>
 
@@ -85,27 +95,20 @@
         window.onload = () => {
             const bar = document.getElementById('bar');
             setTimeout(() => { bar.style.width = '100%'; }, 200);
-
             setTimeout(() => {
-                // Shrink the window inward
                 document.getElementById('boot-screen').classList.add('loaded');
-                document.getElementById('load-content').style.opacity = '0';
-                // Make the X button appear
                 document.getElementById('x-btn').style.opacity = '1';
             }, 2300);
         };
 
-        // --- 2. LAUNCH LOGIC ---
         function launchGame() {
-            // Hide the boot screen and show the board
-            document.getElementById('boot-screen').style.opacity = '0';
-            setTimeout(() => {
-                document.getElementById('boot-screen').style.display = 'none';
-                document.getElementById('game-layer').classList.add('visible');
-            }, 500);
+            document.getElementById('boot-screen').style.display = 'none';
+            document.getElementById('game-layer').classList.add('visible');
+            document.getElementById('stealth-title').classList.add('animate-title');
+            document.getElementById('stealth-desc').classList.add('animate-desc');
         }
 
-        // --- 3. PARTICLES (Constant) ---
+        // --- 2. PARTICLES ---
         const canvas = document.getElementById('particle-canvas');
         const ctx = canvas.getContext('2d');
         let particles = [];
@@ -120,22 +123,42 @@
         function animate() { ctx.clearRect(0,0,canvas.width, canvas.height); particles.forEach(p => { p.update(); p.draw(); }); requestAnimationFrame(animate); }
         animate();
 
-        // --- 4. BOARD SETUP ---
+        // --- 3. MOVABLE PIECES & ICONS ---
         const board = document.getElementById('chess-board');
         const pChars = { 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚', 'p': '♟', 'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔', 'P': '♙' };
         const setup = ['r','n','b','q','k','b','n','r','p','p','p','p','p','p','p','p','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','P','P','P','P','P','P','P','P','R','N','B','Q','K','B','N','R'];
 
+        let draggedPiece = null;
         setup.forEach((p, i) => {
             const sq = document.createElement('div');
-            sq.className = `sq ${(Math.floor(i / 8) + i) % 2 === 0 ? 'w' : 'b'}`;
+            sq.className = 'sq ' + ((Math.floor(i / 8) + i) % 2 === 0 ? 'w' : 'b');
+            
+            // Add Analysis Icons to specific pieces
+            if (i === 1) { // Book move Knight
+                const icon = document.createElement('div'); icon.className = 'analysis-icon book'; icon.innerHTML = '📖'; sq.appendChild(icon);
+            }
+            if (i === 60) { // Brilliant move King
+                const icon = document.createElement('div'); icon.className = 'analysis-icon brilliant'; icon.innerHTML = '!!'; sq.appendChild(icon);
+            }
+
             if (p) {
                 const piece = document.createElement('div');
-                piece.className = 'piece'; piece.innerHTML = pChars[p]; sq.appendChild(piece);
+                piece.className = 'piece'; piece.innerHTML = pChars[p]; piece.draggable = true;
+                piece.addEventListener('dragstart', () => { draggedPiece = piece; });
+                sq.appendChild(piece);
             }
+            sq.addEventListener('dragover', (e) => e.preventDefault());
+            sq.addEventListener('drop', () => {
+                if (draggedPiece) {
+                    const existing = sq.querySelector('.piece');
+                    if (existing) sq.removeChild(existing);
+                    sq.appendChild(draggedPiece);
+                    draggedPiece = null;
+                }
+            });
             board.appendChild(sq);
         });
 
-        // Keyboard Panic Shortcut
         document.addEventListener('keydown', (e) => { if (e.key === '=') window.location.href = "https://schools.compass.education"; });
     </script>
 </body>

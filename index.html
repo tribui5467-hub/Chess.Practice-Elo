@@ -2,7 +2,7 @@
 <html lang="en-AU">
 <head>
     <meta charset="UTF-8">
-    <title>Tactical Analysis Engine | v4.0.2</title>
+    <title>Tactical Analysis Engine | v4.0.5</title>
     <script src="https://cdnjs.cloudflare.com"></script>
     <style>
         body { margin: 0; background: #0a0b10; overflow: hidden; font-family: 'Segoe UI', sans-serif; color: white; user-select: none; display: flex; justify-content: center; align-items: center; height: 100vh; }
@@ -26,25 +26,24 @@
         h1 { font-size: 2.2rem; margin: 0 0 15px 0; color: #fff; letter-spacing: 3px; }
         .description { font-size: 1rem; line-height: 1.6; color: #bbb; max-width: 800px; margin-bottom: 25px; }
 
-        /* 3. GAME INTERFACE (Semi-Transparent Board) */
+        /* 3. SEMI-TRANSPARENT BOARD */
         #game-layer { display: none; width: 95vw; height: 80vh; justify-content: center; align-items: center; gap: 30px; opacity: 0; transition: opacity 1s; }
         #game-layer.visible { display: flex; opacity: 1; }
 
         .board-wrapper { flex: 3; display: flex; justify-content: center; }
-        .board { width: 520px; height: 520px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 2px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.4); backdrop-filter: blur(5px); }
+        .board { width: 520px; height: 520px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 2px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); }
         .sq { width: 65px; height: 65px; display: flex; justify-content: center; align-items: center; position: relative; }
         .w { background: rgba(255, 255, 255, 0.05); } 
-        .b { background: rgba(0, 0, 0, 0.2); }
+        .b { background: rgba(0, 0, 0, 0.3); }
         
-        /* BLACK & WHITE PIECES */
-        .piece { font-size: 50px; cursor: grab; z-index: 10; opacity: 0.3; pointer-events: none; }
-        .piece.white { color: #ffffff; filter: drop-shadow(0 0 5px #fff); }
-        .piece.black { color: #555555; filter: drop-shadow(0 0 5px #000); }
+        .piece { font-size: 50px; cursor: grab; z-index: 10; opacity: 0.2; pointer-events: none; }
+        .piece.white { color: #ffffff; filter: drop-shadow(0 0 8px #fff); }
+        .piece.black { color: #555555; filter: drop-shadow(0 0 8px #000); }
         .game-active .piece { opacity: 1; pointer-events: auto; }
 
-        /* 4. SETTINGS BAR (Neon Green/Blue) */
+        /* 4. NEON SETTINGS (1/4 screen) */
         .settings-bar { 
-            flex: 1; height: 520px; background: rgba(10, 11, 16, 0.9);
+            flex: 1; height: 520px; background: rgba(10, 11, 16, 0.95);
             border: 2px solid #00ff00; border-radius: 10px;
             box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
             padding: 25px; display: flex; flex-direction: column;
@@ -91,10 +90,10 @@
         
         <div class="settings-bar">
             <div class="st-title">04 SYSTEM SETTINGS</div>
-            <div class="st-item">Interface <b>Icons</b>: ENABLED</div>
-            <div class="st-item">System <b>Volume</b>: 85%</div>
-            <div class="st-item">Move <b>Audio</b>: ON</div>
-            <div class="st-item">Engine <b>Mode</b>: Active</div>
+            <div class="st-item">System <b>Volume</b>: 80%</div>
+            <div class="st-item">Move <b>Audio</b>: ENABLED</div>
+            <div class="st-item">Analysis <b>Icons</b>: ON</div>
+            <div class="st-item">Visual <b>Particles</b>: HIGH</div>
             <button class="play-btn" onclick="activateEngine()">01 START PLAY</button>
         </div>
     </div>
@@ -108,7 +107,7 @@
                 document.getElementById('boot-content').style.display = 'none';
                 document.getElementById('hud-container').style.display = 'flex';
                 document.getElementById('x-btn').style.opacity = '1';
-                createBoard();
+                createBoard(); 
             }, 2300);
         };
 
@@ -169,11 +168,11 @@
         function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.onresize = resize; resize();
         class Particle {
-            constructor() { this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height; this.size = Math.random() * 1.5; this.speed = Math.random() * 0.4 + 0.1; }
+            constructor() { this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height; this.size = Math.random() * 2; this.speed = Math.random() * 0.5 + 0.1; }
             update() { this.y += this.speed; if (this.y > canvas.height) this.y = -5; }
-            draw() { ctx.fillStyle = 'rgba(255, 255, 255, 0.4)'; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); }
+            draw() { ctx.fillStyle = 'rgba(255, 255, 255, 0.45)'; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); }
         }
-        for(let i=0; i<120; i++) particles.push(new Particle());
+        for(let i=0; i<150; i++) particles.push(new Particle());
         function animate() { ctx.clearRect(0,0,canvas.width, canvas.height); particles.forEach(p => { p.update(); p.draw(); }); requestAnimationFrame(animate); }
         animate();
 

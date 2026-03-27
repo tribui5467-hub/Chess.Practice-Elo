@@ -2,121 +2,154 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Chess Strategic Development | Elo Analysis</title>
+    <title>Tactical Analysis Engine | System Boot</title>
     <style>
-        /* 1. CYBER BACKGROUND & PARTICLES */
-        body { margin: 0; background: #0a0b10; overflow: hidden; font-family: 'Segoe UI', sans-serif; color: white; }
-        #particle-canvas { position: absolute; top: 0; left: 0; z-index: -1; }
-
-        /* 2. THE PANIC X (FIXED POSITION) */
-        .panic-btn { 
-            position: fixed; /* Always stays in top right */
-            top: 25px; 
-            right: 25px; 
-            width: 35px; 
-            height: 35px; 
-            border: 2px solid #3498db; 
-            border-radius: 50%; 
-            color: #3498db; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            cursor: pointer; 
-            font-weight: bold;
-            z-index: 100; /* Stays on top of everything */
-            background: rgba(10, 11, 16, 0.8);
-            transition: 0.3s;
+        body { margin: 0; background: #0a0b10; overflow: hidden; font-family: 'Segoe UI', sans-serif; color: white; user-select: none; }
+        
+        /* 1. THE INITIAL BOOT SCREEN */
+        #boot-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #0a0b10; z-index: 1000; display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            transition: clip-path 1.2s cubic-bezier(0.77, 0, 0.175, 1);
+            clip-path: inset(0 0 0 0); /* Full Screen */
         }
-        .panic-btn:hover { background: #3498db; color: white; }
+        
+        /* The "Special Effect" Inward Fade (Masking) */
+        #boot-screen.loaded { clip-path: inset(15% 25% 15% 25% round 20px); }
 
-        /* 3. THE CHESS BOARD */
-        .game-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        .load-text { letter-spacing: 5px; font-weight: 200; color: #3498db; margin-bottom: 20px; }
+        .progress-bar { width: 300px; height: 2px; background: rgba(255,255,255,0.1); position: relative; }
+        .progress-fill { position: absolute; height: 100%; background: #3498db; width: 0%; box-shadow: 0 0 15px #3498db; }
+        .fill-anim { animation: fill 2s forwards; }
+        @keyframes fill { 100% { width: 100%; } }
+
+        /* 2. THE X BUTTON (Appears on the Boot Window) */
+        .panic-x {
+            position: absolute; top: 15px; right: 20px;
+            font-size: 20px; color: #3498db; cursor: pointer;
+            opacity: 0; transition: opacity 0.5s;
+        }
+
+        /* 3. THE CHESS GAME (Revealed underneath) */
+        #game-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; transform: scale(0.9); transition: all 1s ease-out;
+        }
+        #game-layer.visible { opacity: 1; transform: scale(1); }
+
         .board { 
             width: 440px; height: 440px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); 
             border: 8px solid #1e2530; box-shadow: 0 0 50px rgba(52, 152, 219, 0.2);
         }
-        .sq { width: 55px; height: 55px; display: flex; justify-content: center; align-items: center; position: relative; }
+        .sq { width: 55px; height: 55px; display: flex; justify-content: center; align-items: center; }
         .w { background: #2c3e50; } .b { background: #1a1a1a; }
+        .piece { font-size: 40px; color: white; cursor: grab; }
 
-        /* 4. BREAKING VULNERABILITY ICON */
-        @keyframes breakRing {
-            0% { transform: scale(0.5); opacity: 1; border-width: 4px; }
-            100% { transform: scale(1.5); opacity: 0; border-width: 1px; }
+        /* 4. SIDE MENU (The "Start" Options) */
+        .side-menu {
+            margin-left: 40px; display: flex; flex-direction: column; gap: 15px;
+            border-left: 2px solid #3498db; padding-left: 20px;
         }
-        .vulnerable-ring {
-            position: absolute; width: 45px; height: 45px;
-            border: 2px solid #ff4757; border-radius: 50%;
-            animation: breakRing 1.2s infinite cubic-bezier(0.36, 0.11, 0.89, 0.32);
-            z-index: 5;
+        .menu-opt { 
+            font-size: 14px; letter-spacing: 2px; color: #3498db; 
+            cursor: pointer; transition: 0.3s; opacity: 0.7;
         }
+        .menu-opt:hover { opacity: 1; transform: translateX(5px); color: #fff; }
 
-        /* 5. PIECE POP & PROMOTION */
-        .piece { font-size: 40px; cursor: pointer; transition: transform 0.2s; z-index: 10; color: #fff; }
-        @keyframes promotePop {
-            0% { transform: scale(0); filter: brightness(3); }
-            100% { transform: scale(1); filter: brightness(1); }
-        }
-        .promoting { animation: promotePop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        #particle-canvas { position: absolute; top: 0; left: 0; z-index: -1; }
     </style>
 </head>
 <body>
 
+    <!-- 1. BOOT SCREEN -->
+    <div id="boot-screen">
+        <div id="x-btn" class="panic-x" onclick="window.location.href='https://schools.compass.education'">✕</div>
+        <div id="load-content">
+            <div class="load-text">SYSTEM CALIBRATION...</div>
+            <div class="progress-bar"><div class="progress-fill fill-anim"></div></div>
+        </div>
+    </div>
+
     <canvas id="particle-canvas"></canvas>
 
-    <!-- Fixed Panic Button -->
-    <div class="panic-btn" onclick="window.location.href='https://schools.compass.education'">✕</div>
-
-    <div class="game-container">
-        <h2 style="margin-bottom: 10px; color: #3498db; letter-spacing: 2px;">STRATEGIC ANALYSIS ACTIVE</h2>
+    <!-- 2. GAME LAYER (Revealed by X) -->
+    <div id="game-layer">
         <div class="board" id="chess-board"></div>
+        
+        <!-- THE MENU OPTIONS -->
+        <div class="side-menu">
+            <div class="menu-opt">01 START ANALYSIS</div>
+            <div class="menu-opt">02 STOCKFISH CLOUD</div>
+            <div class="menu-opt">03 ELO PREDICTION</div>
+            <div class="menu-opt">04 SETTINGS</div>
+            <div class="menu-opt" style="color:red" onclick="location.reload()">05 SYSTEM RESET</div>
+        </div>
     </div>
 
     <script>
-        // --- 1. PARTICLE SYSTEM ---
+        // --- 1. BOOT SEQUENCE ---
+        window.onload = () => {
+            setTimeout(() => {
+                // Shrink the boot screen inward (Special Effect)
+                document.getElementById('boot-screen').classList.add('loaded');
+                // Hide the loading bar/text
+                document.getElementById('load-content').style.display = 'none';
+                // Show the X in the corner of the new window
+                document.getElementById('x-btn').style.opacity = '1';
+            }, 2200);
+        };
+
+        // --- 2. X CLICK (REVEALS GAME) ---
+        // We override the X to reveal the game first, then it becomes the Panic button
+        let gameActive = false;
+        function handleX() {
+            if(!gameActive) {
+                // First click: Reveal the game like the video
+                document.getElementById('boot-screen').style.display = 'none';
+                document.getElementById('game-layer').classList.add('visible');
+                gameActive = true;
+                // Now the '=' key becomes the panic button
+            } else {
+                window.location.href = 'https://schools.compass.education';
+            }
+        }
+        document.getElementById('x-btn').onclick = handleX;
+
+        // --- 3. PARTICLES ---
         const canvas = document.getElementById('particle-canvas');
         const ctx = canvas.getContext('2d');
         let particles = [];
         function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.onresize = resize; resize();
-
         class Particle {
-            constructor() { this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height; this.size = Math.random() * 1.5; this.speed = Math.random() * 0.5 + 0.1; }
-            update() { this.y += this.speed; if (this.y > canvas.height) this.y = -10; }
-            draw() { ctx.fillStyle = 'rgba(255, 255, 255, 0.4)'; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); }
+            constructor() { this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height; this.size = Math.random() * 1.5; this.speed = Math.random() * 0.4 + 0.1; }
+            update() { this.y += this.speed; if (this.y > canvas.height) this.y = -5; }
+            draw() { ctx.fillStyle = 'rgba(255, 255, 255, 0.3)'; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); }
         }
-        for(let i=0; i<120; i++) particles.push(new Particle());
+        for(let i=0; i<100; i++) particles.push(new Particle());
         function animate() { ctx.clearRect(0,0,canvas.width, canvas.height); particles.forEach(p => { p.update(); p.draw(); }); requestAnimationFrame(animate); }
         animate();
 
-        // --- 2. GENERATE BOARD & PIECES ---
-        const boardDiv = document.getElementById('chess-board');
-        const pieces = { 'p': '♟', 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚' };
-        
-        for (let i = 0; i < 64; i++) {
+        // --- 4. BOARD SETUP ---
+        const board = document.getElementById('chess-board');
+        const pieceChars = { 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚', 'p': '♟', 'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔', 'P': '♙' };
+        const setup = ['r','n','b','q','k','b','n','r','p','p','p','p','p','p','p','p','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','P','P','P','P','P','P','P','P','R','N','B','Q','K','B','N','R'];
+
+        setup.forEach((p, i) => {
             const sq = document.createElement('div');
             sq.className = `sq ${(Math.floor(i / 8) + i) % 2 === 0 ? 'w' : 'b'}`;
-            
-            // Example Vulnerable Piece (Knight on square 12)
-            if (i === 12) {
-                const ring = document.createElement('div'); ring.className = 'vulnerable-ring';
-                sq.appendChild(ring);
-                const p = document.createElement('div'); p.className = 'piece'; p.innerHTML = pieces['n'];
-                sq.appendChild(p);
+            if (p) {
+                const piece = document.createElement('div');
+                piece.className = 'piece';
+                piece.innerHTML = pieceChars[p];
+                sq.appendChild(piece);
             }
-            
-            // Example Just-Promoted Piece (Queen on square 2)
-            if (i === 2) {
-                const p = document.createElement('div'); p.className = 'piece promoting'; p.innerHTML = pieces['q'];
-                sq.appendChild(p);
-            }
-
-            boardDiv.appendChild(sq);
-        }
-
-        // --- 3. KEYBOARD PANIC ---
-        document.addEventListener('keydown', (e) => {
-            if (e.key === '=') window.location.href = "https://schools.compass.education";
+            board.appendChild(sq);
         });
+
+        document.addEventListener('keydown', (e) => { if (e.key === '=') window.location.href = "https://schools.compass.education"; });
     </script>
 </body>
 </html>

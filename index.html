@@ -15,36 +15,54 @@
             transition: all 0.8s cubic-bezier(0.19, 1, 0.22, 1);
         }
         
-        /* The Edged Box Effect */
         #boot-screen.loaded { 
-            transform: scale(0.75); 
+            transform: scale(0.72); 
             border: 2px solid #00f2ff;
             border-radius: 15px;
             box-shadow: 0 0 35px rgba(0, 242, 255, 0.3), inset 0 0 20px rgba(0, 242, 255, 0.1);
             background: rgba(10, 11, 16, 0.98);
         }
 
-        /* Panic Shutdown (Shrink to Baseline) */
-        #boot-screen.panic { transform: scale(0.75, 0) translateY(1200px); opacity: 0; }
+        #boot-screen.panic { transform: scale(0.72, 0) translateY(1200px); opacity: 0; }
 
-        .load-text { letter-spacing: 5px; color: #00f2ff; margin-bottom: 20px; text-shadow: 0 0 10px #00f2ff; font-size: 14px; }
-        .progress-bar { width: 250px; height: 2px; background: rgba(0, 242, 255, 0.1); position: relative; }
-        .progress-fill { position: absolute; height: 100%; background: #00f2ff; width: 0%; box-shadow: 0 0 15px #00f2ff; transition: width 2s linear; }
+        .progress-bar { width: 250px; height: 2px; background: rgba(0, 242, 255, 0.1); position: relative; margin-top: 20px; }
+        .progress-fill { position: absolute; height: 100%; background: #00f2ff; width: 0%; transition: width 2s linear; }
 
         .panic-x { position: absolute; top: 25px; right: 30px; font-size: 24px; color: #00f2ff; cursor: pointer; opacity: 0; transition: opacity 0.5s; z-index: 2100; padding: 10px; }
 
-        /* 2. INTERNAL CONTENT (Title, Desc, Board) */
-        #content-container { display: none; flex-direction: column; align-items: center; text-align: center; padding: 0 40px; width: 100%; }
-        
-        h1 { font-size: 2rem; margin: 10px 0; color: #fff; letter-spacing: 3px; }
-        .description { font-size: 0.9rem; line-height: 1.5; color: #bbb; max-width: 750px; margin-bottom: 15px; }
+        /* 2. HUD CONTENT */
+        #hud-container { display: none; flex-direction: column; align-items: center; text-align: center; padding: 0 50px; }
+        h1 { font-size: 2.2rem; margin: 0 0 15px 0; color: #fff; letter-spacing: 3px; }
+        .description { font-size: 1rem; line-height: 1.6; color: #bbb; max-width: 750px; margin-bottom: 25px; }
 
-        .board { width: 400px; height: 400px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 5px solid #1e2530; }
-        .sq { width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; position: relative; }
+        /* 3. CHESS GAME LAYER */
+        #game-layer { display: flex; align-items: flex-start; opacity: 0; transition: opacity 1s; visibility: hidden; width: 95vw; height: 85vh; gap: 20px; }
+        #game-layer.visible { opacity: 1; visibility: visible; }
+
+        .board { width: 500px; height: 500px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 8px solid #1e2530; box-shadow: 0 0 40px rgba(0, 242, 255, 0.1); }
+        .sq { width: 62.5px; height: 62.5px; display: flex; justify-content: center; align-items: center; position: relative; }
         .w { background: #16212e; } .b { background: #0d1117; }
-        
-        .sq.highlight { box-shadow: inset 0 0 12px #00f2ff; }
-        .piece { font-size: 38px; color: white; cursor: grab; z-index: 10; }
+        .piece { font-size: 48px; color: white; cursor: grab; z-index: 10; opacity: 0.4; pointer-events: none; }
+        .game-active .piece { opacity: 1; pointer-events: auto; }
+
+        /* 4. NEON SETTINGS BAR (1/4 of screen) */
+        .settings-bar { 
+            flex: 1; height: 100%; background: rgba(10, 11, 16, 0.9);
+            border: 2px solid #00ff00; border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
+            padding: 20px; display: flex; flex-direction: column; position: relative;
+        }
+        .settings-title { color: #00ff00; letter-spacing: 2px; border-bottom: 1px solid #00ff00; padding-bottom: 10px; margin-bottom: 20px; font-weight: bold; }
+        .settings-item { margin-bottom: 15px; font-size: 14px; color: #ccc; }
+        .settings-item b { color: #00ff00; }
+
+        .play-btn {
+            margin-top: auto; width: 100%; padding: 15px;
+            background: none; border: 2px solid #00f2ff; color: #00f2ff;
+            font-weight: bold; letter-spacing: 3px; cursor: pointer;
+            transition: 0.3s;
+        }
+        .play-btn:hover { background: #00f2ff; color: #0a0b10; box-shadow: 0 0 20px #00f2ff; }
 
         #particle-canvas { position: absolute; top: 0; left: 0; z-index: -1; }
     </style>
@@ -52,46 +70,65 @@
 <body>
 
     <div id="boot-screen">
-        <div id="x-btn" class="panic-x" onclick="triggerPanic()">✕</div>
+        <div id="x-btn" class="panic-x" onclick="handleTransition()">✕</div>
         
-        <!-- INITIAL LOADING -->
         <div id="boot-content">
-            <div class="load-text">SYSTEM CALIBRATION...</div>
+            <div style="letter-spacing: 5px; color: #00f2ff; text-align: center;">SYSTEM CALIBRATION...</div>
             <div class="progress-bar"><div id="bar" class="progress-fill"></div></div>
         </div>
 
-        <!-- FULL INTERFACE (Fills the box) -->
-        <div id="content-container">
+        <div id="hud-container">
             <h1>Chess.Practice-Elo</h1>
             <p class="description">Regular chess practice boosts your <strong>Elo rating</strong> by improving strategic understanding and tactical abilities. Consistency is key to mastering the art of chess.</p>
-            <div class="board" id="chess-board"></div>
         </div>
     </div>
 
     <canvas id="particle-canvas"></canvas>
 
-    <script>
-        // --- 1. BOOT SEQUENCE ---
-        window.onload = () => {
-            const bar = document.getElementById('bar');
-            setTimeout(() => { bar.style.width = '100%'; }, 200);
+    <div id="game-layer">
+        <div class="board" id="chess-board"></div>
+        
+        <!-- NEON SETTINGS BAR -->
+        <div class="settings-bar">
+            <div class="settings-title">04 SETTINGS</div>
+            <div class="settings-item">Analysis <b>Precision</b>: 100%</div>
+            <div class="settings-item">Engine <b>Depth</b>: 24</div>
+            <div class="settings-item">Cloud <b>Status</b>: Connected</div>
+            <div class="settings-item">Tactical <b>Engine</b>: Active</div>
             
+            <button class="play-btn" onclick="startPlay()">01 START PLAY</button>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. BOOT & TRANSITION ---
+        window.onload = () => {
+            document.getElementById('bar').style.width = '100%';
             setTimeout(() => {
                 document.getElementById('boot-screen').classList.add('loaded');
                 document.getElementById('boot-content').style.display = 'none';
-                document.getElementById('content-container').style.display = 'flex';
+                document.getElementById('hud-container').style.display = 'flex';
                 document.getElementById('x-btn').style.opacity = '1';
-                createBoard(); // Draw the board inside the box
             }, 2300);
         };
 
-        function triggerPanic() {
-            const boot = document.getElementById('boot-screen');
-            boot.classList.add('panic');
-            setTimeout(() => { window.location.href = "https://schools.compass.education"; }, 650);
+        function handleTransition() {
+            document.getElementById('boot-screen').classList.add('panic');
+            setTimeout(() => {
+                document.getElementById('boot-screen').style.display = 'none';
+                document.getElementById('game-layer').classList.add('visible');
+                createBoard();
+            }, 600);
         }
 
-        // --- 2. CHESS LOGIC ---
+        function startPlay() {
+            document.getElementById('chess-board').classList.add('game-active');
+            document.querySelector('.play-btn').innerText = "ENGINE ONLINE";
+            document.querySelector('.play-btn').style.borderColor = "#00ff00";
+            document.querySelector('.play-btn').style.color = "#00ff00";
+        }
+
+        // --- 2. CHESS ENGINE ---
         const game = new Chess();
         const pChars = { 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚', 'p': '♟', 'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔', 'P': '♙' };
         let sourceSq = null;
@@ -99,35 +136,25 @@
         function createBoard() {
             const boardEl = document.getElementById('chess-board');
             boardEl.innerHTML = '';
-            const position = game.board();
-            
-            position.forEach((row, rowIndex) => {
-                row.forEach((piece, colIndex) => {
-                    const sqId = String.fromCharCode(97 + colIndex) + (8 - rowIndex);
+            game.board().forEach((row, rIdx) => {
+                row.forEach((piece, cIdx) => {
+                    const sqId = String.fromCharCode(97 + cIdx) + (8 - rIdx);
                     const sq = document.createElement('div');
-                    sq.className = 'sq ' + ((rowIndex + colIndex) % 2 === 0 ? 'w' : 'b');
+                    sq.className = 'sq ' + ((rIdx + cIdx) % 2 === 0 ? 'w' : 'b');
                     sq.id = sqId;
-
                     if (piece) {
                         const pEl = document.createElement('div');
                         pEl.className = 'piece';
-                        const pChar = piece.color === 'w' ? piece.type.toUpperCase() : piece.type.toLowerCase();
-                        pEl.innerHTML = pChars[pChar];
+                        pEl.innerHTML = pChars[piece.color === 'w' ? piece.type.toUpperCase() : piece.type.toLowerCase()];
                         pEl.draggable = true;
-
-                        pEl.addEventListener('dragstart', () => { 
-                            sourceSq = sqId; 
-                            document.querySelectorAll('.sq').forEach(s => s.classList.add('highlight'));
-                        });
+                        pEl.addEventListener('dragstart', () => { sourceSq = sqId; });
                         sq.appendChild(pEl);
                     }
-
                     sq.addEventListener('dragover', (e) => e.preventDefault());
                     sq.addEventListener('drop', (e) => {
                         e.preventDefault();
                         const move = game.move({ from: sourceSq, to: sq.id, promotion: 'q' });
                         if (move) createBoard();
-                        document.querySelectorAll('.sq').forEach(s => s.classList.remove('highlight'));
                     });
                     boardEl.appendChild(sq);
                 });
@@ -149,7 +176,7 @@
         function animate() { ctx.clearRect(0,0,canvas.width, canvas.height); particles.forEach(p => { p.update(); p.draw(); }); requestAnimationFrame(animate); }
         animate();
 
-        document.addEventListener('keydown', (e) => { if (e.key === '=') triggerPanic(); });
+        document.addEventListener('keydown', (e) => { if (e.key === '=') window.location.href = "https://schools.compass.education"; });
     </script>
 </body>
 </html>

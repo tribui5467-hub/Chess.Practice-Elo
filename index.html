@@ -4,120 +4,119 @@
     <meta charset="UTF-8">
     <title>Chess Strategic Development | Elo Analysis</title>
     <style>
-        /* 1. KEYFRAMES */
-        @keyframes popUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        @keyframes wipeDown { from { clip-path: inset(0 0 100% 0); opacity: 0; } to { clip-path: inset(0 0 0 0); opacity: 1; } }
-        @keyframes growLine { from { width: 0; } to { width: 100%; } }
-        
-        /* Clockwise Circle Draw */
-        @keyframes drawCircle { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
-        
-        /* X Pop-In */
-        @keyframes popX { 0% { transform: scale(0); opacity: 0; } 80% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+        /* 1. CYBER BACKGROUND & PARTICLES */
+        body { margin: 0; background: #0a0b10; overflow: hidden; font-family: 'Segoe UI', sans-serif; color: white; }
+        #particle-canvas { position: absolute; top: 0; left: 0; z-index: -1; }
 
-        /* 2. STYLING */
-        body { background: #f0f2f5; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        
-        .container { 
-            position: relative;
-            max-width: 700px; 
-            background: white; 
-            padding: 40px; 
-            border-radius: 12px; 
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            overflow: hidden;
-        }
-
-        /* The Panic X Container */
-        .panic-wrapper {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            width: 32px;
-            height: 32px;
-            cursor: pointer;
-        }
-
-        /* The Clockwise Circle Outline */
-        .outline-circle {
-            fill: none;
-            stroke: #3498db;
-            stroke-width: 2;
-            stroke-dasharray: 100;
-            stroke-dashoffset: 100;
-            stroke-linecap: round;
-            transform: rotate(-90deg); /* Start at 12 o'clock */
-            transform-origin: center;
-            animation: drawCircle 0.8s ease-out forwards;
-            animation-delay: 1.8s; /* Appears after description wipe */
-        }
-
-        /* The X Icon */
-        .x-icon {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            display: flex; justify-content: center; align-items: center;
-            font-size: 18px;
+        /* 2. THE PANIC X (FIXED POSITION) */
+        .panic-btn { 
+            position: fixed; /* Always stays in top right */
+            top: 25px; 
+            right: 25px; 
+            width: 35px; 
+            height: 35px; 
+            border: 2px solid #3498db; 
+            border-radius: 50%; 
+            color: #3498db; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            cursor: pointer; 
             font-weight: bold;
-            color: #3498db;
-            opacity: 0;
-            animation: popX 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-            animation-delay: 2.4s; /* Pops in after circle finishes */
-            user-select: none;
+            z-index: 100; /* Stays on top of everything */
+            background: rgba(10, 11, 16, 0.8);
+            transition: 0.3s;
+        }
+        .panic-btn:hover { background: #3498db; color: white; }
+
+        /* 3. THE CHESS BOARD */
+        .game-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        .board { 
+            width: 440px; height: 440px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); 
+            border: 8px solid #1e2530; box-shadow: 0 0 50px rgba(52, 152, 219, 0.2);
+        }
+        .sq { width: 55px; height: 55px; display: flex; justify-content: center; align-items: center; position: relative; }
+        .w { background: #2c3e50; } .b { background: #1a1a1a; }
+
+        /* 4. BREAKING VULNERABILITY ICON */
+        @keyframes breakRing {
+            0% { transform: scale(0.5); opacity: 1; border-width: 4px; }
+            100% { transform: scale(1.5); opacity: 0; border-width: 1px; }
+        }
+        .vulnerable-ring {
+            position: absolute; width: 45px; height: 45px;
+            border: 2px solid #ff4757; border-radius: 50%;
+            animation: breakRing 1.2s infinite cubic-bezier(0.36, 0.11, 0.89, 0.32);
+            z-index: 5;
         }
 
-        .title-wrapper { overflow: hidden; }
-        h1 { color: #2c3e50; margin: 0; animation: popUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; animation-delay: 0.5s; }
-        
-        .baseline { height: 3px; background: #3498db; margin: 10px 0; animation: growLine 0.6s ease-out both; }
-        
-        .description { font-size: 1.1rem; line-height: 1.8; color: #444; animation: wipeDown 1s ease-out both; animation-delay: 0.8s; }
-
-        .hidden { display: none; }
-        #secret-zone { background: #1a1a1a; color: #00ff00; padding: 20px; font-family: monospace; border-radius: 8px; }
+        /* 5. PIECE POP & PROMOTION */
+        .piece { font-size: 40px; cursor: pointer; transition: transform 0.2s; z-index: 10; color: #fff; }
+        @keyframes promotePop {
+            0% { transform: scale(0); filter: brightness(3); }
+            100% { transform: scale(1); filter: brightness(1); }
+        }
+        .promoting { animation: promotePop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
     </style>
 </head>
 <body>
 
-<div class="container" id="main-page">
-    <!-- Animated Panic Button -->
-    <div class="panic-wrapper" onclick="window.location.href='https://schools.compass.education'">
-        <svg viewBox="0 0 36 36">
-            <circle class="outline-circle" cx="18" cy="18" r="15.915"></circle>
-        </svg>
-        <div class="x-icon">✕</div>
+    <canvas id="particle-canvas"></canvas>
+
+    <!-- Fixed Panic Button -->
+    <div class="panic-btn" onclick="window.location.href='https://schools.compass.education'">✕</div>
+
+    <div class="game-container">
+        <h2 style="margin-bottom: 10px; color: #3498db; letter-spacing: 2px;">STRATEGIC ANALYSIS ACTIVE</h2>
+        <div class="board" id="chess-board"></div>
     </div>
 
-    <div class="title-wrapper">
-        <h1>Chess.Practice-Elo</h1>
-    </div>
-    
-    <div class="baseline"></div>
-    
-    <p class="description">
-        Regular chess practice boosts your <strong>Elo rating</strong> by improving strategic understanding, 
-        anticipatory skills, and tactical abilities. It promotes critical thinking and mental agility, 
-        while game analysis helps identify patterns. Practicing with others builds community and motivation. 
-        Consistency is key to mastering chess at any skill level.
-    </p>
-</div>
+    <script>
+        // --- 1. PARTICLE SYSTEM ---
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.onresize = resize; resize();
 
-<div id="secret-zone" class="container hidden">
-    <h2>[EQUINOX SYSTEM OVERRIDE]</h2>
-    <p>> Bypass AppLocker: Win+R -> 'wsreset.exe'</p>
-    <p>> Status: Stealth Active</p>
-</div>
-
-<script>
-    document.addEventListener('keydown', function(e) {
-        if (e.key === '=') window.location.href = "https://schools.compass.education";
-        if (e.key === 's' || e.key === 'S') {
-            document.getElementById('main-page').classList.toggle('hidden');
-            document.getElementById('secret-zone').classList.toggle('hidden');
+        class Particle {
+            constructor() { this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height; this.size = Math.random() * 1.5; this.speed = Math.random() * 0.5 + 0.1; }
+            update() { this.y += this.speed; if (this.y > canvas.height) this.y = -10; }
+            draw() { ctx.fillStyle = 'rgba(255, 255, 255, 0.4)'; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); }
         }
-    });
-</script>
+        for(let i=0; i<120; i++) particles.push(new Particle());
+        function animate() { ctx.clearRect(0,0,canvas.width, canvas.height); particles.forEach(p => { p.update(); p.draw(); }); requestAnimationFrame(animate); }
+        animate();
 
+        // --- 2. GENERATE BOARD & PIECES ---
+        const boardDiv = document.getElementById('chess-board');
+        const pieces = { 'p': '♟', 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚' };
+        
+        for (let i = 0; i < 64; i++) {
+            const sq = document.createElement('div');
+            sq.className = `sq ${(Math.floor(i / 8) + i) % 2 === 0 ? 'w' : 'b'}`;
+            
+            // Example Vulnerable Piece (Knight on square 12)
+            if (i === 12) {
+                const ring = document.createElement('div'); ring.className = 'vulnerable-ring';
+                sq.appendChild(ring);
+                const p = document.createElement('div'); p.className = 'piece'; p.innerHTML = pieces['n'];
+                sq.appendChild(p);
+            }
+            
+            // Example Just-Promoted Piece (Queen on square 2)
+            if (i === 2) {
+                const p = document.createElement('div'); p.className = 'piece promoting'; p.innerHTML = pieces['q'];
+                sq.appendChild(p);
+            }
+
+            boardDiv.appendChild(sq);
+        }
+
+        // --- 3. KEYBOARD PANIC ---
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '=') window.location.href = "https://schools.compass.education";
+        });
+    </script>
 </body>
 </html>

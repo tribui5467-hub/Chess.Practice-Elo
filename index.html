@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title>Tactical Analysis Engine | System Boot</title>
-    <!-- We use the official Chess.js library for legal move logic -->
     <script src="https://cdnjs.cloudflare.com"></script>
     <style>
         body { margin: 0; background: #0a0b10; overflow: hidden; font-family: 'Segoe UI', sans-serif; color: white; user-select: none; display: flex; justify-content: center; align-items: center; height: 100vh; }
         
-        /* 1. NEON HUD BOOT SCREEN */
+        /* 1. NEON HUD BOX */
         #boot-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #0a0b10; z-index: 2000;
@@ -16,35 +15,36 @@
             transition: all 0.8s cubic-bezier(0.19, 1, 0.22, 1);
         }
         
+        /* The Edged Box Effect */
         #boot-screen.loaded { 
-            transform: scale(0.68); 
+            transform: scale(0.75); 
             border: 2px solid #00f2ff;
-            border-radius: 10px;
-            box-shadow: 0 0 30px rgba(0, 242, 255, 0.3), inset 0 0 15px rgba(0, 242, 255, 0.1);
+            border-radius: 15px;
+            box-shadow: 0 0 35px rgba(0, 242, 255, 0.3), inset 0 0 20px rgba(0, 242, 255, 0.1);
             background: rgba(10, 11, 16, 0.98);
         }
 
-        #boot-screen.panic { transform: scale(0.68, 0) translateY(1200px); opacity: 0; }
+        /* Panic Shutdown (Shrink to Baseline) */
+        #boot-screen.panic { transform: scale(0.75, 0) translateY(1200px); opacity: 0; }
 
         .load-text { letter-spacing: 5px; color: #00f2ff; margin-bottom: 20px; text-shadow: 0 0 10px #00f2ff; font-size: 14px; }
         .progress-bar { width: 250px; height: 2px; background: rgba(0, 242, 255, 0.1); position: relative; }
         .progress-fill { position: absolute; height: 100%; background: #00f2ff; width: 0%; box-shadow: 0 0 15px #00f2ff; transition: width 2s linear; }
 
-        .panic-x { position: absolute; top: 20px; right: 25px; font-size: 24px; color: #00f2ff; cursor: pointer; opacity: 0; transition: opacity 0.5s; z-index: 2100; padding: 10px; }
+        .panic-x { position: absolute; top: 25px; right: 30px; font-size: 24px; color: #00f2ff; cursor: pointer; opacity: 0; transition: opacity 0.5s; z-index: 2100; padding: 10px; }
 
-        /* 2. THE CONTENT */
-        #main-ui { display: flex; flex-direction: column; align-items: center; opacity: 0; transition: opacity 1s ease-in; width: 100%; }
+        /* 2. INTERNAL CONTENT (Title, Desc, Board) */
+        #content-container { display: none; flex-direction: column; align-items: center; text-align: center; padding: 0 40px; width: 100%; }
+        
+        h1 { font-size: 2rem; margin: 10px 0; color: #fff; letter-spacing: 3px; }
+        .description { font-size: 0.9rem; line-height: 1.5; color: #bbb; max-width: 750px; margin-bottom: 15px; }
 
-        .board { width: 440px; height: 440px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 6px solid #1e2530; box-shadow: 0 0 40px rgba(0, 242, 255, 0.1); }
-        .sq { width: 55px; height: 55px; display: flex; justify-content: center; align-items: center; position: relative; }
+        .board { width: 400px; height: 400px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 5px solid #1e2530; }
+        .sq { width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; position: relative; }
         .w { background: #16212e; } .b { background: #0d1117; }
         
-        .sq.highlight { box-shadow: inset 0 0 12px #00f2ff; border: 0.5px solid rgba(0, 242, 255, 0.5); }
-        .piece { font-size: 42px; color: white; cursor: grab; z-index: 10; }
-
-        #box-text { text-align: center; padding: 0 50px; max-width: 800px; }
-        h1 { font-size: 2.2rem; margin: 0 0 15px 0; color: #fff; letter-spacing: 3px; }
-        .description { font-size: 1rem; line-height: 1.6; color: #bbb; margin: 0; }
+        .sq.highlight { box-shadow: inset 0 0 12px #00f2ff; }
+        .piece { font-size: 38px; color: white; cursor: grab; z-index: 10; }
 
         #particle-canvas { position: absolute; top: 0; left: 0; z-index: -1; }
     </style>
@@ -52,72 +52,53 @@
 <body>
 
     <div id="boot-screen">
-        <div id="x-btn" class="panic-x" onclick="handleXClick()">✕</div>
+        <div id="x-btn" class="panic-x" onclick="triggerPanic()">✕</div>
+        
+        <!-- INITIAL LOADING -->
         <div id="boot-content">
             <div class="load-text">SYSTEM CALIBRATION...</div>
             <div class="progress-bar"><div id="bar" class="progress-fill"></div></div>
         </div>
-        <div id="box-text" style="display:none;">
+
+        <!-- FULL INTERFACE (Fills the box) -->
+        <div id="content-container">
             <h1>Chess.Practice-Elo</h1>
-            <p class="description">
-                Regular chess practice boosts your <strong>Elo rating</strong> by improving strategic understanding, 
-                anticipatory skills, and tactical abilities. It promotes critical thinking and mental agility, 
-                while game analysis helps identify patterns. Practicing with others builds community and motivation. 
-                Consistency is key to mastering chess at any skill level.
-            </p>
+            <p class="description">Regular chess practice boosts your <strong>Elo rating</strong> by improving strategic understanding and tactical abilities. Consistency is key to mastering the art of chess.</p>
+            <div class="board" id="chess-board"></div>
         </div>
     </div>
 
     <canvas id="particle-canvas"></canvas>
-
-    <div id="main-ui">
-        <div class="board" id="chess-board"></div>
-    </div>
 
     <script>
         // --- 1. BOOT SEQUENCE ---
         window.onload = () => {
             const bar = document.getElementById('bar');
             setTimeout(() => { bar.style.width = '100%'; }, 200);
+            
             setTimeout(() => {
                 document.getElementById('boot-screen').classList.add('loaded');
                 document.getElementById('boot-content').style.display = 'none';
-                document.getElementById('box-text').style.display = 'block';
+                document.getElementById('content-container').style.display = 'flex';
                 document.getElementById('x-btn').style.opacity = '1';
+                createBoard(); // Draw the board inside the box
             }, 2300);
         };
 
-        let isGameVisible = false;
-        function handleXClick() {
-            if (!isGameVisible) {
-                document.getElementById('boot-screen').style.opacity = '0';
-                document.getElementById('boot-screen').style.visibility = 'hidden';
-                document.getElementById('main-ui').style.opacity = '1';
-                isGameVisible = true;
-            } else {
-                triggerPanic();
-            }
-        }
-
         function triggerPanic() {
             const boot = document.getElementById('boot-screen');
-            boot.style.visibility = 'visible';
-            boot.style.opacity = '1';
-            setTimeout(() => {
-                boot.classList.add('panic');
-                setTimeout(() => { window.location.href = "https://schools.compass.education"; }, 600);
-            }, 10);
+            boot.classList.add('panic');
+            setTimeout(() => { window.location.href = "https://schools.compass.education"; }, 650);
         }
 
-        // --- 2. LEGAL CHESS LOGIC ---
+        // --- 2. CHESS LOGIC ---
         const game = new Chess();
-        const board = document.getElementById('chess-board');
         const pChars = { 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚', 'p': '♟', 'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔', 'P': '♙' };
-
         let sourceSq = null;
 
         function createBoard() {
-            board.innerHTML = '';
+            const boardEl = document.getElementById('chess-board');
+            boardEl.innerHTML = '';
             const position = game.board();
             
             position.forEach((row, rowIndex) => {
@@ -130,13 +111,12 @@
                     if (piece) {
                         const pEl = document.createElement('div');
                         pEl.className = 'piece';
-                        // Convert chess.js piece names to our display characters
                         const pChar = piece.color === 'w' ? piece.type.toUpperCase() : piece.type.toLowerCase();
                         pEl.innerHTML = pChars[pChar];
                         pEl.draggable = true;
 
-                        pEl.addEventListener('dragstart', (e) => {
-                            sourceSq = sqId;
+                        pEl.addEventListener('dragstart', () => { 
+                            sourceSq = sqId; 
                             document.querySelectorAll('.sq').forEach(s => s.classList.add('highlight'));
                         });
                         sq.appendChild(pEl);
@@ -145,22 +125,14 @@
                     sq.addEventListener('dragover', (e) => e.preventDefault());
                     sq.addEventListener('drop', (e) => {
                         e.preventDefault();
-                        const targetSq = sq.id;
-                        const move = game.move({ from: sourceSq, to: targetSq, promotion: 'q' });
-                        
-                        if (move === null) {
-                            // Illegal move or wrong turn
-                            document.querySelectorAll('.sq').forEach(s => s.classList.remove('highlight'));
-                        } else {
-                            createBoard(); // Redraw board with new positions
-                        }
+                        const move = game.move({ from: sourceSq, to: sq.id, promotion: 'q' });
+                        if (move) createBoard();
+                        document.querySelectorAll('.sq').forEach(s => s.classList.remove('highlight'));
                     });
-                    board.appendChild(sq);
+                    boardEl.appendChild(sq);
                 });
             });
         }
-
-        createBoard();
 
         // --- 3. PARTICLES ---
         const canvas = document.getElementById('particle-canvas');

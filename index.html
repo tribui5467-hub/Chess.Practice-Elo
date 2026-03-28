@@ -4,17 +4,17 @@
     <meta charset="UTF-8">
     <title>Chess-Practice | Elo</title>
     <style>
-        :root { --neon-blue: #00f2ff; --neon-green: #00ff00; --bg-dark: #0a0b10; }
-        body { margin: 0; background: var(--bg-dark); overflow: hidden; font-family: 'Segoe UI', sans-serif; color: white; user-select: none; }
+        :root { --neon-blue: #00f2ff; --neon-green: #00ff00; --neon-red: #ff4757; --neon-orange: #ffa502; --bg-dark: #0a0b10; }
+        body { margin: 0; background: var(--bg-dark); overflow: hidden; font-family: 'Segoe UI', sans-serif; color: white; user-select: none; display: flex; justify-content: center; align-items: center; height: 100vh; }
 
-        /* 1. BOOT SCREEN & HUD BOX */
+        /* 1. BOOT SCREEN & HUD */
         #boot-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--bg-dark); z-index: 5000;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             transition: all 0.8s cubic-bezier(0.19, 1, 0.22, 1);
         }
-        #boot-screen.loaded { transform: scale(0.78); border: 2px solid var(--neon-blue); border-radius: 15px; box-shadow: 0 0 30px rgba(0, 242, 255, 0.2); background: rgba(10, 11, 16, 0.98); }
+        #boot-screen.loaded { transform: scale(0.78); border: 2px solid var(--neon-blue); border-radius: 15px; box-shadow: 0 0 35px rgba(0, 242, 255, 0.2); background: rgba(10, 11, 16, 0.98); }
         #boot-screen.panic { transform: scale(0.78, 0) translateY(1200px); opacity: 0; }
         
         .progress-bar { width: 250px; height: 2px; background: rgba(255,255,255,0.1); margin-top: 20px; }
@@ -23,36 +23,37 @@
         #hud-container { display: none; flex-direction: column; align-items: center; text-align: center; padding: 0 60px; }
         .baseline { height: 2px; background: var(--neon-blue); margin: 15px 0; width: 0; transition: width 0.8s ease-out; box-shadow: 0 0 10px var(--neon-blue); }
 
-        /* 2. SCRATCH-STYLE ELASTIC BUTTONS */
+        /* 2. ELASTIC BUTTONS */
         .btn-elastic {
             background: none; border: 2px solid var(--neon-blue); color: var(--neon-blue);
-            font-weight: bold; padding: 15px 30px; cursor: pointer; letter-spacing: 2px;
+            font-weight: bold; padding: 12px 25px; cursor: pointer; letter-spacing: 2px;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            text-transform: uppercase; border-radius: 5px; outline: none;
+            text-transform: uppercase; border-radius: 5px; outline: none; margin: 5px;
         }
-        .btn-elastic:hover {
-            transform: scale(1.12);
-            border-color: var(--neon-green); color: var(--neon-green);
-            box-shadow: 0 0 20px rgba(0, 255, 0, 0.4);
-        }
+        .btn-elastic:hover { transform: scale(1.1); border-color: var(--neon-green); color: var(--neon-green); box-shadow: 0 0 20px rgba(0, 255, 0, 0.3); }
 
-        /* 3. GAME LAYER & SIDEBAR */
+        /* 3. GAME INTERFACE */
         #game-layer { display: none; width: 100vw; height: 100vh; opacity: 0; transition: opacity 1s; }
         #game-layer.visible { display: flex; opacity: 1; }
 
         #board-area { flex: 1; display: flex; justify-content: center; align-items: center; transition: all 0.6s cubic-bezier(0.19, 1, 0.22, 1); }
-        .board { width: 520px; height: 520px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid rgba(0, 242, 255, 0.3); background: rgba(10, 11, 16, 0.5); backdrop-filter: blur(8px); position: relative; }
-        .sq { width: 65px; height: 65px; display: flex; justify-content: center; align-items: center; position: relative; }
+        .board { width: 520px; height: 520px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid rgba(0, 242, 255, 0.3); background: rgba(10, 11, 16, 0.5); backdrop-filter: blur(8px); }
+        .sq { width: 65px; height: 65px; display: flex; justify-content: center; align-items: center; position: relative; cursor: default; }
         .w { background: rgba(255, 255, 255, 0.05); } .b { background: rgba(0, 0, 0, 0.4); }
         
-        .piece { font-size: 52px; cursor: grab; z-index: 10; opacity: 0.3; transition: opacity 0.5s; pointer-events: none; }
-        .game-active .piece { opacity: 1; pointer-events: auto; }
+        /* SELECTION HIGHLIGHT */
+        .sq.selected { box-shadow: inset 0 0 15px var(--neon-blue); border: 1px solid var(--neon-blue); }
+        .sq.valid-target { cursor: pointer; }
+        .sq.valid-target::after { content: ''; width: 15px; height: 15px; background: rgba(0, 242, 255, 0.3); border-radius: 50%; }
+
+        .piece { font-size: 52px; z-index: 10; opacity: 0.3; transition: transform 0.2s, opacity 0.5s; pointer-events: none; }
+        .game-active .piece { opacity: 1; pointer-events: auto; cursor: pointer; }
         .white-p { color: #fff; filter: drop-shadow(0 0 8px #fff); }
         .black-p { color: #555; filter: drop-shadow(0 0 8px #000); }
 
         /* ANALYSIS ICONS */
         .icon { position: absolute; top: -8px; right: -8px; width: 24px; height: 24px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 900; font-size: 13px; border: 2px solid white; color: #000; box-shadow: 0 2px 10px rgba(0,0,0,0.5); z-index: 20; }
-        .brilliant { background: #00e6ff; } .book { background: #a6db2d; }
+        .brilliant { background: #00e6ff; } .good { background: #2ecc71; } .book { background: #a6db2d; } .blunder { background: var(--neon-red); } .mistake { background: var(--neon-orange); }
 
         /* 4. SETTINGS SIDEBAR */
         #settings-sidebar { 
@@ -60,20 +61,26 @@
             padding: 40px; display: flex; flex-direction: column; transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1);
             box-shadow: -10px 0 30px rgba(0, 255, 0, 0.15); box-sizing: border-box; position: relative;
         }
-        #settings-sidebar.collapsed { transform: translateX(100%); width: 0; padding: 0; border: none; }
+        #settings-sidebar.collapsed { transform: translateX(100%); position: absolute; right: 0; }
 
-        .gear-tab {
-            position: absolute; left: -60px; top: 50%; transform: translateY(-50%);
+        #reopen-btn {
+            position: fixed; right: 0; top: 50%; transform: translateY(-50%);
             background: rgba(10, 11, 16, 0.9); border: 2px solid var(--neon-green); border-right: none;
-            padding: 15px 10px; border-radius: 10px 0 0 10px; cursor: pointer; display: none;
+            padding: 15px 10px; border-radius: 10px 0 0 10px; cursor: pointer; display: none; z-index: 4500;
         }
         .gear { width: 32px; height: 32px; fill: var(--neon-green); animation: spin 5s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        /* 5. HELP MODAL */
-        #help-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 6000; display: none; justify-content: center; align-items: center; }
-        .help-content { width: 85%; max-width: 650px; background: var(--bg-dark); border: 2px solid var(--neon-blue); padding: 40px; border-radius: 15px; box-shadow: 0 0 40px var(--neon-blue); text-align: center; }
-        .guide-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid rgba(0,242,255,0.2); }
+        /* 5. HELP MODAL & COLLAPSIBLES */
+        #help-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 6000; display: none; justify-content: center; align-items: center; overflow-y: auto; }
+        .help-content { width: 90%; max-width: 700px; background: var(--bg-dark); border: 2px solid var(--neon-blue); padding: 40px; border-radius: 15px; box-shadow: 0 0 40px var(--neon-blue); margin: 20px; }
+        
+        details { background: rgba(255,255,255,0.05); margin-bottom: 10px; border-radius: 5px; overflow: hidden; border: 1px solid rgba(0,242,255,0.1); }
+        summary { padding: 15px; cursor: pointer; font-weight: bold; color: var(--neon-blue); outline: none; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+        summary::-webkit-details-marker { display: none; }
+        summary::after { content: '▼'; font-size: 12px; transition: 0.3s; }
+        details[open] summary::after { transform: rotate(180deg); }
+        .details-inner { padding: 15px; color: #ccc; font-size: 14px; line-height: 1.6; border-top: 1px solid rgba(0,242,255,0.1); text-align: left; }
 
         #particle-canvas { position: fixed; top: 0; left: 0; z-index: -1; pointer-events: none; }
     </style>
@@ -81,6 +88,9 @@
 <body>
 
     <canvas id="particle-canvas"></canvas>
+
+    <!-- REOPEN TAB -->
+    <div id="reopen-btn" onclick="toggleSidebar()"><svg class="gear" viewBox="0 0 24 24"><path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5 3.5 3.5 0 0 1 15.5 12 3.5 3.5 0 0 1 12 15.5M19.43 12.97c.04-.32.07-.65.07-.97 0-.32-.03-.65-.07-.97l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.39-1.09-.73-1.69-.98l-.37-2.65c-.04-.24-.25-.42-.5-.42h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.6.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.12.22-.07.49.12.64l2.11 1.63c-.04.32-.07.65-.07.97 0 .32.03.65.07.97l-2.11 1.63c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.31.61.22l2.49-1c.52.39 1.09.73 1.69.98l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.6-.25 1.17-.59 1.69-.98l2.49 1c.22.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.63z"></path></svg></div>
 
     <!-- 1. HUD BOOT -->
     <div id="boot-screen">
@@ -96,10 +106,7 @@
         </div>
     </div>
 
-    <!-- 2. REOPEN TAB -->
-    <div id="gear-tab" class="gear-tab" onclick="toggleSidebar()"><svg class="gear" viewBox="0 0 24 24"><path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5 3.5 3.5 0 0 1 15.5 12 3.5 3.5 0 0 1 12 15.5M19.43 12.97c.04-.32.07-.65.07-.97 0-.32-.03-.65-.07-.97l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.39-1.09-.73-1.69-.98l-.37-2.65c-.04-.24-.25-.42-.5-.42h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.6.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.12.22-.07.49.12.64l2.11 1.63c-.04.32-.07.65-.07.97 0 .32.03.65.07.97l-2.11 1.63c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.31.61.22l2.49-1c.52.39 1.09.73 1.69.98l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.6-.25 1.17-.59 1.69-.98l2.49 1c.22.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.63z"></path></svg></div>
-
-    <!-- 3. GAME LAYER -->
+    <!-- 2. GAME LAYER -->
     <div id="game-layer">
         <div id="board-area"><div class="board" id="chess-board"></div></div>
         
@@ -109,28 +116,49 @@
             </div>
             <div style="margin-top:30px; font-size:15px; color:#aaa;">System Volume: <b>85%</b></div>
             <div style="margin-top:20px; font-size:15px; color:#aaa;">Move Audio: <b>ON</b></div>
-            <button class="btn-elastic" style="margin-top:30px; width:100%;" onclick="openHelp()">?</button>
+            <button class="btn-elastic" style="margin-top:30px; width:100%; border-color:var(--neon-green); color:var(--neon-green);" onclick="openHelp()">?</button>
             <button class="btn-elastic" id="play-btn" style="margin-top:auto; width:100%;" onclick="activateBoard()">PLAY</button>
         </div>
     </div>
 
-    <!-- 4. HELP MODAL -->
+    <!-- 3. DETAILED HELP MODAL -->
     <div id="help-modal">
         <div class="help-content">
-            <h2 style="color:var(--neon-blue); margin:0 0 20px 0;">MOVEMENT GUIDE</h2>
-            <div class="guide-row"><span>♜ ROOK: Straight Lines</span> <span>♝ BISHOP: Diagonals</span></div>
-            <div class="guide-row"><span>♞ KNIGHT: 'L' Shape</span> <span>♛ QUEEN: Any Path</span></div>
-            <div class="baseline" style="width:100%; opacity:1; margin:25px 0;"></div>
-            <h2 style="color:var(--neon-green);">ANALYSIS ICONS</h2>
-            <div style="display:flex; justify-content:space-around; align-items:center; margin-top:20px;">
-                <div style="text-align:center;"><div class="icon brilliant" style="position:static; margin:0 auto 10px;">!!</div> Brilliant Move</div>
-                <div style="text-align:center;"><div class="icon book" style="position:static; margin:0 auto 10px;">📖</div> Theory/Book</div>
-            </div>
-            <button class="btn-elastic" style="margin-top:40px; width:100%; border-color:white; color:white;" onclick="closeHelp()">CLOSE SYSTEM GUIDE</button>
+            <h2 style="color:var(--neon-blue); margin:0 0 20px 0; letter-spacing:3px;">SYSTEM DIRECTORY</h2>
+            
+            <!-- GROUP: PIECES -->
+            <details>
+                <summary>TACTICAL PIECE OVERVIEW</summary>
+                <div class="details-inner">
+                    <p><b>♜ Rook:</b> Moves horizontally or vertically any number of squares. Essential for late-game power.</p>
+                    <p><b>♞ Knight:</b> Moves in an 'L' shape (two squares one way, one square perpendicular). It is the only piece that can jump over others.</p>
+                    <p><b>♝ Bishop:</b> Moves diagonally any number of squares. Always stays on its starting square color.</p>
+                    <p><b>♛ Queen:</b> The most powerful piece. Moves any number of squares horizontally, vertically, or diagonally.</p>
+                    <p><b>♚ King:</b> Moves one square in any direction. If the King is trapped, the session ends.</p>
+                    <p><b>♟ Pawn:</b> Moves forward one square (two on the first move). Captures diagonally.</p>
+                </div>
+            </details>
+
+            <!-- GROUP: ICONS -->
+            <details>
+                <summary>ANALYSIS ICON LEGEND</summary>
+                <div class="details-inner">
+                    <p><span class="icon brilliant" style="position:static; display:inline-flex;">!!</span> <b>Brilliant Move:</b> A move that is hard to find and significantly improves your position, often involving a sacrifice.</p>
+                    <p><span class="icon good" style="position:static; display:inline-flex; color:white;">!</span> <b>Great Move:</b> A very strong move that is the best or second-best option in a given position.</p>
+                    <p><span class="icon book" style="position:static; display:inline-flex;">📖</span> <b>Book Move:</b> Conventional opening theory. These moves follow established strategic patterns used by grandmasters.</p>
+                    <p><span class="icon mistake" style="position:static; display:inline-flex;">?</span> <b>Mistake:</b> A move that gives away some of your advantage or makes your position harder to play.</p>
+                    <p><span class="icon blunder" style="position:static; display:inline-flex;">??</span> <b>Blunder:</b> A catastrophic error that loses significant material or leads to a forced defeat.</p>
+                </div>
+            </details>
+
+            <button class="btn-elastic" style="margin-top:30px; width:100%; border-color:white; color:white;" onclick="closeHelp()">CLOSE DIRECTORY</button>
         </div>
     </div>
 
     <script>
+        let selectedSq = null;
+        let isEngineOnline = false;
+
         // --- 1. BOOT & UI ---
         window.onload = () => {
             document.getElementById('bar').style.width = '100%';
@@ -140,7 +168,7 @@
                 document.getElementById('hud-container').style.display = 'flex';
                 setTimeout(() => document.getElementById('line').style.width = '100%', 100);
                 initParticles(); 
-                createBoard(); // Internal board draw
+                createBoard(); 
             }, 2300);
         };
 
@@ -154,12 +182,13 @@
 
         function toggleSidebar() {
             const sb = document.getElementById('settings-sidebar');
-            const tab = document.getElementById('gear-tab');
+            const btn = document.getElementById('reopen-btn');
             sb.classList.toggle('collapsed');
-            tab.style.display = sb.classList.contains('collapsed') ? 'block' : 'none';
+            btn.style.display = sb.classList.contains('collapsed') ? 'block' : 'none';
         }
 
         function activateBoard() { 
+            isEngineOnline = true;
             document.getElementById('chess-board').classList.add('game-active');
             document.getElementById('play-btn').innerText = "ONLINE";
             document.getElementById('play-btn').style.borderColor = "var(--neon-green)";
@@ -169,7 +198,7 @@
         function openHelp() { document.getElementById('help-modal').style.display = 'flex'; }
         function closeHelp() { document.getElementById('help-modal').style.display = 'none'; }
 
-        // --- 2. INTERNAL BOARD RENDER (No External Library Required) ---
+        // --- 2. MOVEMENT LOGIC (LIGHTWEIGHT) ---
         function createBoard() {
             const board = document.getElementById('chess-board');
             const setup = [
@@ -186,27 +215,49 @@
             setup.forEach((p, i) => {
                 const sq = document.createElement('div');
                 sq.className = 'sq ' + ((Math.floor(i/8)+i)%2==0 ? 'w' : 'b');
+                sq.dataset.index = i;
+                
                 if(p) {
                     const pEl = document.createElement('div');
                     pEl.className = 'piece ' + (p === p.toUpperCase() ? 'white-p' : 'black-p');
                     pEl.innerHTML = pChars[p];
-                    
-                    // Specific icons for start
-                    if(i===62 || i===1) {
-                        const icon = document.createElement('div');
-                        icon.className = 'icon book'; icon.innerHTML = '📖'; sq.appendChild(icon);
-                    }
-                    if(i===60 || i===4) {
-                        const icon = document.createElement('div');
-                        icon.className = 'icon brilliant'; icon.innerHTML = '!!'; sq.appendChild(icon);
-                    }
+                    pEl.dataset.type = p;
                     sq.appendChild(pEl);
+                    
+                    // Demo Icons
+                    if(i===62 || i===1) sq.innerHTML += '<div class="icon book">📖</div>';
+                    if(i===60 || i===4) sq.innerHTML += '<div class="icon brilliant">!!</div>';
                 }
+
+                sq.onclick = () => handleSqClick(sq);
                 board.appendChild(sq);
             });
         }
 
-        // --- 3. WHITE PARTICLES ---
+        function handleSqClick(sq) {
+            if(!isEngineOnline) return;
+
+            const piece = sq.querySelector('.piece');
+            
+            if (selectedSq) {
+                // MOVE PIECE
+                if (sq !== selectedSq) {
+                    const movingPiece = selectedSq.querySelector('.piece');
+                    const targetPiece = sq.querySelector('.piece');
+                    if(targetPiece) sq.removeChild(targetPiece);
+                    sq.appendChild(movingPiece);
+                }
+                // DESELECT
+                selectedSq.classList.remove('selected');
+                selectedSq = null;
+            } else if (piece) {
+                // SELECT PIECE
+                selectedSq = sq;
+                sq.classList.add('selected');
+            }
+        }
+
+        // --- 3. PARTICLES ---
         const canvas = document.getElementById('particle-canvas');
         const ctx = canvas.getContext('2d');
         let particles = [];

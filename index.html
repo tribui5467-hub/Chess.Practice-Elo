@@ -7,13 +7,13 @@
     <style>
         :root { 
             --n-blue: #00f2ff; --n-green: #00ff00; --n-red: #ff4757; 
-            --n-purple: #bb86fc; --n-book: #d5a021; --bg: #030406;
+            --n-book: #d5a021; --bg: #030406;
             --rainbow: linear-gradient(90deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
         }
         body, html { margin: 0; padding: 0; background: #000; color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; }
 
-        /* 1. CINEMATIC BOOT */
-        #boot { position: fixed; inset: 0; background: black; z-index: 30000; display: flex; justify-content: center; align-items: center; transition: 1s; }
+        /* 1. BOOT SCREEN (FORCE HIDE) */
+        #boot { position: fixed; inset: 0; background: black; z-index: 30000; display: flex; justify-content: center; align-items: center; transition: opacity 0.8s; }
         .equinox-text { font-size: 32px; letter-spacing: 12px; font-weight: 200; color: #fff; clip-path: inset(0 100% 0 0); animation: solaris-reveal 2s forwards; position: relative; }
         .equinox-text::after { content: "EQUINOX GAMES"; position: absolute; top: 0; left: 0; width: 100%; color: var(--n-blue); filter: blur(8px); clip-path: inset(0 100% 0 0); animation: solaris-shine 2s forwards; }
         @keyframes solaris-reveal { 0% { clip-path: inset(0 100% 0 0); opacity: 0; } 100% { clip-path: inset(0 0 0 0); opacity: 1; } }
@@ -23,14 +23,15 @@
         @keyframes pop { to { transform: scaleY(1); opacity: 1; } }
         @keyframes slide { to { transform: translateX(0); } }
 
-        /* 2. LOADING ASSETS HUD */
+        /* 2. ASSET LOADING HUD */
         #assets { position: fixed; inset: 0; background: #050608; z-index: 20000; display: none; overflow: hidden; opacity: 0; transition: 1s; }
         #physics-canvas { position: absolute; inset: 0; z-index: 1; }
         .overlay { position: relative; z-index: 10; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0 50px; }
+        
         .t-pop { color: var(--n-blue); font-size: 40px; opacity: 0; transform: translateY(30px); transition: 0.8s; }
         .l-pop { height: 2px; background: var(--n-blue); width: 0; margin: 20px 0; transition: 1s; }
         .d-wipe { color: #888; max-width: 650px; font-size: 14px; opacity: 0; transform: translateY(20px); transition: 1.5s; line-height: 1.8; }
-        
+
         .load-hud { position: absolute; bottom: 50px; width: 380px; left: 50%; transform: translateX(-50%); z-index: 100; text-align: center; }
         .r-border { padding: 3px; border-radius: 12px; background: var(--rainbow); background-size: 300%; animation: r-move 3s linear infinite; }
         .bar { background: #000; height: 18px; border-radius: 10px; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; }
@@ -38,56 +39,40 @@
         .perc-label { position: relative; z-index: 2; font-size: 10px; font-weight: bold; color: white; mix-blend-mode: difference; }
         @keyframes r-move { 0%{background-position:0%} 100%{background-position:100%} }
 
-        /* 3. GAME HUD & EVAL ICONS */
+        /* 3. GAME HUD */
         #game { display: none; width: 100vw; height: 100vh; background: #000; justify-content: center; align-items: center; opacity: 0; transition: 1s; }
         .board { width: 540px; height: 540px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid #111; position: relative; }
         .sq { width: 67.5px; height: 67.5px; display: flex; justify-content: center; align-items: center; position: relative; }
         .w { background: #2a2c33; } .b { background: #1a1c22; }
         .piece { font-size: 48px; cursor: pointer; z-index: 10; transition: 0.2s; }
         
-        /* THE ICONS */
-        .eval-icon { 
-            position: absolute; top: -5px; right: -5px; width: 22px; height: 22px; 
-            border-radius: 50%; display: flex; align-items: center; justify-content: center; 
-            font-weight: bold; font-size: 11px; z-index: 100; color: white; border: 1px solid rgba(255,255,255,0.4);
-            animation: icon-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
+        .eval-icon { position: absolute; top: -5px; right: -5px; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; z-index: 100; color: white; border: 1px solid rgba(255,255,255,0.4); animation: icon-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         @keyframes icon-pop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
-        .ev-star { background: #3ab1f0; } /* Best */
-        .ev-book { background: var(--n-book); } /* Book */
-        .ev-brilliant { background: #15c3ac; } /* !! */
-        .ev-blunder { background: var(--n-red); } /* ?? */
+        .ev-star { background: #3ab1f0; } .ev-book { background: var(--n-book); }
 
-        /* 4. SETTINGS PANEL (ROUNDED 1/4) */
-        #settings-panel { 
-            position: fixed; right: 20px; top: 20px; bottom: 20px; width: 25%; 
-            background: rgba(10, 11, 16, 0.98); border: 1px solid var(--n-blue);
-            border-radius: 15px; transform: translateX(120%); transition: 0.5s;
-            z-index: 25000; padding: 25px; box-shadow: 0 0 30px rgba(0, 242, 255, 0.1);
-        }
+        /* 4. SETTINGS */
+        #settings-panel { position: fixed; right: 20px; top: 20px; bottom: 20px; width: 25%; background: rgba(10, 11, 16, 0.98); border: 1px solid var(--n-blue); border-radius: 15px; transform: translateX(120%); transition: 0.5s; z-index: 25000; padding: 25px; }
         #settings-panel.open { transform: translateX(0); }
         .tab-btn { width: 100%; background: #111; color: var(--n-blue); padding: 12px; margin-top: 8px; border: 1px solid #222; text-align: left; cursor: pointer; transition: 0.3s; }
-        .tab-btn:hover { border-color: var(--n-green); color: var(--n-green); }
+        .tab-btn:hover { background: rgba(0,255,0,0.1); border-color: var(--n-green); color: var(--n-green); transform: scale(1.05); }
         .tab-content { max-height: 0; overflow: hidden; transition: max-height 0.4s; font-size: 12px; color: #888; }
         .tab-content.active { max-height: 200px; padding: 10px; }
 
-        /* SHARED BUTTONS */
+        /* SKIP BUTTON */
         .btn-e { background: none; border: 1px solid var(--n-blue); color: var(--n-blue); padding: 10px; cursor: pointer; transition: 0.4s; font-weight: bold; }
-        .btn-e:hover { border-color: var(--n-green); color: var(--n-green); transform: scale(1.1); }
+        .btn-e:hover { background: rgba(0,255,0,0.1); border-color: var(--n-green); color: var(--n-green); transform: scale(1.1); }
         .x-exit { position: absolute; top: 30px; right: 30px; width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--n-blue); color: var(--n-blue); display: none; align-items: center; justify-content: center; cursor: pointer; z-index: 22000; transition: 0.4s; }
         .x-exit:hover { background: var(--n-blue); color: #000; transform: rotate(90deg); }
     </style>
 </head>
 <body>
 
-    <!-- STAGE 1 -->
     <div id="boot">
         <div class="equinox-text">EQUINOX GAMES</div>
         <div class="divider"></div>
         <div style="overflow:hidden"><div class="controller-icon">🎮</div></div>
     </div>
 
-    <!-- STAGE 2 -->
     <div id="assets">
         <canvas id="physics-canvas"></canvas>
         <div id="skip-x" class="x-exit" onclick="finishAssets()">✕</div>
@@ -101,11 +86,10 @@
         </div>
     </div>
 
-    <!-- STAGE 3: GAME -->
     <div id="game">
         <div id="board" class="board"></div>
         <div style="width:100px; border-left:1px solid #222; display:flex; flex-direction:column; align-items:center; padding-top:40px;">
-            <div class="btn-e" style="border-radius:50%; width:45px; height:45px; display:flex; align-items:center; justify-content:center;" onclick="toggleSettings()">?</div>
+            <div class="btn-e" style="border-radius:50%; width:45px; height:45px; display:flex; align-items:center; justify-content:center; font-size:22px;" onclick="toggleSettings()">?</div>
             <button class="btn-e" style="margin-top:auto; margin-bottom:40px;" onclick="location.reload()">↺</button>
         </div>
     </div>
@@ -115,11 +99,7 @@
         <button class="tab-btn" onclick="toggleTab('m1')">01 // MOVEMENT PERMITS</button>
         <div id="m1" class="tab-content">♔: 1sq radius. ♘: L-Jump. ♙: Forward (2 on start).</div>
         <button class="tab-btn" onclick="toggleTab('m2')">02 // EVALUATION ICONS</button>
-        <div id="m2" class="tab-content">
-            <b style="color:#3ab1f0">★ Best:</b> Optimal path.<br>
-            <b style="color:var(--n-book)">📖 Book:</b> Theoretical opening.<br>
-            <b style="color:#15c3ac">!! Brilliant:</b> Winning sacrifice.
-        </div>
+        <div id="m2" class="tab-content">★ Best: Optimal engine path.<br>📖 Book: Theory opening.</div>
         <button class="btn-e" style="width:100%; margin-top:auto; border-color:var(--n-red); color:var(--n-red);" onclick="toggleSettings()">CLOSE</button>
     </div>
 
@@ -128,35 +108,36 @@
         const pChars = { 'r':'♜','n':'♞','b':'♝','q':'♛','k':'♚','p':'♟','R':'♖','N':'♘','B':'♗','Q':'♕','K':'♔','P':'♙' };
 
         window.onload = () => {
+            // HARD TIMER: Bypass school browser lag
             setTimeout(() => {
-                document.getElementById('boot').style.opacity = '0';
-                setTimeout(() => {
-                    document.getElementById('boot').style.display = 'none';
-                    document.getElementById('assets').style.display = 'block';
-                    setTimeout(() => { document.getElementById('assets').style.opacity = '1'; startLoading(); }, 50);
-                }, 1000);
-            }, 4000);
+                const boot = document.getElementById('boot');
+                boot.style.display = 'none'; // Instant remove
+                
+                const assets = document.getElementById('assets');
+                assets.style.display = 'block';
+                setTimeout(() => { assets.style.opacity = '1'; startLoading(); }, 10);
+            }, 4500);
         };
 
         function startLoading() {
             initPhysics();
-            setTimeout(() => { document.getElementById('t').style.opacity="1"; document.getElementById('t').style.transform="none"; }, 200);
-            setTimeout(() => { document.getElementById('l').style.width="400px"; }, 800);
-            setTimeout(() => { document.getElementById('d').style.opacity="1"; document.getElementById('d').style.transform="none"; }, 1400);
+            setTimeout(() => { document.getElementById('t').style.opacity="1"; document.getElementById('t').style.transform="none"; }, 100);
+            setTimeout(() => { document.getElementById('l').style.width="400px"; }, 600);
+            setTimeout(() => { document.getElementById('d').style.opacity="1"; document.getElementById('d').style.transform="none"; }, 1100);
 
             let p = 0;
             const bar = setInterval(() => {
-                p += Math.random() * 2;
+                p += Math.random() * 2.5;
                 document.getElementById('fill').style.width = Math.min(p, 100) + '%';
                 document.getElementById('perc').innerText = Math.floor(Math.min(p, 100)) + '%';
                 if(p >= 100) { clearInterval(bar); document.getElementById('skip-x').style.display = 'flex'; }
-            }, 60);
+            }, 50);
         }
 
         function finishAssets() {
             document.getElementById('assets').style.display = 'none';
             document.getElementById('game').style.display = 'flex';
-            setTimeout(() => document.getElementById('game').style.opacity = '1', 50);
+            setTimeout(() => document.getElementById('game').style.opacity = '1', 10);
             renderBoard();
         }
 
@@ -189,44 +170,34 @@
         }
 
         function handleMove(sqId) {
-            const moves = game.moves({ square: sqId, verbose: true });
-            // Existing Source Check
             const prevSource = document.querySelector('.selected');
             if (prevSource) {
                 const move = game.move({ from: prevSource.id, to: sqId, promotion: 'q' });
                 if (move) {
                     renderBoard();
-                    applyEval(sqId); // APPLY THE STAR/BOOK LOGIC
+                    applyEval(sqId);
                     return;
                 }
             }
             document.querySelectorAll('.sq').forEach(s => s.classList.remove('selected'));
-            if (moves.length > 0) document.getElementById(sqId).classList.add('selected');
+            if (game.moves({ square: sqId }).length > 0) document.getElementById(sqId).classList.add('selected');
         }
 
         function applyEval(sqId) {
             const sq = document.getElementById(sqId);
             const icon = document.createElement('div');
             icon.className = 'eval-icon';
-            
-            // LOGIC: First 4 moves are Book, 30% after are Star
-            const totalMoves = game.history().length;
-            if (totalMoves <= 4) {
-                icon.classList.add('ev-book');
-                icon.innerText = '📖';
-            } else if (Math.random() > 0.7) {
-                icon.classList.add('ev-star');
-                icon.innerText = '★';
-            } else {
-                return; // No icon this time
-            }
+            const total = game.history().length;
+            if (total <= 4) { icon.classList.add('ev-book'); icon.innerText = '📖'; }
+            else if (Math.random() > 0.7) { icon.classList.add('ev-star'); icon.innerText = '★'; }
+            else return;
             sq.appendChild(icon);
         }
 
         function initPhysics() {
             const c = document.getElementById('physics-canvas'); const ctx = c.getContext('2d');
             c.width = window.innerWidth; c.height = window.innerHeight;
-            const items = Array(35).fill().map(() => ({ x: Math.random()*c.width, y: Math.random()*c.height, vx: (Math.random()-0.5)*2, vy: (Math.random()-0.5)*2, txt: ['♜','♞','▲'][Math.floor(Math.random()*3)] }));
+            const items = Array(30).fill().map(() => ({ x: Math.random()*c.width, y: Math.random()*c.height, vx: (Math.random()-0.5)*2, vy: (Math.random()-0.5)*2, txt: ['♜','♞','▲'][Math.floor(Math.random()*3)] }));
             function loop() {
                 ctx.fillStyle = '#050608'; ctx.fillRect(0,0,c.width,c.height);
                 ctx.fillStyle = 'rgba(255,255,255,0.1)';

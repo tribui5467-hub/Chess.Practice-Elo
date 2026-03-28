@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>Equinox Games | Tactical HUD</title>
-    <script src="https://cdnjs.cloudflare.com"></script>
     <style>
         :root { 
             --n-blue: #00f2ff; --n-green: #00ff00; --n-red: #ff4757; 
@@ -12,26 +11,24 @@
         }
         body, html { margin: 0; padding: 0; background: #000; color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; }
 
-        /* 1. BOOT SCREEN (FORCE HIDE) */
+        /* 1. BOOT SCREEN */
         #boot { position: fixed; inset: 0; background: black; z-index: 30000; display: flex; justify-content: center; align-items: center; transition: opacity 0.8s; }
         .equinox-text { font-size: 32px; letter-spacing: 12px; font-weight: 200; color: #fff; clip-path: inset(0 100% 0 0); animation: solaris-reveal 2s forwards; position: relative; }
         .equinox-text::after { content: "EQUINOX GAMES"; position: absolute; top: 0; left: 0; width: 100%; color: var(--n-blue); filter: blur(8px); clip-path: inset(0 100% 0 0); animation: solaris-shine 2s forwards; }
         @keyframes solaris-reveal { 0% { clip-path: inset(0 100% 0 0); opacity: 0; } 100% { clip-path: inset(0 0 0 0); opacity: 1; } }
         @keyframes solaris-shine { 0% { clip-path: inset(0 100% 0 0); } 50% { clip-path: inset(0 0 0 0); } 100% { clip-path: inset(0 0 0 100%); } }
         .divider { width: 2px; height: 40px; background: white; margin: 0 15px; transform: scaleY(0); animation: pop 0.5s forwards 1.8s; }
-        .controller-icon { font-size: 40px; transform: translateX(-100%); animation: slide 0.8s forwards 2.2s; }
+        .controller-icon { font-size: 40px; transform: translateX(-100%); opacity: 0; animation: slide 0.8s forwards 2.2s; }
         @keyframes pop { to { transform: scaleY(1); opacity: 1; } }
-        @keyframes slide { to { transform: translateX(0); } }
+        @keyframes slide { to { transform: translateX(0); opacity: 1; } }
 
         /* 2. ASSET LOADING HUD */
         #assets { position: fixed; inset: 0; background: #050608; z-index: 20000; display: none; overflow: hidden; opacity: 0; transition: 1s; }
         #physics-canvas { position: absolute; inset: 0; z-index: 1; }
-        .overlay { position: relative; z-index: 10; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0 50px; }
-        
+        .overlay { position: relative; z-index: 10; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0 50px; pointer-events: none; }
         .t-pop { color: var(--n-blue); font-size: 40px; opacity: 0; transform: translateY(30px); transition: 0.8s; }
         .l-pop { height: 2px; background: var(--n-blue); width: 0; margin: 20px 0; transition: 1s; }
         .d-wipe { color: #888; max-width: 650px; font-size: 14px; opacity: 0; transform: translateY(20px); transition: 1.5s; line-height: 1.8; }
-
         .load-hud { position: absolute; bottom: 50px; width: 380px; left: 50%; transform: translateX(-50%); z-index: 100; text-align: center; }
         .r-border { padding: 3px; border-radius: 12px; background: var(--rainbow); background-size: 300%; animation: r-move 3s linear infinite; }
         .bar { background: #000; height: 18px; border-radius: 10px; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; }
@@ -44,21 +41,18 @@
         .board { width: 540px; height: 540px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid #111; position: relative; }
         .sq { width: 67.5px; height: 67.5px; display: flex; justify-content: center; align-items: center; position: relative; }
         .w { background: #2a2c33; } .b { background: #1a1c22; }
-        .piece { font-size: 48px; cursor: pointer; z-index: 10; transition: 0.2s; }
-        
+        .piece { font-size: 48px; cursor: pointer; z-index: 10; transition: 0.2s; user-select: none; }
         .eval-icon { position: absolute; top: -5px; right: -5px; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; z-index: 100; color: white; border: 1px solid rgba(255,255,255,0.4); animation: icon-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         @keyframes icon-pop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
         .ev-star { background: #3ab1f0; } .ev-book { background: var(--n-book); }
 
         /* 4. SETTINGS */
-        #settings-panel { position: fixed; right: 20px; top: 20px; bottom: 20px; width: 25%; background: rgba(10, 11, 16, 0.98); border: 1px solid var(--n-blue); border-radius: 15px; transform: translateX(120%); transition: 0.5s; z-index: 25000; padding: 25px; }
+        #settings-panel { position: fixed; right: 20px; top: 20px; bottom: 20px; width: 300px; background: rgba(10, 11, 16, 0.98); border: 1px solid var(--n-blue); border-radius: 15px; transform: translateX(120%); transition: 0.5s; z-index: 25000; padding: 25px; }
         #settings-panel.open { transform: translateX(0); }
         .tab-btn { width: 100%; background: #111; color: var(--n-blue); padding: 12px; margin-top: 8px; border: 1px solid #222; text-align: left; cursor: pointer; transition: 0.3s; }
         .tab-btn:hover { background: rgba(0,255,0,0.1); border-color: var(--n-green); color: var(--n-green); transform: scale(1.05); }
         .tab-content { max-height: 0; overflow: hidden; transition: max-height 0.4s; font-size: 12px; color: #888; }
         .tab-content.active { max-height: 200px; padding: 10px; }
-
-        /* SKIP BUTTON */
         .btn-e { background: none; border: 1px solid var(--n-blue); color: var(--n-blue); padding: 10px; cursor: pointer; transition: 0.4s; font-weight: bold; }
         .btn-e:hover { background: rgba(0,255,0,0.1); border-color: var(--n-green); color: var(--n-green); transform: scale(1.1); }
         .x-exit { position: absolute; top: 30px; right: 30px; width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--n-blue); color: var(--n-blue); display: none; align-items: center; justify-content: center; cursor: pointer; z-index: 22000; transition: 0.4s; }
@@ -100,114 +94,119 @@
         <div id="m1" class="tab-content">♔: 1sq radius. ♘: L-Jump. ♙: Forward (2 on start).</div>
         <button class="tab-btn" onclick="toggleTab('m2')">02 // EVALUATION ICONS</button>
         <div id="m2" class="tab-content">★ Best: Optimal engine path.<br>📖 Book: Theory opening.</div>
-        <button class="btn-e" style="width:100%; margin-top:auto; border-color:var(--n-red); color:var(--n-red);" onclick="toggleSettings()">CLOSE</button>
+        <button class="tab-btn" onclick="toggleTab('m3')">03 // SYSTEM STATUS</button>
+        <div id="m3" class="tab-content">Neural Link: Stable. ELO Tracking: Active.</div>
+        <button class="btn-e" style="width:100%; margin-top:20px;" onclick="toggleSettings()">CLOSE HUD</button>
     </div>
 
     <script>
-        const game = new Chess();
-        const pChars = { 'r':'♜','n':'♞','b':'♝','q':'♛','k':'♚','p':'♟','R':'♖','N':'♘','B':'♗','Q':'♕','K':'♔','P':'♙' };
-
-        window.onload = () => {
-            // HARD TIMER: Bypass school browser lag
+        // 1. BOOT SEQUENCE
+        setTimeout(() => {
+            document.getElementById('boot').style.opacity = '0';
             setTimeout(() => {
-                const boot = document.getElementById('boot');
-                boot.style.display = 'none'; // Instant remove
-                
-                const assets = document.getElementById('assets');
-                assets.style.display = 'block';
-                setTimeout(() => { assets.style.opacity = '1'; startLoading(); }, 10);
-            }, 4500);
-        };
+                document.getElementById('boot').style.display = 'none';
+                startLoading();
+            }, 800);
+        }, 3500);
 
+        // 2. LOADING LOGIC
         function startLoading() {
-            initPhysics();
-            setTimeout(() => { document.getElementById('t').style.opacity="1"; document.getElementById('t').style.transform="none"; }, 100);
-            setTimeout(() => { document.getElementById('l').style.width="400px"; }, 600);
-            setTimeout(() => { document.getElementById('d').style.opacity="1"; document.getElementById('d').style.transform="none"; }, 1100);
+            const assets = document.getElementById('assets');
+            assets.style.display = 'block';
+            setTimeout(() => assets.style.opacity = '1', 50);
+
+            setTimeout(() => {
+                document.getElementById('t').style.opacity = '1';
+                document.getElementById('t').style.transform = 'translateY(0)';
+                document.getElementById('l').style.width = '300px';
+                document.getElementById('d').style.opacity = '1';
+                document.getElementById('d').style.transform = 'translateY(0)';
+            }, 600);
 
             let p = 0;
-            const bar = setInterval(() => {
+            const interval = setInterval(() => {
                 p += Math.random() * 2.5;
-                document.getElementById('fill').style.width = Math.min(p, 100) + '%';
-                document.getElementById('perc').innerText = Math.floor(Math.min(p, 100)) + '%';
-                if(p >= 100) { clearInterval(bar); document.getElementById('skip-x').style.display = 'flex'; }
+                if (p >= 100) {
+                    p = 100;
+                    clearInterval(interval);
+                    document.getElementById('skip-x').style.display = 'flex';
+                    setTimeout(finishAssets, 1500); 
+                }
+                document.getElementById('fill').style.width = p + '%';
+                document.getElementById('perc').innerText = Math.floor(p) + '%';
             }, 50);
+            initParticles();
         }
 
         function finishAssets() {
-            document.getElementById('assets').style.display = 'none';
-            document.getElementById('game').style.display = 'flex';
-            setTimeout(() => document.getElementById('game').style.opacity = '1', 10);
-            renderBoard();
+            document.getElementById('assets').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('assets').style.display = 'none';
+                document.getElementById('game').style.display = 'flex';
+                setTimeout(() => document.getElementById('game').style.opacity = '1', 50);
+                initBoard();
+            }, 1000);
         }
 
-        function toggleSettings() { document.getElementById('settings-panel').classList.toggle('open'); }
-        function toggleTab(id) {
-            const el = document.getElementById(id);
-            const active = el.classList.contains('active');
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            if(!active) el.classList.add('active');
-        }
-
-        function renderBoard() {
-            const b = document.getElementById('board'); b.innerHTML = '';
-            game.board().forEach((row, rIdx) => {
-                row.forEach((piece, cIdx) => {
-                    const sqId = String.fromCharCode(97 + cIdx) + (8 - rIdx);
+        // 3. CHESS BOARD
+        function initBoard() {
+            const board = document.getElementById('board');
+            const pieces = {
+                'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚', 'p': '♟',
+                'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔', 'P': '♙'
+            };
+            const start = [
+                ['r','n','b','q','k','b','n','r'], ['p','p','p','p','p','p','p','p'],
+                ['','','','','','','',''],['','','','','','','',''],
+                ['','','','','','','',''],['','','','','','','',''],
+                ['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']
+            ];
+            board.innerHTML = '';
+            for(let r=0; r<8; r++){
+                for(let c=0; c<8; c++){
                     const sq = document.createElement('div');
-                    sq.className = `sq ${(rIdx + cIdx) % 2 === 0 ? 'w' : 'b'}`;
-                    sq.id = sqId;
-                    sq.onclick = () => handleMove(sqId);
-                    if (piece) {
-                        const pEl = document.createElement('div');
-                        pEl.className = 'piece ' + (piece.color === 'w' ? 'white-p' : 'black-p');
-                        pEl.innerHTML = pChars[piece.color === 'w' ? piece.type.toUpperCase() : piece.type.toLowerCase()];
-                        sq.appendChild(pEl);
+                    sq.className = `sq ${(r+c)%2==0?'w':'b'}`;
+                    if(start[r][c]) {
+                        const p = document.createElement('div');
+                        p.className = 'piece';
+                        p.innerHTML = pieces[start[r][c]];
+                        if(Math.random() > 0.85) {
+                            const icon = document.createElement('div');
+                            icon.className = Math.random() > 0.5 ? 'eval-icon ev-star' : 'eval-icon ev-book';
+                            icon.innerHTML = icon.classList.contains('ev-star') ? '★' : '📖';
+                            sq.appendChild(icon);
+                        }
+                        sq.appendChild(p);
                     }
-                    b.appendChild(sq);
-                });
-            });
-        }
-
-        function handleMove(sqId) {
-            const prevSource = document.querySelector('.selected');
-            if (prevSource) {
-                const move = game.move({ from: prevSource.id, to: sqId, promotion: 'q' });
-                if (move) {
-                    renderBoard();
-                    applyEval(sqId);
-                    return;
+                    board.appendChild(sq);
                 }
             }
-            document.querySelectorAll('.sq').forEach(s => s.classList.remove('selected'));
-            if (game.moves({ square: sqId }).length > 0) document.getElementById(sqId).classList.add('selected');
         }
 
-        function applyEval(sqId) {
-            const sq = document.getElementById(sqId);
-            const icon = document.createElement('div');
-            icon.className = 'eval-icon';
-            const total = game.history().length;
-            if (total <= 4) { icon.classList.add('ev-book'); icon.innerText = '📖'; }
-            else if (Math.random() > 0.7) { icon.classList.add('ev-star'); icon.innerText = '★'; }
-            else return;
-            sq.appendChild(icon);
-        }
+        // 4. UI HELPERS
+        function toggleSettings() { document.getElementById('settings-panel').classList.toggle('open'); }
+        function toggleTab(id) { document.getElementById(id).classList.toggle('active'); }
 
-        function initPhysics() {
-            const c = document.getElementById('physics-canvas'); const ctx = c.getContext('2d');
-            c.width = window.innerWidth; c.height = window.innerHeight;
-            const items = Array(30).fill().map(() => ({ x: Math.random()*c.width, y: Math.random()*c.height, vx: (Math.random()-0.5)*2, vy: (Math.random()-0.5)*2, txt: ['♜','♞','▲'][Math.floor(Math.random()*3)] }));
-            function loop() {
-                ctx.fillStyle = '#050608'; ctx.fillRect(0,0,c.width,c.height);
-                ctx.fillStyle = 'rgba(255,255,255,0.1)';
-                items.forEach(i => {
-                    i.x+=i.vx; i.y+=i.vy; if(i.x<0||i.x>c.width) i.vx*=-1; if(i.y<0||i.y>c.height) i.vy*=-1;
-                    ctx.font = "24px serif"; ctx.fillText(i.txt, i.x, i.y);
+        // 5. BACKGROUND PARTICLES
+        function initParticles() {
+            const canvas = document.getElementById('physics-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            let parts = Array.from({length: 50}, () => ({
+                x: Math.random()*canvas.width, y: Math.random()*canvas.height,
+                s: Math.random()*2, v: Math.random()*0.5
+            }));
+            function draw() {
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+                ctx.fillStyle = '#00f2ff44';
+                parts.forEach(p => {
+                    ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, Math.PI*2); ctx.fill();
+                    p.y -= p.v; if(p.y < 0) p.y = canvas.height;
                 });
-                requestAnimationFrame(loop);
+                requestAnimationFrame(draw);
             }
-            loop();
+            draw();
         }
     </script>
 </body>

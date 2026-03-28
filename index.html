@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title>Chess-Practice | Elo</title>
-    <!-- 1. CORE ENGINES (MUST LOAD FIRST) -->
     <script src="https://cdnjs.cloudflare.com"></script>
     <style>
         body { margin: 0; background: #0a0b10; overflow: hidden; font-family: 'Segoe UI', sans-serif; color: white; user-select: none; display: flex; justify-content: center; align-items: center; height: 100vh; }
         
-        /* 2. THE BOOT HUD BOX */
+        /* 1. BOOT SCREEN & HUD BOX */
         #boot-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #0a0b10; z-index: 5000;
@@ -23,43 +22,55 @@
 
         #hud-container { display: none; flex-direction: column; align-items: center; text-align: center; padding: 0 60px; }
         
-        /* THE POPPING LINE */
-        @keyframes popLine { 0% { width: 0; opacity: 0; } 100% { width: 100%; opacity: 1; } }
-        .baseline { height: 2px; background: #00f2ff; width: 0; margin: 15px 0; box-shadow: 0 0 10px #00f2ff; }
-        .line-active { animation: popLine 0.6s ease-out forwards; }
+        /* THE POPPING LINE ANIMATION */
+        @keyframes lineGrow { from { width: 0; opacity: 0; } to { width: 100%; opacity: 1; } }
+        .baseline { height: 2px; background: #00f2ff; margin: 15px 0; box-shadow: 0 0 10px #00f2ff; width: 0; opacity: 0; }
+        .line-active { animation: lineGrow 0.8s ease-out forwards; animation-delay: 0.2s; }
 
         h1 { font-size: 2.2rem; margin: 0; color: #fff; letter-spacing: 3px; }
         .description { font-size: 0.95rem; line-height: 1.6; color: #bbb; max-width: 800px; }
 
-        /* 3. COLLAPSIBLE SIDEBAR */
+        /* 2. GAME LAYER & SIDEBAR */
         #game-layer { display: none; width: 100vw; height: 100vh; justify-content: center; align-items: center; opacity: 0; transition: opacity 1s; }
         #game-layer.visible { display: flex; opacity: 1; }
 
         #settings-sidebar { 
             width: 25vw; height: 100vh; background: rgba(10, 11, 16, 0.96); border-left: 2px solid #00ff00; 
             padding: 30px; display: flex; flex-direction: column; transition: transform 0.5s ease;
-            position: relative; z-index: 100;
+            position: relative; z-index: 100; box-sizing: border-box;
         }
         #settings-sidebar.collapsed { transform: translateX(100%); margin-right: -25vw; }
 
-        /* ROTATING GEAR & HELP ICON */
         .sidebar-controls { position: absolute; left: -60px; top: 20px; display: flex; flex-direction: column; gap: 10px; }
         .control-tab { background: rgba(10, 11, 16, 0.9); border: 2px solid #00ff00; border-right: none; padding: 10px; border-radius: 10px 0 0 10px; cursor: pointer; }
         .gear { width: 30px; height: 30px; fill: #00ff00; animation: spin 5s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
-
-        /* CIRCULAR ? ICON */
         .help-circle { width: 30px; height: 30px; border: 2px solid #00ff00; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #00ff00; font-weight: bold; }
 
-        /* 4. CHESSBOARD (Semi-Transparent) */
-        #board-area { flex: 1; display: flex; justify-content: center; align-items: center; }
+        /* 3. CHESSBOARD (Semi-Transparent) */
+        #board-area { flex: 1; display: flex; justify-content: center; align-items: center; transition: all 0.5s ease; }
         .board { width: 500px; height: 500px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid rgba(0, 242, 255, 0.4); background: rgba(10, 11, 16, 0.5); backdrop-filter: blur(8px); }
         .sq { width: 62.5px; height: 62.5px; display: flex; justify-content: center; align-items: center; position: relative; }
         .w { background: rgba(255, 255, 255, 0.05); } .b { background: rgba(0, 0, 0, 0.4); }
-        .piece { font-size: 48px; color: white; cursor: grab; z-index: 10; opacity: 0.3; pointer-events: none; }
+        
+        .piece { font-size: 48px; color: white; cursor: grab; z-index: 10; opacity: 0.35; transition: opacity 0.5s; pointer-events: none; }
         .game-active .piece { opacity: 1; pointer-events: auto; }
 
-        .play-btn { margin-top: auto; width: 100%; padding: 20px; background: none; border: 2px solid #00f2ff; color: #00f2ff; font-weight: bold; cursor: pointer; font-size: 1.1rem; }
+        /* VIDEO-ACCURATE ANALYSIS ICONS */
+        .icon { 
+            position: absolute; top: -8px; right: -8px; 
+            width: 24px; height: 24px; border-radius: 50%; 
+            display: flex; justify-content: center; align-items: center; 
+            font-weight: 900; font-size: 14px; color: #000;
+            border: 2px solid #fff; z-index: 20;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        .brilliant { background: #00e6ff; } /* Neon/Brilliant Blue */
+        .good { background: #2ecc71; } /* Great Move Green */
+        .book { background: #a6db2d; } /* Theory/Book Lime */
+
+        .play-btn { margin-top: auto; width: 100%; padding: 20px; background: none; border: 2px solid #00f2ff; color: #00f2ff; font-weight: bold; cursor: pointer; letter-spacing: 2px; }
         #particle-canvas { position: fixed; top: 0; left: 0; z-index: -1; pointer-events: none; }
     </style>
 </head>
@@ -88,14 +99,14 @@
                 <div class="control-tab"><div class="help-circle">?</div></div>
             </div>
             <div style="font-weight:bold; color:#00ff00; border-bottom:1px solid #00ff00; padding-bottom:10px;">SETTINGS</div>
-            <div style="margin-top:20px; font-size:14px;">System Volume: <b>85%</b></div>
-            <div style="margin-top:20px; font-size:14px;">Engine Depth: <b>24-Ply</b></div>
+            <div style="margin-top:20px; font-size:14px;">Move Audio: <b>ENABLED</b></div>
+            <div style="margin-top:20px; font-size:14px;">Engine Volume: <b>85%</b></div>
             <button class="play-btn" id="play-btn" onclick="activateBoard()">Play</button>
         </div>
     </div>
 
     <script>
-        // --- 1. BOOT SEQUENCE ---
+        // --- 1. BOOT & LAUNCH ---
         window.onload = () => {
             document.getElementById('bar').style.width = '100%';
             setTimeout(() => {
@@ -104,7 +115,7 @@
                 document.getElementById('hud-container').style.display = 'flex';
                 document.getElementById('line').classList.add('line-active');
                 initParticles(); 
-                renderBoard();
+                renderBoard(); 
             }, 2300);
         };
 
@@ -120,36 +131,63 @@
         function activateBoard() { 
             document.getElementById('chess-board').classList.add('game-active');
             document.getElementById('play-btn').innerText = "ONLINE";
+            document.getElementById('play-btn').style.borderColor = "#00ff00";
+            document.getElementById('play-btn').style.color = "#00ff00";
         }
 
-        // --- 2. CHESS LOGIC ---
+        // --- 2. CHESS RENDER LOGIC ---
         const game = new Chess();
+        const pChars = { 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚', 'p': '♟', 'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔', 'P': '♙' };
+        let sourceSq = null;
+
         function renderBoard() {
             const boardEl = document.getElementById('chess-board');
             boardEl.innerHTML = '';
             game.board().forEach((row, rIdx) => {
                 row.forEach((piece, cIdx) => {
+                    const sqId = String.fromCharCode(97 + cIdx) + (8 - rIdx);
                     const sq = document.createElement('div');
                     sq.className = 'sq ' + ((rIdx + cIdx) % 2 === 0 ? 'w' : 'b');
+                    sq.id = sqId;
+                    
                     if (piece) {
                         const pEl = document.createElement('div');
                         pEl.className = 'piece';
-                        pEl.innerHTML = piece.color === 'w' ? piece.type.toUpperCase() : piece.type.toLowerCase();
+                        const char = piece.color === 'w' ? piece.type.toUpperCase() : piece.type.toLowerCase();
+                        pEl.innerHTML = pChars[char];
                         pEl.style.color = piece.color === 'w' ? '#fff' : '#444';
+                        pEl.draggable = true;
+
+                        // Analysis Icons accurate to video (Placed on start positions)
+                        if (sqId === 'g1' || sqId === 'b8') {
+                            const icon = document.createElement('div');
+                            icon.className = 'icon book'; icon.innerHTML = '📖'; sq.appendChild(icon);
+                        }
+                        if (sqId === 'e1' || sqId === 'e8') {
+                            const icon = document.createElement('div');
+                            icon.className = 'icon brilliant'; icon.innerHTML = '!!'; sq.appendChild(icon);
+                        }
+
+                        pEl.addEventListener('dragstart', () => { sourceSq = sqId; });
                         sq.appendChild(pEl);
                     }
+                    sq.addEventListener('dragover', e => e.preventDefault());
+                    sq.addEventListener('drop', e => {
+                        e.preventDefault();
+                        if (game.move({ from: sourceSq, to: sq.id, promotion: 'q' })) renderBoard();
+                    });
                     boardEl.appendChild(sq);
                 });
             });
         }
 
-        // --- 3. PARTICLES (FORCE DRAW) ---
+        // --- 3. PARTICLES ---
         const canvas = document.getElementById('particle-canvas');
         const ctx = canvas.getContext('2d');
         let particles = [];
         function initParticles() {
             canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-            for(let i=0; i<150; i++) particles.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, s: Math.random()*2, v: Math.random()*0.5+0.2 });
+            for(let i=0; i<180; i++) particles.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, s: Math.random()*2.2, v: Math.random()*0.5+0.2 });
             animate();
         }
         function animate() {

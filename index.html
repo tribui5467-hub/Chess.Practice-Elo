@@ -6,54 +6,49 @@
     <style>
         :root { 
             --n-blue: #00f2ff; --n-green: #81b64c; --n-red: #fa412d; 
-            --n-orange: #f4943c; --n-yellow: #f1c40f;
+            --n-orange: #f4943c; --n-yellow: #f1c40f; --n-pink: #ff00ff;
         }
         body, html { margin: 0; padding: 0; background: #000; color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; width: 100vw; }
 
-        #particle-canvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
+        canvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 
-        /* --- 1. UPDATED BOOT SCREEN --- */
+        /* --- 1. BOOT SCREEN --- */
         #boot { position: fixed; inset: 0; background: black; z-index: 30000; display: flex; justify-content: center; align-items: center; transition: opacity 1s ease; }
         .equinox-text { font-size: 32px; letter-spacing: 12px; font-weight: 200; color: #fff; clip-path: inset(0 100% 0 0); animation: reveal 2.5s forwards; }
-        .divider { width: 2px; height: 40px; background: white; margin: 0 25px; transform: scaleY(0); animation: pop-divider 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards 2s; }
-        .controller-box { position: relative; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .divider { width: 2px; height: 40px; background: white; margin: 0 25px; transform: scaleY(0); animation: pop-divider 0.6s forwards 2s; }
+        .controller-box { position: relative; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; }
         .aura-circle {
             position: absolute; width: 60px; height: 60px; border-radius: 50%; border: 3px solid var(--n-blue);
             opacity: 0; box-shadow: 0 0 25px var(--n-blue);
             animation: aura-glow 1s forwards 3s, aura-color-pulse 3s infinite alternate 4s;
         }
-        .controller-icon { font-size: 42px; transform: translateX(-150%); animation: slide-in 0.8s ease-out forwards 2.5s; }
+        .controller-icon { font-size: 42px; transform: translateX(-150%); animation: slide-in 0.8s forwards 2.5s; }
 
         @keyframes reveal { to { clip-path: inset(0 0 0 0); } }
         @keyframes pop-divider { to { transform: scaleY(1); } }
         @keyframes slide-in { to { transform: translateX(0); } }
         @keyframes aura-glow { from { opacity: 0; transform: scale(0.4); } to { opacity: 1; transform: scale(1); } }
-        @keyframes aura-color-pulse { 0% { border-color: var(--n-blue); box-shadow: 0 0 20px var(--n-blue); } 100% { border-color: #ff00ff; box-shadow: 0 0 40px #ff00ff; transform: scale(1.1); } }
+        @keyframes aura-color-pulse { 0% { border-color: var(--n-blue); box-shadow: 0 0 20px var(--n-blue); } 100% { border-color: var(--n-pink); box-shadow: 0 0 40px var(--n-pink); transform: scale(1.1); } }
 
-        /* --- 2. RAINBOW LOADING SCREEN --- */
+        /* --- 2. LOADING SCREEN --- */
         #assets { position: fixed; inset: 0; background: #050608; z-index: 20000; display: none; opacity: 0; transition: 1s; flex-direction: column; align-items: center; justify-content: center; }
-        
-        /* Rainbow Gradient Border */
         .rainbow-container {
-            padding: 3px; border-radius: 10px;
-            background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff);
-            background-size: 400% 400%;
-            animation: rainbow-flow 3s linear infinite;
-            margin: 20px;
+            padding: 3px; border-radius: 10px; margin: 20px;
+            background: linear-gradient(90deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
+            background-size: 400%; animation: rainbow-flow 3s linear infinite;
         }
-        .bar { width: 400px; height: 14px; background: #000; border-radius: 7px; overflow: hidden; position: relative; }
+        .bar { width: 400px; height: 14px; background: #000; border-radius: 7px; overflow: hidden; }
         #fill { width: 0%; height: 100%; background: var(--n-blue); box-shadow: 0 0 15px var(--n-blue); }
-
-        @keyframes rainbow-flow { 0% { background-position: 0% 50%; } 100% { background-position: 100% 50%; } }
+        @keyframes rainbow-flow { to { background-position: 400%; } }
 
         /* --- 3. GAME HUD --- */
         #game { display: none; width: 100vw; height: 100vh; justify-content: center; align-items: center; opacity: 0; transition: 1.5s; z-index: 5; position: relative; }
-        .board { width: 560px; height: 560px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid #111; background: rgba(0,0,0,0.8); }
+        .board { width: 560px; height: 560px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid #111; background: rgba(0,0,0,0.85); }
         .sq { width: 70px; height: 70px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s; position: relative; }
-        .w { background: rgba(42, 44, 51, 0.8); } .b { background: rgba(26, 28, 34, 0.8); }
-        .piece { font-size: 48px; user-select: none; z-index: 2; }
-        
-        /* Neon Hover Logic */
+        .w { background: rgba(45, 45, 55, 0.8); } .b { background: rgba(20, 20, 25, 0.8); }
+        .piece { font-size: 48px; user-select: none; z-index: 2; transition: transform 0.2s; }
+
+        /* NEON HOVER SYSTEM */
         .sq:hover { z-index: 10; outline: 2px solid; }
         .sq[data-rank="royal"]:hover { outline-color: var(--n-red); box-shadow: 0 0 20px var(--n-red), inset 0 0 10px var(--n-red); }
         .sq[data-rank="heavy"]:hover { outline-color: var(--n-orange); box-shadow: 0 0 20px var(--n-orange), inset 0 0 10px var(--n-orange); }
@@ -61,7 +56,7 @@
         .sq[data-rank="pawn"]:hover { outline-color: var(--n-green); box-shadow: 0 0 20px var(--n-green), inset 0 0 10px var(--n-green); }
 
         .death-icon { position: absolute; font-size: 30px; pointer-events: none; z-index: 1000; animation: death-pop 1s forwards; }
-        @keyframes death-pop { 0% { transform: scale(0.5) translateY(0); opacity: 1; } 100% { transform: scale(1.5) translateY(-50px); opacity: 0; } }
+        @keyframes death-pop { 0% { transform: scale(0.5) translateY(0); opacity: 1; } 100% { transform: scale(1.5) translateY(-60px); opacity: 0; } }
 
         /* --- 4. SIDEBAR & LEGEND --- */
         #settings-panel { position: fixed; right: 20px; top: 5vh; bottom: 5vh; width: 25vw; background: rgba(5,6,8,0.98); border: 1px solid var(--n-blue); border-radius: 15px; transform: translateX(120%); transition: 0.5s; z-index: 25000; padding: 25px; display: flex; flex-direction: column; }
@@ -70,16 +65,14 @@
         #icon-legend.active { bottom: 20%; }
         .tab-content { display: none; max-height: 400px; overflow-y: auto; }
         .tab-content.active { display: block; }
-        .asset-card { border-left: 3px solid var(--n-blue); background: rgba(255,255,255,0.05); padding: 10px; margin-bottom: 12px; font-size: 12px; }
-        .importance { display: block; margin-top: 5px; font-weight: bold; border-top: 1px solid #333; padding-top: 5px; }
-        .tab-btn { background: #111; border: 1px solid #333; color: #fff; padding: 8px; cursor: pointer; flex: 1; }
+        .asset-card { border-left: 3px solid var(--n-blue); background: rgba(255,255,255,0.05); padding: 10px; margin-bottom: 12px; font-size: 12px; line-height: 1.4; }
+        .tab-btn { background: #111; border: 1px solid #333; color: #fff; padding: 8px; cursor: pointer; flex: 1; font-size: 11px; }
     </style>
 </head>
 <body>
 
     <canvas id="particle-canvas"></canvas>
 
-    <!-- BOOT SCREEN WITH CONTROLLER -->
     <div id="boot">
         <div class="equinox-text">EQUINOX GAMES</div>
         <div class="divider"></div>
@@ -89,10 +82,9 @@
         </div>
     </div>
 
-    <!-- LOADING SCREEN WITH RAINBOW BAR -->
     <div id="assets">
         <h1 style="color:var(--n-blue); letter-spacing:5px;">DEPLOYING ASSETS</h1>
-        <div id="loading-board" style="width:200px; height:200px; display:grid; grid-template:repeat(8,1fr)/repeat(8,1fr); gap:2px; margin-bottom:20px;"></div>
+        <div id="loading-board" style="width:240px; height:240px; display:grid; grid-template:repeat(8,1fr)/repeat(8,1fr); gap:2px; margin-bottom:20px;"></div>
         <div class="rainbow-container">
             <div class="bar"><div id="fill"></div></div>
         </div>
@@ -119,38 +111,66 @@
             <button class="tab-btn" onclick="showTab('icon-tab')">ICONS</button>
         </div>
         <div id="asset-tab" class="tab-content active">
-            <div class="asset-card"><b>♔ KING</b> Moves 1 square. | Importance: <span style="color:var(--n-red)">RED-CRITICAL</span></div>
-            <div class="asset-card"><b>♕ QUEEN</b> Moves straight/diagonal. | Importance: <span style="color:var(--n-red)">RED-CRITICAL</span></div>
-            <div class="asset-card"><b>♖ ROOK</b> Moves straight. | Importance: <span style="color:var(--n-orange)">ORANGE-SIGNIFICANT</span></div>
-            <div class="asset-card"><b>♗ BISHOP</b> Moves diagonal. | Importance: <span style="color:var(--n-orange)">ORANGE-SIGNIFICANT</span></div>
-            <div class="asset-card"><b>♘ KNIGHT</b> L-shape leap. | Importance: <span style="color:var(--n-yellow)">YELLOW-MODERATE</span></div>
-            <div class="asset-card"><b>♙ PAWN</b> Moves forward, caps diagonal. | Importance: <span style="color:var(--n-green)">GREEN-EXPANDABLE</span></div>
+            <div class="asset-card"><b>♔/♚ KING</b> Moves 1 square in any direction. Captures by occupying target square. | Importance: <span style="color:var(--n-red)">RED-CRITICAL</span></div>
+            <div class="asset-card"><b>♕/♛ QUEEN</b> Moves any distance straight/diagonal. Captures by displacement. | Importance: <span style="color:var(--n-red)">RED-CRITICAL</span></div>
+            <div class="asset-card"><b>♖/♜ ROOK</b> Moves any distance horizontally/vertically. | Importance: <span style="color:var(--n-orange)">ORANGE-SIGNIFICANT</span></div>
+            <div class="asset-card"><b>♗/♝ BISHOP</b> Moves any distance diagonally. Confined to tile color. | Importance: <span style="color:var(--n-orange)">ORANGE-SIGNIFICANT</span></div>
+            <div class="asset-card"><b>♘/♞ KNIGHT</b> L-shape leap. Only piece able to jump over units. | Importance: <span style="color:var(--n-yellow)">YELLOW-MODERATE</span></div>
+            <div class="asset-card"><b>♙/♟ PAWN</b> Moves 1 forward, captures 1 diagonally forward. | Importance: <span style="color:var(--n-green)">GREEN-EXPANDABLE</span></div>
         </div>
         <div id="icon-tab" class="tab-content">
-            <div class="asset-card"><b>!!</b> Brilliant | <b>★</b> Best | <b>?</b> Mistake | <b>??</b> Blunder</div>
+            <div class="asset-card"><b style="color:var(--n-blue)">!! BRILLIANT:</b> A winning sacrifice.</div>
+            <div class="asset-card"><b style="color:var(--n-yellow)">★ BEST:</b> Top engine move.</div>
+            <div class="asset-card"><b style="color:var(--n-orange)">? MISTAKE:</b> Lost advantage.</div>
+            <div class="asset-card"><b style="color:var(--n-red)">?? BLUNDER:</b> Major tactical error.</div>
         </div>
     </div>
 
     <script>
-        // --- PARTICLES & DEBRIS ---
+        // --- 1. BACKGROUND FLOATING ASSETS ---
         const pCanvas = document.getElementById('particle-canvas');
         const pCtx = pCanvas.getContext('2d');
-        let parts = [], debris = [];
-        function initParts() {
+        let parts = [], floatingAssets = [], debris = [];
+        const symbols = ['♔','♕','♖','♗','♘','♙','■','□','♚','♛','♜','♝','♞','♟'];
+
+        function initBG() {
             pCanvas.width = window.innerWidth; pCanvas.height = window.innerHeight;
-            for(let i=0; i<60; i++) parts.push({ x:Math.random()*pCanvas.width, y:Math.random()*pCanvas.height, s:Math.random()*2, v:Math.random()*0.5+0.1 });
-        }
-        function draw() {
-            pCtx.clearRect(0,0,pCanvas.width,pCanvas.height);
-            pCtx.fillStyle='rgba(255,255,255,0.2)';
-            parts.forEach(p=>{ p.y-=p.v; if(p.y<0) p.y=pCanvas.height; pCtx.fillRect(p.x,p.y,p.s,p.s); });
-            debris.forEach((d,i)=>{ d.x+=d.vx; d.y+=d.vy; d.life-=0.02; if(d.life<=0) debris.splice(i,1); pCtx.fillStyle=`rgba(255,77,77,${d.life})`; pCtx.fillRect(d.x,d.y,d.s,d.s); });
-            requestAnimationFrame(draw);
+            for(let i=0; i<50; i++) parts.push({ x:Math.random()*pCanvas.width, y:Math.random()*pCanvas.height, s:Math.random()*2, v:Math.random()*0.4 });
+            for(let i=0; i<12; i++) floatingAssets.push({
+                x: Math.random()*pCanvas.width, y: Math.random()*pCanvas.height,
+                s: Math.random()*30+15, v: Math.random()*0.3+0.1,
+                rot: Math.random()*360, rotV: (Math.random()-0.5)*0.5,
+                sym: symbols[Math.floor(Math.random()*symbols.length)]
+            });
         }
 
-        // --- GAME ENGINE ---
+        function drawLoop() {
+            pCtx.clearRect(0,0,pCanvas.width,pCanvas.height);
+            // Floating Pieces & Fragments
+            pCtx.fillStyle = 'rgba(0, 242, 255, 0.08)';
+            floatingAssets.forEach(a => {
+                a.y -= a.v; a.rot += a.rotV;
+                if(a.y < -50) a.y = pCanvas.height + 50;
+                pCtx.save();
+                pCtx.translate(a.x, a.y); pCtx.rotate(a.rot * Math.PI/180);
+                pCtx.font = `${a.s}px serif`; pCtx.fillText(a.sym, 0, 0);
+                pCtx.restore();
+            });
+            // Dust
+            pCtx.fillStyle = 'rgba(255,255,255,0.15)';
+            parts.forEach(p => { p.y -= p.v; if(p.y<0) p.y=pCanvas.height; pCtx.fillRect(p.x, p.y, p.s, p.s); });
+            // Red Debris
+            debris.forEach((d,i) => {
+                d.x+=d.vx; d.y+=d.vy; d.life-=0.02;
+                if(d.life<=0) debris.splice(i,1);
+                pCtx.fillStyle=`rgba(255,77,77,${d.life})`; pCtx.fillRect(d.x,d.y,d.s,d.s);
+            });
+            requestAnimationFrame(drawLoop);
+        }
+
+        // --- 2. GAME ENGINE ---
         let turn = 'white', selectedSq = null;
-        const pieces = { 'r':'♜','n':'♞','b':'♝','q':'♛','k':'♚','p':'♟','R':'♖','N':'♘','B':'♗','Q':'♕','K':'♔','P':'♙' };
+        const pieceIcons = { 'r':'♜','n':'♞','b':'♝','q':'♛','k':'♚','p':'♟','R':'♖','N':'♘','B':'♗','Q':'♕','K':'♔','P':'♙' };
         let board = [['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],['','','','','','','',''],['','','','','','','',''],['','','','','','','',''],['','','','','','','',''],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']];
 
         function renderBoard() {
@@ -159,7 +179,7 @@
                 const sq = document.createElement('div'); sq.className = `sq ${(r+c)%2===0?'w':'b'}`;
                 sq.dataset.r=r; sq.dataset.c=c;
                 if(p) {
-                    const span = document.createElement('span'); span.className='piece'; span.innerText=pieces[p];
+                    const span = document.createElement('span'); span.className='piece'; span.innerText=pieceIcons[p];
                     span.style.color = p===p.toUpperCase()?'#fff':'var(--n-blue)';
                     sq.appendChild(span);
                     const t = p.toLowerCase();
@@ -172,7 +192,7 @@
         function handleClick(r,c) {
             if(selectedSq) {
                 const [sr,sc] = selectedSq;
-                if(board[r][c]!=='') {
+                if(board[r][c]!=='' && (board[r][c]===board[r][c].toUpperCase()) !== (board[sr][sc]===board[sr][sc].toUpperCase())) {
                     const rect = document.querySelector(`[data-r="${r}"][data-c="${c}"]`).getBoundingClientRect();
                     showDeath(rect.left+35, rect.top+35);
                 }
@@ -184,22 +204,26 @@
                 const p = board[r][c];
                 if((turn==='white'&&p===p.toUpperCase())||(turn==='black'&&p===p.toLowerCase())){
                     selectedSq=[r,c]; renderBoard();
-                    document.querySelector(`[data-r="${r}"][data-c="${c}"]`).style.background="rgba(0,242,255,0.3)";
+                    document.querySelector(`[data-r="${r}"][data-c="${c}"]`).style.background="rgba(0,242,255,0.25)";
                 }
             }
         }
 
         function showDeath(x,y) {
             const s=document.createElement('div'); s.className='death-icon'; s.innerText='💀'; s.style.left=`${x-15}px`; s.style.top=`${y-15}px`; document.body.appendChild(s);
-            for(let i=0;i<15;i++) debris.push({x,y,vx:(Math.random()-0.5)*10,vy:(Math.random()-0.5)*10,life:1,s:Math.random()*4+2});
+            for(let i=0;i<18;i++) debris.push({x,y,vx:(Math.random()-0.5)*12,vy:(Math.random()-0.5)*12,life:1,s:Math.random()*5+2});
             setTimeout(()=>s.remove(),1000);
         }
 
-        // --- BOOT CONTROLLER ---
+        // --- 3. UI & LIFECYCLE ---
+        function toggleSettings() { document.getElementById('settings-panel').classList.toggle('open'); }
+        function toggleLegend() { document.getElementById('icon-legend').classList.toggle('active'); }
+        function showTab(id) { document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+
         window.onload = () => {
-            initParts(); draw();
+            initBG(); drawLoop();
             const lb = document.getElementById('loading-board');
-            for(let i=0; i<64; i++){ let d=document.createElement('div'); d.style.background=(Math.floor(i/8)+i)%2===0?'#111':'#050505'; d.id=`ls-${i}`; lb.appendChild(d); }
+            for(let i=0; i<64; i++){ let d=document.createElement('div'); d.style.background=(Math.floor(i/8)+i)%2===0?'#111':'#080808'; d.id=`ls-${i}`; lb.appendChild(d); }
             
             setTimeout(() => {
                 document.getElementById('boot').style.opacity = '0';
@@ -208,18 +232,15 @@
                     document.getElementById('assets').style.display='flex';
                     setTimeout(()=>document.getElementById('assets').style.opacity='1',50);
                     let p=0; let iv=setInterval(()=>{
-                        p+=2; document.getElementById('fill').style.width=p+'%'; document.getElementById('perc').innerText=p+'%';
+                        p+=2.5; document.getElementById('fill').style.width=p+'%'; document.getElementById('perc').innerText=Math.floor(p)+'%';
                         let si=Math.floor((p/100)*64); let t=document.getElementById(`ls-${si}`);
-                        if(t) t.style.boxShadow="inset 0 0 8px var(--n-blue)";
+                        if(t) { t.style.boxShadow="inset 0 0 10px var(--n-blue)"; t.style.border="1px solid var(--n-blue)"; }
                         if(p>=100){ clearInterval(iv); setTimeout(launch,800); }
                     },50);
-                },1000);
+                }, 1000);
             }, 5000);
         };
         function launch() { document.getElementById('assets').style.display='none'; document.getElementById('game').style.display='flex'; setTimeout(()=>document.getElementById('game').style.opacity='1',50); renderBoard(); }
-        function toggleSettings() { document.getElementById('settings-panel').classList.toggle('open'); }
-        function toggleLegend() { document.getElementById('icon-legend').classList.toggle('active'); }
-        function showTab(id) { document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active')); document.getElementById(id).classList.add('active'); }
     </script>
 </body>
 </html>

@@ -2,132 +2,103 @@
 <html lang="en-AU">
 <head>
     <meta charset="UTF-8">
-    <title>Equinox Games | Chess</title>
+    <title>Equinox Games | Solaris HUD v12</title>
     <style>
         :root { 
             --n-blue: #00f2ff; --n-green: #81b64c; --n-red: #fa412d; 
             --n-orange: #f4943c; --n-yellow: #f1c40f; --n-pink: #ff00ff;
             --smooth: cubic-bezier(0.4, 0, 0.2, 1);
         }
-        body, html { margin: 0; padding: 0; background: #000; color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; width: 100vw; }
+        body, html { margin: 0; padding: 0; background: #000; color: white; font-family: 'Segoe UI', Tahoma, sans-serif; overflow: hidden; height: 100vh; width: 100vw; }
         canvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 
-        /* --- BOOT & SMOOTH LOADING --- */
+        /* --- 1. BOOT SCREEN --- */
         #boot { position: fixed; inset: 0; background: black; z-index: 30000; display: flex; justify-content: center; align-items: center; transition: 1s; }
-        #assets { position: fixed; inset: 0; background: #050608; z-index: 20000; display: none; opacity: 0; transition: 1s; flex-direction: column; align-items: center; justify-content: center; }
-        .bar { width: 400px; height: 24px; background: #000; border-radius: 12px; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; border: 1px solid #333; }
-        #fill { position: absolute; left: 0; width: 0%; height: 100%; background: var(--n-blue); box-shadow: 0 0 15px var(--n-blue); transition: width 0.4s var(--smooth); } /* Liquid Smooth */
-        #perc { position: relative; z-index: 2; font-weight: bold; mix-blend-mode: difference; }
+        .equinox-text { font-size: 32px; letter-spacing: 12px; font-weight: 200; color: #fff; clip-path: inset(0 100% 0 0); animation: reveal 2.5s forwards; }
+        .divider { width: 2px; height: 40px; background: white; margin: 0 25px; transform: scaleY(0); animation: pop-divider 0.6s var(--smooth) forwards 2s; }
+        .controller-box { position: relative; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .controller-icon { font-size: 42px; transform: translateX(-180%); animation: slide-in 0.8s var(--smooth) forwards 2.5s; }
 
-        /* --- GAME & GEAR --- */
+        @keyframes reveal { to { clip-path: inset(0 0 0 0); } }
+        @keyframes pop-divider { to { transform: scaleY(1); } }
+        @keyframes slide-in { to { transform: translateX(0); } }
+
+        /* --- 2. ELO LOADING SCREEN --- */
+        #assets { position: fixed; inset: 0; background: #050608; z-index: 20000; display: none; opacity: 0; transition: 1.5s; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 0 40px; }
+        
+        .elo-title { font-size: 48px; color: var(--n-blue); opacity: 0; transform: translateY(50px); animation: baseline-up 1s var(--smooth) forwards 0.5s; }
+        .elo-line { width: 0; height: 2px; background: var(--n-blue); margin: 15px 0; animation: pop-line 0.8s var(--smooth) forwards 1.2s; }
+        .elo-desc { font-size: 16px; color: #888; max-width: 700px; line-height: 1.6; opacity: 0; clip-path: inset(0 0 100% 0); animation: wipe-down 1.5s var(--smooth) forwards 1.8s; }
+
+        @keyframes baseline-up { to { opacity: 1; transform: translateY(0); } }
+        @keyframes pop-line { to { width: 250px; } }
+        @keyframes wipe-down { to { opacity: 1; clip-path: inset(0 0 0 0); } }
+
+        /* --- 3. GAME HUD & GEAR --- */
         #game { display: none; width: 100vw; height: 100vh; justify-content: center; align-items: center; opacity: 0; transition: 1.5s; z-index: 5; }
         .board { width: 560px; height: 560px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid #111; background: rgba(0,0,0,0.85); transition: 1s var(--smooth); }
         .sq { width: 70px; height: 70px; display: flex; justify-content: center; align-items: center; cursor: pointer; position: relative; }
         .piece { font-size: 48px; transition: 0.8s var(--smooth); filter: brightness(0.2); pointer-events: none; }
         .piece.unlocked { filter: brightness(1); pointer-events: auto; }
 
-        /* --- INTEGRATED TRIGGER BUTTON --- */
-        .trigger-container { position: relative; width: 100%; display: flex; align-items: center; margin-top: 10px; }
-        .start-btn { flex-grow: 1; height: 35px; color: var(--n-green); border: 1px solid var(--n-green); background: rgba(129, 182, 76, 0.1); cursor: pointer; font-size: 11px; letter-spacing: 1px; transition: 0.3s; display: flex; align-items: center; justify-content: center; padding-right: 40px; }
-        .dots-trigger { position: absolute; right: 0; width: 40px; height: 35px; background: rgba(255,255,255,0.05); border-left: 1px solid var(--n-green); color: var(--n-green); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; transition: 0.3s; }
-        .dots-trigger:hover { background: var(--n-green); color: black; }
+        #gear-btn { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; background: none; border: none; color: var(--n-blue); font-size: 35px; cursor: pointer; z-index: 100; transition: 0.4s var(--smooth); display: flex; align-items: center; justify-content: center; }
+        #gear-btn.active { color: var(--n-green); animation: gear-spin 3s linear infinite; }
+        @keyframes gear-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        /* --- SPIN + ZOOM ICONS --- */
-        @keyframes spinZoom { 
-            0% { transform: scale(0) rotate(0deg); opacity: 0; }
-            70% { transform: scale(1.3) rotate(280deg); opacity: 1; }
-            100% { transform: scale(1) rotate(360deg); opacity: 1; }
-        }
-        .eval-icon { position: absolute; top: -5px; right: -5px; width: 24px; height: 24px; z-index: 100; animation: spinZoom 0.6s var(--smooth) forwards; }
+        /* --- 4. SIDEBAR --- */
+        #settings-panel { position: fixed; right: 20px; top: 5vh; bottom: 5vh; width: 25vw; background: rgba(5,6,8,0.98); border: 1px solid var(--n-blue); border-radius: 15px; transform: translateX(120%); transition: 0.7s var(--smooth); z-index: 25000; padding: 25px; display: flex; flex-direction: column; }
+        #settings-panel.open { transform: translateX(0); }
 
-        /* --- CENTRED HELP MENU --- */
-        #help-menu { 
-            position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(0.8); 
-            width: 750px; background: #000; border: 2px solid var(--n-blue); border-radius: 15px; 
-            z-index: 31000; padding: 30px; opacity: 0; pointer-events: none; transition: 0.5s var(--smooth);
-            box-shadow: 0 0 50px rgba(0,242,255,0.3);
-        }
-        #help-menu.active { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
-        .asset-card { border-left: 3px solid var(--n-blue); background: rgba(255,255,255,0.05); padding: 15px; margin-bottom: 15px; font-size: 13px; line-height: 1.6; }
-
-        /* Dropdown */
-        .dropdown { position: absolute; right: 0; bottom: 40px; background: #111; border: 1px solid #333; border-radius: 8px; display: none; flex-direction: column; min-width: 150px; z-index: 1000; }
-        .dropdown.show { display: flex; }
-        .dropdown button { background: none; border: none; color: white; padding: 10px; text-align: left; cursor: pointer; font-size: 12px; }
-        .dropdown button:hover { background: #222; color: var(--n-blue); }
+        .trigger-container { position: relative; width: 100%; display: flex; margin-top: auto; }
+        .start-btn { flex-grow: 1; height: 35px; color: var(--n-green); border: 1px solid var(--n-green); background: rgba(129, 182, 76, 0.1); cursor: pointer; font-size: 11px; letter-spacing: 1px; transition: 0.3s; padding-right: 40px; }
+        .dots-trigger { position: absolute; right: 0; width: 40px; height: 35px; border-left: 1px solid var(--n-green); color: var(--n-green); cursor: pointer; display: flex; align-items: center; justify-content: center; background: none; }
     </style>
 </head>
 <body>
 
     <canvas id="particle-canvas"></canvas>
 
-    <div id="boot"><div class="equinox-text">EQUINOX GAMES</div></div>
-
-    <div id="assets">
-        <div class="rainbow-container" style="padding:3px; border-radius:15px; background:linear-gradient(90deg, #ff0000, #00ff00, #0000ff, #ff0000); background-size:400%; animation:rainbow 3s linear infinite;">
-            <div class="bar"><div id="fill"></div><div id="perc">0%</div></div>
+    <!-- BOOT SCREEN -->
+    <div id="boot">
+        <div class="equinox-text">EQUINOX GAMES</div>
+        <div class="divider"></div>
+        <div class="controller-box">
+            <div class="controller-icon">🎮</div>
         </div>
-        <button onclick="launch()" style="margin-top:10px; background:none; border:1px solid #333; color:#555; padding:4px 20px; cursor:pointer; font-size:10px;">SKIP</button>
+    </div>
+
+    <!-- ELO LOADING SCREEN -->
+    <div id="assets">
+        <h1 class="elo-title">Chess Practice | Elo</h1>
+        <div class="elo-line"></div>
+        <p class="elo-desc">Regular chess practice boosts your Elo rating by improving strategic understanding, anticipatory skills, and tactical abilities. It promotes critical thinking and mental agility, while game analysis helps identify patterns. Practicing with others builds community and motivation. Consistency is key to mastering chess at any skill level.</p>
+        
+        <div class="rainbow-container" style="padding:3px; border-radius:12px; background:linear-gradient(90deg, #ff0000, #00ff00, #0000ff, #ff0000); background-size:400%; animation:rainbow 3s linear infinite; margin-top:30px;">
+            <div style="width:400px; height:24px; background:#000; border-radius:10px; overflow:hidden; position:relative; display:flex; align-items:center; justify-content:center;">
+                <div id="fill" style="position:absolute; left:0; height:100%; width:0%; background:var(--n-blue); transition: width 0.4s var(--smooth);"></div>
+                <div id="perc" style="position:relative; z-index:2; mix-blend-mode:difference; font-weight:bold;">0%</div>
+            </div>
+        </div>
     </div>
 
     <div id="game">
         <div id="board" class="board"></div>
-        <button id="gear-btn" onclick="toggleSettings()" style="position:fixed; bottom:20px; right:20px; background:none; border:none; color:var(--n-blue); font-size:35px; cursor:pointer;">⚙</button>
+        <button id="gear-btn" onclick="toggleSettings()">⚙</button>
     </div>
 
-    <!-- SIDEBAR -->
-    <div id="settings-panel" style="position:fixed; right:20px; top:5vh; bottom:5vh; width:25vw; background:rgba(5,6,8,0.98); border:1px solid var(--n-blue); border-radius:15px; transform:translateX(120%); transition:0.5s var(--smooth); z-index:25000; padding:25px; display:flex; flex-direction:column;">
+    <div id="settings-panel">
         <h3 style="color:var(--n-blue); margin:0;">COMMAND HUB</h3>
-        <iframe src="https://open.spotify.com" width="100%" height="152" frameBorder="0" allow="autoplay; encrypted-media" style="border-radius:12px; margin-top:15px;"></iframe>
+        <iframe src="https://open.spotify.com" width="100%" height="152" frameBorder="0" allow="autoplay; encrypted-media" style="border-radius:12px; margin-top:20px;"></iframe>
         
-        <div style="flex-grow:1"></div>
-
         <div class="trigger-container">
             <button class="start-btn" onclick="unlockPieces()">▶ START SIMULATION</button>
-            <button class="dots-trigger" onclick="toggleDropdown()">⋮</button>
-            <div id="dropdown" class="dropdown">
-                <button onclick="toggleHelp()">Help Menu (?)</button>
-                <button onclick="surrender()">Surrender</button>
-                <button onclick="location.reload()">Reboot System</button>
-            </div>
+            <button class="dots-trigger">⋮</button>
         </div>
-    </div>
-
-    <!-- CENTRED HELP MENU -->
-    <div id="help-menu">
-        <h2 style="color:var(--n-blue); margin-top:0;">ASSET DOCUMENTATION</h2>
-        <div style="max-height:500px; overflow-y:auto; padding-right:10px;">
-            <div class="asset-card">
-                <strong>♔ KING (Royal Asset):</strong> The King is the <strong>absolute core</strong> of the simulation. It moves exactly one square in any direction. Its survival is the <strong>primary win condition</strong>; if the King is trapped in a terminal checkmate state, the simulation terminates immediately. Strategic safety of this asset is the highest priority.
-                <br>Importance: <span style="color:var(--n-red)">Critical</span>
-            </div>
-            <div class="asset-card">
-                <strong>♕ QUEEN (Royal Asset):</strong> The <strong>offensive powerhouse</strong> of the board. Capable of moving any distance straight or diagonally, combining the firepower of a Rook and Bishop. She is best utilised for central suppression and executing complex mating nets. Losing this asset often results in a 9.0 ELO disadvantage.
-                <br>Importance: <span style="color:var(--n-red)">Critical</span>
-            </div>
-            <div class="asset-card">
-                <strong>♖ ROOK (Heavy Asset):</strong> Specialized in <strong>linear suppression</strong> across open ranks and files. Rooks are essential for "Castling" maneuvers to protect the King and dominate the final ranks during terminal endgame phases. They move any distance horizontally or vertically.
-                <br>Importance: <span style="color:var(--n-orange)">Significant</span>
-            </div>
-            <div class="asset-card">
-                <strong>♗ BISHOP (Heavy Asset):</strong> A <strong>diagonal specialist</strong>. Confined to tiles of their starting color, Bishops excel at long-range pinning of enemy royals. They are most effective when the board state is open and clear of pawn blockades.
-                <br>Importance: <span style="color:var(--n-orange)">Significant</span>
-            </div>
-            <div class="asset-card">
-                <strong>♘ KNIGHT (Minor Asset):</strong> The only unit capable of <strong>leaping over</strong> other simulation assets. Its asymmetrical "L-shape" movement provides unpredictable tactical depth, making it deadly in closed or crowded board positions.
-                <br>Importance: <span style="color:var(--n-yellow)">Moderate</span>
-            </div>
-            <div class="asset-card">
-                <strong>♙ PAWN (Infantry Unit):</strong> The <strong>soul of the simulation</strong>. Pawns move forward but capture diagonally. While individually weak, their formation creates the structural terrain of the game. Reaching the final rank triggers a high-priority <strong>Promotion Event</strong>.
-                <br>Importance: <span style="color:var(--n-green)">Expendable</span>
-            </div>
-        </div>
-        <button onclick="toggleHelp()" style="width:100%; padding:10px; background:var(--n-blue); border:none; color:black; font-weight:bold; cursor:pointer; margin-top:15px;">CLOSE ARCHIVE</button>
     </div>
 
     <script>
         const pCanvas = document.getElementById('particle-canvas'), pCtx = pCanvas.getContext('2d');
-        let parts = [], isUnlocked = false, selected = null, boardState = [['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],['','','','','','','',''],['','','','','','','',''],['','','','','','','',''],['','','','','','','',''],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']];
+        let parts = [], isUnlocked = false, boardState = [['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],['','','','','','','',''],['','','','','','','',''],['','','','','','','',''],['','','','','','','',''],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']];
         const icons = { 'r':'♜','n':'♞','b':'♝','q':'♛','k':'♚','p':'♟','R':'♖','N':'♘','B':'♗','Q':'♕','K':'♔','P':'♙' };
 
         function initBG() {
@@ -150,45 +121,36 @@
                     span.innerText = icons[p]; span.style.color = p === p.toUpperCase() ? '#fff' : 'var(--n-blue)';
                     sq.appendChild(span);
                 }
-                sq.onclick = () => handleMove(r, c); el.appendChild(sq);
+                el.appendChild(sq);
             }));
         }
 
-        function handleMove(r, c) {
-            if(!isUnlocked) return;
-            if(selected) {
-                const [sr, sc] = selected;
-                boardState[r][c] = boardState[sr][sc]; boardState[sr][sc] = '';
-                selected = null; render(); spawnIcon(r, c);
-            } else if(boardState[r][c]) { selected = [r, c]; }
+        function unlockPieces() { isUnlocked = true; toggleSettings(); render(); }
+        function toggleSettings() { 
+            document.getElementById('settings-panel').classList.toggle('open'); 
+            document.getElementById('gear-btn').classList.toggle('active');
         }
-
-        function spawnIcon(r, c) {
-            const sq = document.querySelectorAll('.sq')[r*8+c];
-            const icon = document.createElement('div'); icon.className = 'eval-icon';
-            icon.innerHTML = `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="var(--n-brilliant)"/><text x="12" y="17" text-anchor="middle" fill="white" font-size="12" font-weight="bold">!!</text></svg>`;
-            sq.appendChild(icon);
-        }
-
-        function unlockPieces() { isUnlocked = true; render(); toggleSettings(); }
-        function toggleSettings() { document.getElementById('settings-panel').classList.toggle('open'); }
-        function toggleHelp() { document.getElementById('help-menu').classList.toggle('active'); }
-        function toggleDropdown() { document.getElementById('dropdown').classList.toggle('show'); }
-        function surrender() { alert("SIMULATION TERMINATED BY USER."); location.reload(); }
 
         window.onload = () => {
             initBG(); draw();
             setTimeout(() => {
-                document.getElementById('boot').style.display='none';
-                document.getElementById('assets').style.display='flex';
-                document.getElementById('assets').style.opacity='1';
-                let p=0; let iv = setInterval(() => {
-                    p += 1; document.getElementById('fill').style.width = p+'%'; document.getElementById('perc').innerText = Math.floor(p)+'%';
-                    if(p >= 100) { clearInterval(iv); launch(); }
-                }, 40);
-            }, 3000);
+                document.getElementById('boot').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('boot').style.display = 'none';
+                    document.getElementById('assets').style.display = 'flex';
+                    document.getElementById('assets').style.opacity = '1';
+                    let p=0; let iv = setInterval(() => {
+                        p += 1; document.getElementById('fill').style.width = p+'%'; document.getElementById('perc').innerText = p+'%';
+                        if(p >= 100) { clearInterval(iv); launch(); }
+                    }, 50);
+                }, 1000);
+            }, 5000);
         };
-        function launch() { document.getElementById('assets').style.display='none'; document.getElementById('game').style.display='flex'; document.getElementById('game').style.opacity='1'; render(); }
+        function launch() { 
+            document.getElementById('assets').style.display = 'none';
+            document.getElementById('game').style.display = 'flex';
+            setTimeout(() => { document.getElementById('game').style.opacity = '1'; render(); }, 100);
+        }
     </script>
 </body>
 </html>

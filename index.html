@@ -2,80 +2,85 @@
 <html lang="en-AU">
 <head>
     <meta charset="UTF-8">
-    <title>Equinox Games | Solaris HUD</title>
-    <!-- Use a reliable HTTPS CDN for Chess.js -->
-    <script src="https://cdnjs.cloudflare.com"></script>
+    <title>Equinox Games | Solaris HUD v12</title>
     <style>
         :root { 
-            --n-blue: #00f2ff; --n-green: #00ff00;
+            --n-blue: #00f2ff; --n-green: #00ff00; --n-red: #ff4757; 
+            --n-orange: #ff9f43; --n-yellow: #f1c40f; 
         }
-        body, html { margin: 0; padding: 0; background: #000; color: white; overflow: hidden; height: 100vh; width: 100vw; }
+        body, html { margin: 0; padding: 0; background: #000; color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; width: 100vw; }
 
-        /* 1. BOOT SCREEN: SOLARIS REVEAL */
+        /* 1. BOOT SCREEN: SOLARIS & NEON AURA */
         #boot { 
             position: fixed; inset: 0; background: black; z-index: 30000; 
             display: flex; justify-content: center; align-items: center; 
-            transition: opacity 1s ease-in-out; 
+            transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1); 
         }
-        
         .equinox-text { 
             font-size: 32px; letter-spacing: 12px; font-weight: 200; color: #fff; 
             position: relative; clip-path: inset(0 100% 0 0); 
             animation: solaris-reveal 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
-        /* The Shine Effect */
         .equinox-text::after {
             content: "EQUINOX GAMES"; position: absolute; inset: 0;
             color: var(--n-blue); filter: blur(12px); clip-path: inset(0 100% 0 0);
             animation: solaris-shine 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
-
         .divider { 
             width: 2px; height: 40px; background: white; margin: 0 25px; 
             transform: scaleY(0); 
             animation: pop-divider 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards 2s; 
         }
-
-        /* CIRCULAR AURA & BASELINE CONTROLLER */
-        .controller-box {
-            position: relative; width: 80px; height: 80px;
-            display: flex; align-items: center; justify-content: center;
-            overflow: hidden; /* Baseline effect */
-        }
-
+        .controller-box { position: relative; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         .aura-circle {
-            position: absolute; width: 60px; height: 60px;
-            border-radius: 50%; border: 3px solid var(--n-blue);
-            opacity: 0;
-            box-shadow: 0 0 25px var(--n-blue), inset 0 0 15px var(--n-blue);
+            position: absolute; width: 60px; height: 60px; border-radius: 50%; border: 3px solid var(--n-blue);
+            opacity: 0; box-shadow: 0 0 25px var(--n-blue), inset 0 0 15px var(--n-blue);
             animation: aura-glow 1s forwards 3s, aura-color-pulse 3s infinite alternate 4s;
         }
-
-        .controller-icon { 
-            font-size: 42px; z-index: 2; transform: translateX(-150%);
-            animation: baseline-slide 0.8s ease-out forwards 2.5s; 
-        }
+        .controller-icon { font-size: 42px; z-index: 2; transform: translateX(-150%); animation: baseline-slide 0.8s ease-out forwards 2.5s; }
 
         @keyframes solaris-reveal { to { clip-path: inset(0 0 0 0); } }
-        @keyframes solaris-shine { 
-            0% { clip-path: inset(0 100% 0 0); }
-            50% { clip-path: inset(0 0 0 0); opacity: 1; }
-            100% { clip-path: inset(0 0 0 100%); opacity: 0; }
-        }
+        @keyframes solaris-shine { 0% { clip-path: inset(0 100% 0 0); } 50% { clip-path: inset(0 0 0 0); opacity: 1; } 100% { clip-path: inset(0 0 0 100%); opacity: 0; } }
         @keyframes pop-divider { to { transform: scaleY(1); } }
         @keyframes baseline-slide { to { transform: translateX(0); } }
         @keyframes aura-glow { from { opacity: 0; transform: scale(0.4); } to { opacity: 1; transform: scale(1); } }
-        @keyframes aura-color-pulse {
-            0% { border-color: var(--n-blue); box-shadow: 0 0 20px var(--n-blue); }
-            100% { border-color: var(--n-green); box-shadow: 0 0 45px var(--n-green); transform: scale(1.1); }
-        }
+        @keyframes aura-color-pulse { 0% { border-color: var(--n-blue); box-shadow: 0 0 20px var(--n-blue); } 100% { border-color: var(--n-green); box-shadow: 0 0 45px var(--n-green); transform: scale(1.1); } }
 
-        /* LOADING & GAME PLACEHOLDERS */
-        #assets, #game { position: fixed; inset: 0; display: none; opacity: 0; transition: 1s; }
+        /* 2. LOADING SCREEN */
+        #assets { position: fixed; inset: 0; background: #050608; z-index: 20000; display: none; opacity: 0; transition: 1.5s; }
+        #physics-canvas { position: absolute; inset: 0; }
+        .overlay { position: relative; z-index: 10; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0 50px; }
+        .t-pop { color: var(--n-blue); font-size: 40px; opacity: 0; transform: translateY(30px); transition: 0.8s; }
+        .l-pop { height: 2px; background: var(--n-blue); width: 0; margin: 20px 0; transition: 1.2s; }
+        .d-wipe { color: #888; max-width: 650px; font-size: 14px; opacity: 0; transform: translateY(-20px); transition: 1.5s; line-height: 1.8; }
+        .load-hud { position: absolute; bottom: 60px; width: 400px; left: 50%; transform: translateX(-50%); z-index: 100; }
+        .bar { background: #111; height: 24px; border-radius: 12px; overflow: hidden; border: 1px solid #333; position: relative; display: flex; align-items: center; justify-content: center; }
+        #fill { position: absolute; left: 0; width: 0%; height: 100%; background: var(--n-blue); transition: width 0.1s linear; }
+        #perc { position: relative; z-index: 2; font-size: 11px; font-weight: bold; color: white; mix-blend-mode: difference; }
+
+        /* 3. GAME HUD */
+        #game { display: none; width: 100vw; height: 100vh; background: #000; justify-content: center; align-items: center; opacity: 0; transition: 1.5s; }
+        #game-canvas { position: absolute; inset: 0; }
+        .board { width: 560px; height: 560px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid #111; z-index: 5; background: rgba(0,0,0,0.8); }
+        .sq { width: 70px; height: 70px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.3s; }
+        .w { background: rgba(42, 44, 51, 0.8); } .b { background: rgba(26, 28, 34, 0.8); }
+        .piece { font-size: 48px; transition: transform 0.2s; user-select: none; }
+        .sq:hover .piece { transform: scale(1.2); }
+
+        /* 4. SETTINGS HUB */
+        #settings-panel { 
+            position: fixed; left: 50%; bottom: 0; width: 300px; max-height: 80vh;
+            background: rgba(5,6,8,0.98); border: 1px solid var(--n-blue); border-bottom: none;
+            border-radius: 15px 15px 0 0; transform: translate(-50%, 100%); transition: 0.6s; z-index: 25000; padding: 20px; overflow-y: auto;
+        }
+        #settings-panel.open { transform: translate(-50%, -5%); }
+        .tab-btn { background: #111; border: 1px solid #333; color: #fff; width: 100%; padding: 10px; margin-top: 5px; cursor: pointer; text-align: left; }
+        .rate-red { color: var(--n-red); } .rate-orange { color: var(--n-orange); }
     </style>
 </head>
 <body>
 
+    <!-- BOOT SCREEN -->
     <div id="boot">
         <div class="equinox-text">EQUINOX GAMES</div>
         <div class="divider"></div>
@@ -85,24 +90,149 @@
         </div>
     </div>
 
-    <div id="assets" style="background:#050608; color:white; display:flex; justify-content:center; align-items:center;">
-        <h1>LOADING TACTICAL ASSETS...</h1>
+    <!-- LOADING SCREEN -->
+    <div id="assets">
+        <canvas id="physics-canvas"></canvas>
+        <div class="overlay">
+            <h1 id="t" class="t-pop">Chess Practice | Elo</h1>
+            <div id="l" class="l-pop"></div>
+            <p id="d" class="d-wipe">Regular chess practice boosts your Elo rating by improving strategic understanding and tactical abilities. Consistency is key to mastering chess at any skill level.</p>
+        </div>
+        <div class="load-hud">
+            <div class="bar"><div id="fill"></div><div id="perc">0%</div></div>
+        </div>
+    </div>
+
+    <!-- GAME HUD -->
+    <div id="game">
+        <canvas id="game-canvas"></canvas>
+        <div style="display:flex; flex-direction:column; align-items:center; z-index:10;">
+            <div id="turn" style="color:var(--n-blue); margin-bottom:15px; letter-spacing:3px;">SYSTEM TURN: WHITE</div>
+            <div id="board" class="board"></div>
+        </div>
+        <button style="position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:none; border:1px solid var(--n-blue); color:var(--n-blue); width:45px; height:45px; border-radius:50%; cursor:pointer; z-index:100;" onclick="toggleSettings()">?</button>
+    </div>
+
+    <div id="settings-panel">
+        <h3 style="color:var(--n-blue); margin:0;">COMMAND HUB</h3>
+        <button class="tab-btn" onclick="location.reload()">RESTART SIMULATION</button>
+        <div style="margin-top:15px; font-size:12px; color:#777;">IMPORTANCE RATINGS</div>
+        <p style="font-size:11px;">♔ ♕: <b class="rate-red">CRITICAL</b><br>♖ ♗: <b class="rate-orange">HIGH</b></p>
+        <iframe src="https://open.spotify.com" width="100%" height="80" frameBorder="0" allow="autoplay; encrypted-media"></iframe>
     </div>
 
     <script>
-        // Use DOMContentLoaded to ensure elements exist before script runs
-        document.addEventListener('DOMContentLoaded', function() {
+        // NO EXTERNAL JS LIBS - Custom Local Engine
+        let turn = 'white';
+        let selectedSq = null;
+        const initialBoard = [
+            ['r','n','b','q','k','b','n','r'],
+            ['p','p','p','p','p','p','p','p'],
+            Array(8).fill(''), Array(8).fill(''), Array(8).fill(''), Array(8).fill(''),
+            ['P','P','P','P','P','P','P','P'],
+            ['R','N','B','Q','K','B','N','R']
+        ];
+        let currentBoard = JSON.parse(JSON.stringify(initialBoard));
+
+        window.onload = () => {
             setTimeout(() => {
                 const boot = document.getElementById('boot');
                 boot.style.opacity = '0';
                 setTimeout(() => {
                     boot.style.display = 'none';
-                    const assets = document.getElementById('assets');
-                    assets.style.display = 'flex';
-                    setTimeout(() => assets.style.opacity = '1', 50);
+                    startLoading();
                 }, 1000);
-            }, 7500); // Wait for full Solaris + Aura cycle
-        });
+            }, 7500);
+        };
+
+        function startLoading() {
+            document.getElementById('assets').style.display = 'block';
+            setTimeout(() => {
+                document.getElementById('assets').style.opacity = '1';
+                document.getElementById('t').style.opacity = '1'; document.getElementById('t').style.transform = 'translateY(0)';
+                document.getElementById('l').style.width = '300px';
+                document.getElementById('d').style.opacity = '1'; document.getElementById('d').style.transform = 'translateY(0)';
+            }, 100);
+            
+            let p = 0;
+            let iv = setInterval(() => {
+                p += Math.random() * 2.5;
+                if(p >= 100) { p = 100; clearInterval(iv); setTimeout(initGame, 1000); }
+                document.getElementById('fill').style.width = p + '%';
+                document.getElementById('perc').innerText = Math.floor(p) + '%';
+            }, 50);
+            initPhysics();
+        }
+
+        function initGame() {
+            document.getElementById('assets').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('assets').style.display = 'none';
+                document.getElementById('game').style.display = 'flex';
+                setTimeout(() => document.getElementById('game').style.opacity = '1', 50);
+                drawBoard();
+                initStarfield();
+            }, 1000);
+        }
+
+        function drawBoard() {
+            const b = document.getElementById('board'); b.innerHTML = '';
+            const glyphs = { p:'♟', r:'♜', n:'♞', b:'♝', q:'♛', k:'♚', P:'♙', R:'♖', N:'♘', B:'♗', Q:'♕', K:'♔' };
+            for(let r=0; r<8; r++) {
+                for(let c=0; c<8; c++) {
+                    const sq = document.createElement('div');
+                    sq.className = `sq ${(r+c)%2==0?'w':'b'}`;
+                    const pCode = currentBoard[r][c];
+                    if(pCode) {
+                        const p = document.createElement('div');
+                        p.className = 'piece';
+                        p.innerHTML = glyphs[pCode];
+                        sq.appendChild(p);
+                    }
+                    sq.onclick = () => handleMove(r, c);
+                    b.appendChild(sq);
+                }
+            }
+        }
+
+        function handleMove(r, c) {
+            if(selectedSq) {
+                currentBoard[r][c] = currentBoard[selectedSq.r][selectedSq.c];
+                currentBoard[selectedSq.r][selectedSq.c] = '';
+                selectedSq = null;
+                turn = turn === 'white' ? 'black' : 'white';
+                document.getElementById('turn').innerText = `SYSTEM TURN: ${turn.toUpperCase()}`;
+                drawBoard();
+            } else if(currentBoard[r][c] !== '') {
+                selectedSq = {r, c};
+            }
+        }
+
+        function initPhysics() {
+            const cvs = document.getElementById('physics-canvas'); const ctx = cvs.getContext('2d');
+            cvs.width = window.innerWidth; cvs.height = window.innerHeight;
+            let parts = Array.from({length: 15}, () => ({ x: Math.random()*cvs.width, y: Math.random()*cvs.height, v: Math.random()*0.5 }));
+            function loop() {
+                ctx.clearRect(0,0,cvs.width,cvs.height); ctx.fillStyle = 'rgba(255,255,255,0.1)';
+                parts.forEach(p => { ctx.fillText('♖', p.x, p.y); p.y -= p.v; if(p.y<0) p.y=cvs.height; });
+                requestAnimationFrame(loop);
+            }
+            loop();
+        }
+
+        function initStarfield() {
+            const cvs = document.getElementById('game-canvas'); const ctx = cvs.getContext('2d');
+            cvs.width = window.innerWidth; cvs.height = window.innerHeight;
+            let stars = Array.from({length: 100}, () => ({ x: Math.random()*cvs.width, y: Math.random()*cvs.height, v: Math.random()*0.3 }));
+            function loop() {
+                ctx.clearRect(0,0,cvs.width,cvs.height); ctx.fillStyle = '#fff';
+                stars.forEach(s => { ctx.fillRect(s.x, s.y, 2, 2); s.y -= s.v; if(s.y<0) s.y=cvs.height; });
+                requestAnimationFrame(loop);
+            }
+            loop();
+        }
+
+        function toggleSettings() { document.getElementById('settings-panel').classList.toggle('open'); }
     </script>
 </body>
 </html>

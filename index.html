@@ -6,250 +6,139 @@
     <script src="https://cdnjs.cloudflare.com"></script>
     <style>
         :root { 
-            --n-blue: #00f2ff; --n-green: #00ff00; --n-red: #ff4757; 
-            --bg: #030406; --glass: rgba(255, 255, 255, 0.05);
+            --n-blue: #00f2ff; --bg: #030406;
         }
         body, html { margin: 0; padding: 0; background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; }
 
-        /* 1. SOLARIS 0.6 BOOT SCREEN */
+        /* SOLARIS 0.6 SHINE APPEARANCE */
         #solaris-boot {
             position: fixed; inset: 0; background: black; z-index: 30000;
             display: flex; justify-content: center; align-items: center;
-            transition: opacity 1s cubic-bezier(0.7, 0, 0.3, 1);
+            transition: opacity 1s ease-out;
         }
-        
-        /* SHINE WIPE EFFECT */
+
+        .container { display: flex; align-items: center; position: relative; }
+
+        /* THE SHINE WIPE EFFECT */
         .equinox-text {
             font-size: 32px; letter-spacing: 12px; font-weight: 200;
-            position: relative; display: flex; align-items: center;
-            background: linear-gradient(120deg, #555 30%, #fff 50%, #555 70%);
-            background-size: 200% auto;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: shine-wipe 2.5s linear infinite;
+            color: #ffffff; position: relative;
+            /* The Mask Wipe */
+            clip-path: inset(0 100% 0 0);
+            animation: solaris-reveal 2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
 
-        @keyframes shine-wipe { to { background-position: 200% center; } }
+        /* The Moving Shine Highlight */
+        .equinox-text::after {
+            content: "EQUINOX GAMES";
+            position: absolute; top: 0; left: 0; width: 100%;
+            color: var(--n-blue);
+            filter: blur(8px);
+            clip-path: inset(0 100% 0 0);
+            animation: solaris-shine 2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
 
-        /* THE | POP & CONTROLLER EMERGE */
+        @keyframes solaris-reveal {
+            0% { clip-path: inset(0 100% 0 0); opacity: 0; }
+            100% { clip-path: inset(0 0 0 0); opacity: 1; }
+        }
+
+        @keyframes solaris-shine {
+            0% { clip-path: inset(0 100% 0 0); }
+            50% { clip-path: inset(0 0 0 0); opacity: 1; }
+            100% { clip-path: inset(0 0 0 100%); opacity: 0; }
+        }
+
+        /* THE | POP */
         .divider { 
             width: 2px; height: 40px; background: white; margin: 0 15px; 
             transform: scaleY(0); opacity: 0;
-            animation: divider-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards 1s;
+            animation: divider-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards 1.8s;
         }
+
+        /* THE 🎮 EMERGE */
+        .controller-wrapper { overflow: hidden; display: flex; align-items: center; }
         .controller-icon {
-            font-size: 40px; opacity: 0; transform: translateX(-20px);
-            animation: controller-emerge 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards 1.4s;
+            font-size: 40px; transform: translateX(-100%);
+            animation: controller-slide 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards 2.2s;
         }
 
         @keyframes divider-pop { to { transform: scaleY(1); opacity: 1; } }
-        @keyframes controller-emerge { to { opacity: 1; transform: translateX(0); } }
+        @keyframes controller-slide { to { transform: translateX(0); } }
 
-        /* 2. ASSET LOADING SCREEN */
-        #asset-loading {
-            position: fixed; inset: 0; background: radial-gradient(circle at center, #0a0c10 0%, #030406 100%);
-            z-index: 20000; display: none; overflow: hidden; opacity: 1;
-            /* Fullscreen edge pull-in effect */
-            clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
-            transition: clip-path 1.2s cubic-bezier(0.7, 0, 0.3, 1);
-        }
-        #physics-canvas { position: absolute; inset: 0; z-index: 1; }
-        
-        .loading-hud {
-            position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
-            z-index: 10; text-align: center; width: 400px;
-        }
-        .glass-bar {
-            width: 100%; height: 6px; background: var(--glass); border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 10px; overflow: hidden; backdrop-filter: blur(5px);
-        }
-        .progress-fill { width: 0%; height: 100%; background: linear-gradient(90deg, transparent, var(--n-blue)); transition: width 0.1s linear; }
-
-        /* 3. CANVA STORY SCREEN */
-        #story-screen {
-            position: fixed; inset: 0; background: var(--bg); z-index: 10000;
-            display: none; flex-direction: column; justify-content: center; align-items: center; padding: 50px;
-        }
-        .title-pop { font-size: 48px; letter-spacing: 5px; color: var(--n-blue); opacity: 0; transform: scale(0.5); }
-        .line-pop { width: 0; height: 2px; background: var(--n-blue); margin: 20px 0; }
-        .desc-wipe { max-width: 700px; text-align: center; color: #888; line-height: 1.8; opacity: 0; font-size: 14px; }
-        
-        .final-x {
-            width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--n-blue);
-            display: none; justify-content: center; align-items: center; cursor: pointer;
-            margin-top: 40px; font-size: 24px; color: var(--n-blue); opacity: 0; transform: scale(0);
-            transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        .final-x:hover { background: var(--n-blue); color: black; transform: scale(1.1) rotate(90deg); }
-
-        #game-layer { display: none; width: 100vw; height: 100vh; justify-content: center; align-items: center; opacity: 0; transition: 1.5s; }
-        .board { width: 560px; height: 560px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 10px solid #111; }
+        /* ASSET LOADING & PHYSICS (Hidden initially) */
+        #asset-loading { position: fixed; inset: 0; background: #030406; z-index: 20000; display: none; }
+        #physics-canvas { position: absolute; inset: 0; }
+        .loading-hud { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); text-align: center; width: 300px; }
+        .bar { width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; }
+        .fill { width: 0%; height: 100%; background: var(--n-blue); transition: width 0.1s linear; }
     </style>
 </head>
 <body>
 
-    <!-- STAGE 1: SOLARIS 0.6 BOOT -->
     <div id="solaris-boot">
-        <div class="equinox-text">EQUINOX GAMES</div>
-        <div class="divider"></div>
-        <div class="controller-icon">🎮</div>
-    </div>
-
-    <!-- STAGE 2: ASSET LOADING -->
-    <div id="asset-loading">
-        <canvas id="physics-canvas"></canvas>
-        <div class="loading-hud">
-            <div style="font-size: 10px; letter-spacing: 3px; color: #555; margin-bottom: 10px;">LOADING ASSETS</div>
-            <div class="glass-bar"><div id="load-progress" class="progress-fill"></div></div>
-            <button style="margin-top:20px; background:none; border:1px solid #333; color:#555; padding:5px 20px; cursor:pointer;" onclick="finishLoading()">SKIP</button>
+        <div class="container">
+            <div class="equinox-text">EQUINOX GAMES</div>
+            <div class="divider"></div>
+            <div class="controller-wrapper"><div class="controller-icon">🎮</div></div>
         </div>
     </div>
 
-    <!-- STAGE 3: CANVA DESCRIPTION -->
-    <div id="story-screen">
-        <h1 id="title" class="title-pop">Chess Practice | Elo</h1>
-        <div id="line" class="line-pop"></div>
-        <p id="desc" class="desc-wipe">
-            Regular chess practice boosts your Elo rating by improving strategic understanding, anticipatory skills, and tactical abilities. It promotes critical thinking and mental agility, while game analysis helps identify patterns. Practicing with others builds community and motivation. Consistency is key to mastering chess at any skill level.
-        </p>
-        <div id="final-x" class="final-x" onclick="enterGame()">✕</div>
-    </div>
-
-    <!-- STAGE 4: GAME -->
-    <div id="game-layer">
-        <div id="chess-board" class="board"></div>
+    <div id="asset-loading">
+        <canvas id="physics-canvas"></canvas>
+        <div class="loading-hud">
+            <div style="font-size: 10px; letter-spacing: 2px; color: #444; margin-bottom: 8px;">LOADING ASSETS</div>
+            <div class="bar"><div id="progress" class="fill"></div></div>
+        </div>
     </div>
 
     <script>
-        const game = new Chess();
-        
-        // --- SEQUENCE CONTROL ---
         window.onload = () => {
-            // Stage 1 (Equinox Shine) -> Stage 2 (Asset Loading)
+            // Sequence: Solaris Shine -> Wait -> Transition to Assets
             setTimeout(() => {
                 const boot = document.getElementById('solaris-boot');
                 boot.style.opacity = '0';
                 setTimeout(() => {
                     boot.style.display = 'none';
-                    startAssetLoading();
+                    startAssets();
                 }, 1000);
-            }, 4000); // Wait for shine + controller animation
+            }, 5000); // Allow time for full shine + emerge sequence
         };
 
-        function startAssetLoading() {
-            const assetScreen = document.getElementById('asset-loading');
-            assetScreen.style.display = 'block';
+        function startAssets() {
+            document.getElementById('asset-loading').style.display = 'block';
             initPhysics();
-            
-            let prog = 0;
-            const interval = setInterval(() => {
-                prog += Math.random() * 2.5;
-                if (prog > 100) prog = 100;
-                document.getElementById('load-progress').style.width = prog + '%';
-                if (prog >= 100) {
-                    clearInterval(interval);
-                    setTimeout(finishLoading, 800);
-                }
-            }, 60);
+            let p = 0;
+            const itv = setInterval(() => {
+                p += Math.random() * 3;
+                if (p > 100) p = 100;
+                document.getElementById('progress').style.width = p + '%';
+                if (p >= 100) clearInterval(itv);
+            }, 100);
         }
 
-        function finishLoading() {
-            const screen = document.getElementById('asset-loading');
-            // Edge Pull In Transition
-            screen.style.clipPath = "polygon(10% 10%, 90% 10%, 90% 90%, 10% 90%)";
-            screen.style.opacity = '0';
-            setTimeout(() => {
-                screen.style.display = 'none';
-                startCanvaIntro();
-            }, 1000);
-        }
-
-        function startCanvaIntro() {
-            document.getElementById('story-screen').style.display = 'flex';
-            setTimeout(() => {
-                document.getElementById('title').style.opacity = "1";
-                document.getElementById('title').style.transform = "scale(1)";
-            }, 200);
-            setTimeout(() => { document.getElementById('line').style.width = "450px"; }, 700);
-            setTimeout(() => { document.getElementById('desc').style.opacity = "1"; }, 1400);
-            
-            const x = document.getElementById('final-x');
-            setTimeout(() => {
-                x.style.display = "flex";
-                setTimeout(() => { x.style.opacity = "1"; x.style.transform = "scale(1) rotate(0deg)"; }, 50);
-            }, 4500);
-        }
-
-        function enterGame() {
-            const story = document.getElementById('story-screen');
-            story.style.transition = "1s ease-in";
-            story.style.transform = "scale(1.5)";
-            story.style.opacity = "0";
-            setTimeout(() => {
-                story.style.display = "none";
-                document.getElementById('game-layer').style.display = "flex";
-                setTimeout(() => document.getElementById('game-layer').style.opacity = "1", 50);
-                renderBoard();
-            }, 1000);
-        }
-
-        // --- PHYSICS ENGINE ---
         function initPhysics() {
             const canvas = document.getElementById('physics-canvas');
             const ctx = canvas.getContext('2d');
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-
-            const items = [];
-            const glyphs = ['♜','♞','♝','♛','♚','♟','▦','▧']; 
-            
-            for(let i=0; i<30; i++) {
-                items.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height,
-                    vx: (Math.random()-0.5) * 2,
-                    vy: (Math.random()-0.5) * 2,
-                    char: glyphs[Math.floor(Math.random()*glyphs.length)],
-                    size: 30 + Math.random() * 45,
-                    rot: Math.random() * Math.PI * 2,
-                    rv: (Math.random()-0.5) * 0.05
-                });
-            }
-
-            function frame() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            const parts = Array(30).fill().map(() => ({
+                x: Math.random()*canvas.width, y: Math.random()*canvas.height,
+                vx: (Math.random()-0.5)*2, vy: (Math.random()-0.5)*2,
+                s: 20+Math.random()*30, c: ['♜','♞','♟'][Math.floor(Math.random()*3)]
+            }));
+            function loop() {
+                ctx.clearRect(0,0,canvas.width,canvas.height);
                 ctx.fillStyle = "rgba(255,255,255,0.1)";
-                for(let i=0; i<80; i++) {
-                    ctx.beginPath();
-                    ctx.arc(Math.random()*canvas.width, Math.random()*canvas.height, 1, 0, Math.PI*2);
-                    ctx.fill();
-                }
-
-                items.forEach(p => {
-                    p.x += p.vx; p.y += p.vy; p.rot += p.rv;
-                    if(p.x < 0 || p.x > canvas.width) p.vx *= -1;
-                    if(p.y < 0 || p.y > canvas.height) p.vy *= -1;
-                    ctx.save();
-                    ctx.translate(p.x, p.y);
-                    ctx.rotate(p.rot);
-                    ctx.fillStyle = "rgba(255,255,255,0.15)";
-                    ctx.font = p.size + "px serif";
-                    ctx.fillText(p.char, -p.size/2, p.size/2);
-                    ctx.restore();
+                parts.forEach(p => {
+                    p.x += p.vx; p.y += p.vy;
+                    if(p.x<0 || p.x>canvas.width) p.vx*=-1;
+                    if(p.y<0 || p.y>canvas.height) p.vy*=-1;
+                    ctx.font = p.s+"px serif";
+                    ctx.fillText(p.c, p.x, p.y);
                 });
-                requestAnimationFrame(frame);
+                requestAnimationFrame(loop);
             }
-            frame();
-        }
-
-        function renderBoard() {
-            const b = document.getElementById('chess-board');
-            b.innerHTML = '';
-            for(let i=0; i<64; i++) {
-                const sq = document.createElement('div');
-                sq.className = `sq ${ (Math.floor(i/8) + i%8)%2==0?'w':'b'}`;
-                b.appendChild(sq);
-            }
+            loop();
         }
     </script>
 </body>

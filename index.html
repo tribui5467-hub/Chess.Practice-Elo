@@ -4,48 +4,54 @@
     <meta charset="UTF-8">
     <title>Equinox Games | Tactical HUD</title>
     <style>
-        :root { --n-blue: #00f2ff; --bg: #030406; --rainbow: linear-gradient(90deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00); }
-        body, html { margin: 0; padding: 0; background: #000; color: white; font-family: sans-serif; overflow: hidden; height: 100vh; }
+        :root { 
+            --n-blue: #00f2ff; --n-green: #00ff00; --n-red: #ff4757; 
+            --bg: #030406; --rainbow: linear-gradient(90deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+        }
+        body, html { margin: 0; padding: 0; background: #000; color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; }
 
-        /* STAGE 1: SOLARIS SHINE */
-        #boot { position: fixed; inset: 0; background: #000; z-index: 999; display: flex; justify-content: center; align-items: center; }
-        .shine-text { font-size: 28px; letter-spacing: 10px; font-weight: 200; color: #333; position: relative; }
+        /* 1. SOLARIS 0.6 SHINE BOOT */
+        #boot { position: fixed; inset: 0; background: #000; z-index: 9000; display: flex; justify-content: center; align-items: center; }
+        .shine-text { font-size: 28px; letter-spacing: 10px; font-weight: 200; color: #222; position: relative; }
         .shine-text::after {
             content: "EQUINOX GAMES"; position: absolute; inset: 0; color: #fff;
             clip-path: inset(0 100% 0 0); animation: solaris-shine 2.5s forwards;
         }
         @keyframes solaris-shine { 0% { clip-path: inset(0 100% 0 0); } 100% { clip-path: inset(0 0 0 0); } }
-        
         .divider { width: 2px; height: 30px; background: #fff; margin: 0 15px; opacity: 0; animation: pop 0.5s forwards 2.5s; }
         .controller { font-size: 30px; opacity: 0; animation: emerge 0.6s forwards 2.8s; }
         @keyframes pop { to { opacity: 1; } }
         @keyframes emerge { to { opacity: 1; } }
 
-        /* STAGE 2: ASSET LOADING */
-        #assets { position: fixed; inset: 0; background: #050608; z-index: 888; display: none; text-align: center; }
-        .overlay { height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 0 40px; }
-        .t-pop { color: var(--n-blue); font-size: 32px; opacity: 0; transition: 1s; }
-        .l-pop { height: 2px; background: var(--n-blue); width: 0; margin: 15px 0; transition: 1.2s; }
-        .d-wipe { color: #777; max-width: 550px; font-size: 13px; opacity: 0; transition: 2s; line-height: 1.6; }
+        /* 2. ASSET LOADING (Physics + Particles) */
+        #assets { position: fixed; inset: 0; background: #050608; z-index: 8000; display: none; }
+        #physics-canvas { position: absolute; inset: 0; z-index: 1; }
+        
+        .overlay { position: relative; z-index: 10; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 0 40px; text-align: center; }
+        .t-pop { color: var(--n-blue); font-size: 32px; opacity: 0; transition: 1s; transform: translateY(20px); }
+        .l-pop { height: 2px; background: var(--n-blue); width: 0; margin: 15px 0; transition: 1s; }
+        .d-wipe { color: #777; max-width: 550px; font-size: 13px; opacity: 0; transition: 1.5s; line-height: 1.6; }
 
-        .load-hud { position: absolute; bottom: 50px; width: 280px; left: 50%; transform: translateX(-50%); }
+        .load-hud { position: absolute; bottom: 50px; width: 300px; left: 50%; transform: translateX(-50%); z-index: 20; }
         .r-border { padding: 2px; border-radius: 10px; background: var(--rainbow); background-size: 300%; animation: r-move 3s linear infinite; }
-        .bar { background: #000; height: 8px; border-radius: 6px; overflow: hidden; }
+        .bar { background: #000; height: 10px; border-radius: 8px; overflow: hidden; }
         .fill { width: 0%; height: 100%; background: var(--n-blue); transition: width 0.2s; }
         @keyframes r-move { 0%{background-position:0%} 100%{background-position:100%} }
 
-        /* EXIT X */
-        .x-btn { 
-            position: fixed; top: 20px; right: 20px; width: 45px; height: 45px; 
-            border-radius: 50%; border: 2px solid var(--n-blue); color: var(--n-blue);
-            display: none; align-items: center; justify-content: center; cursor: pointer;
-            z-index: 9999; font-weight: bold;
-        }
-
-        /* STAGE 3: CHESS GRID */
+        /* 3. GAME LAYER */
         #game { display: none; width: 100vw; height: 100vh; background: #000; justify-content: center; align-items: center; }
-        .board { width: 480px; height: 480px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 2px solid #222; }
-        .sq { width: 60px; height: 60px; }
+        .board { width: 520px; height: 520px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid #111; box-shadow: 0 0 30px rgba(0, 242, 255, 0.1); }
+        .sq { width: 65px; height: 65px; display: flex; justify-content: center; align-items: center; font-size: 45px; cursor: pointer; transition: 0.2s; }
+        .w { background: #222; } .b { background: #111; }
+        .sq:hover { background: rgba(0, 242, 255, 0.1); }
+        .sq.selected { background: rgba(0, 242, 255, 0.3) !important; box-shadow: inset 0 0 15px var(--n-blue); }
+
+        /* SETTINGS / SYSTEM GUIDE */
+        #guide { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; display: none; justify-content: center; align-items: center; }
+        .menu { width: 400px; background: #0a0b10; border: 1px solid var(--n-blue); padding: 30px; border-radius: 5px; }
+        .tab { background: #111; color: var(--n-blue); padding: 12px; margin-bottom: 5px; cursor: pointer; border: 1px solid #222; font-weight: bold; }
+
+        .x-btn { position: fixed; top: 20px; right: 20px; width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--n-blue); color: var(--n-blue); display: none; align-items: center; justify-content: center; cursor: pointer; z-index: 8500; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -57,6 +63,7 @@
     </div>
 
     <div id="assets">
+        <canvas id="physics-canvas"></canvas>
         <div class="overlay">
             <h1 id="t" class="t-pop">Chess Practice | Elo</h1>
             <div id="l" class="l-pop"></div>
@@ -65,52 +72,132 @@
         <div class="load-hud">
             <div id="perc" style="text-align:right; font-size:11px; color:var(--n-blue); margin-bottom:4px;">0%</div>
             <div class="r-border"><div class="bar"><div id="fill" class="fill"></div></div></div>
-            <button onclick="launchNow()" style="background:none; border:none; color:#333; font-size:9px; cursor:pointer; margin-top:8px;">SKIP ASSETS</button>
         </div>
     </div>
 
-    <div id="x" class="x-btn" onclick="launchNow()">✕</div>
-    <div id="game"><div id="board" class="board"></div></div>
+    <div id="x" class="x-btn" onclick="launchGame()">✕</div>
+
+    <div id="game">
+        <div id="board" class="board"></div>
+        <div style="width: 150px; padding: 20px; border-left: 1px solid #222; display: flex; flex-direction: column;">
+            <div style="width:40px; height:40px; border:2px solid var(--n-blue); border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--n-blue); cursor:pointer; font-weight:bold;" onclick="toggleGuide()">?</div>
+            <p style="font-size:10px; color:#444; margin-top:10px;">SYSTEM: ACTIVE</p>
+            <button style="margin-top:auto; background:none; border:1px solid var(--n-blue); color:var(--n-blue); cursor:pointer; padding:10px;" onclick="location.reload()">REBOOT</button>
+        </div>
+    </div>
+
+    <div id="guide" onclick="toggleGuide()">
+        <div class="menu" onclick="event.stopPropagation()">
+            <h2 style="color:var(--n-blue); margin-top:0;">SYSTEM GUIDE</h2>
+            <div class="tab">01 // PIECE MOVEMENT</div>
+            <div class="tab">02 // EVALUATION ICONS</div>
+            <div class="tab">03 // GAME MECHANICS</div>
+            <button style="width:100%; margin-top:20px; background:none; border:1px solid var(--n-red); color:var(--n-red); padding:10px; cursor:pointer;" onclick="toggleGuide()">CLOSE</button>
+        </div>
+    </div>
 
     <script>
-        // STAGE 1 -> 2 (Hard Reset)
-        setTimeout(() => {
-            document.getElementById('boot').style.display = 'none';
-            document.getElementById('assets').style.display = 'block';
-            
-            // Canva Anim Trigger
-            setTimeout(() => { document.getElementById('t').style.opacity = "1"; }, 200);
-            setTimeout(() => { document.getElementById('l').style.width = "100%"; }, 800);
-            setTimeout(() => { document.getElementById('d').style.opacity = "1"; }, 1500);
-            
-            // Loading Loop
-            let p = 0;
-            const bar = setInterval(() => {
-                p += Math.random() * 3;
-                if (p > 100) p = 100;
-                document.getElementById('fill').style.width = p + '%';
-                document.getElementById('perc').innerText = Math.floor(p) + '%';
-                if (p >= 100) {
-                    clearInterval(bar);
-                    document.getElementById('x').style.display = 'flex';
-                }
-            }, 60);
-        }, 5000);
+        const pChars = { 'R':'♖','N':'♘','B':'♗','Q':'♕','K':'♔','P':'♙','r':'♜','n':'♞','b':'♝','q':'♛','k':'♚','p':'♟' };
+        let source = null;
 
-        function launchNow() {
+        // INITIAL DATA (Piece positions)
+        let layout = [
+            ['r','n','b','q','k','b','n','r'],
+            ['p','p','p','p','p','p','p','p'],
+            ['','','','','','','',''],['','','','','','','',''],['','','','','','','',''],['','','','','','','',''],
+            ['P','P','P','P','P','P','P','P'],
+            ['R','N','B','Q','K','B','N','R']
+        ];
+
+        window.onload = () => {
+            // BOOT -> ASSETS
+            setTimeout(() => {
+                document.getElementById('boot').style.display = 'none';
+                document.getElementById('assets').style.display = 'block';
+                initPhysics();
+                
+                // CANVA ANIMS
+                setTimeout(() => { document.getElementById('t').style.opacity = "1"; document.getElementById('t').style.transform = "none"; }, 200);
+                setTimeout(() => { document.getElementById('l').style.width = "400px"; }, 800);
+                setTimeout(() => { document.getElementById('d').style.opacity = "1"; }, 1500);
+
+                // LOADING BAR
+                let p = 0;
+                const bar = setInterval(() => {
+                    p += Math.random() * 2;
+                    if (p > 100) p = 100;
+                    document.getElementById('fill').style.width = p + '%';
+                    document.getElementById('perc').innerText = Math.floor(p) + '%';
+                    if (p >= 100) { clearInterval(bar); document.getElementById('x').style.display = 'flex'; }
+                }, 60);
+            }, 5000);
+        };
+
+        function launchGame() {
             document.getElementById('assets').style.display = 'none';
             document.getElementById('x').style.display = 'none';
             document.getElementById('game').style.display = 'flex';
-            
-            // Generate board manually to avoid external engine blocks
+            drawBoard();
+        }
+
+        function toggleGuide() {
+            const g = document.getElementById('guide');
+            g.style.display = (g.style.display === 'flex') ? 'none' : 'flex';
+        }
+
+        function drawBoard() {
             const b = document.getElementById('board');
             b.innerHTML = '';
-            for(let i=0; i<64; i++) {
-                const s = document.createElement('div');
-                s.className = 'sq';
-                s.style.background = (Math.floor(i/8)+i%8)%2==0 ? '#222' : '#111';
-                b.appendChild(s);
+            layout.forEach((row, r) => {
+                row.forEach((piece, c) => {
+                    const s = document.createElement('div');
+                    s.className = `sq ${(r+c)%2==0?'w':'b'}`;
+                    s.innerHTML = pChars[piece] || '';
+                    s.onclick = () => handleSq(r, c);
+                    b.appendChild(s);
+                });
+            });
+        }
+
+        function handleSq(r, c) {
+            if (source) {
+                layout[r][c] = layout[source.r][source.c];
+                layout[source.r][source.c] = '';
+                source = null;
+                drawBoard();
+            } else if (layout[r][c]) {
+                source = {r, c};
+                drawBoard();
+                document.getElementById('board').children[r*8+c].classList.add('selected');
             }
+        }
+
+        function initPhysics() {
+            const canvas = document.getElementById('physics-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            const items = Array(40).fill().map(() => ({
+                x: Math.random()*canvas.width, y: Math.random()*canvas.height,
+                vx: (Math.random()-0.5)*2, vy: (Math.random()-0.5)*2,
+                txt: ['♜','♞','♟','▰','▲'][Math.floor(Math.random()*5)],
+                sz: 20+Math.random()*40
+            }));
+            function loop() {
+                ctx.fillStyle = '#050608'; ctx.fillRect(0,0,canvas.width,canvas.height);
+                // WHITE PARTICLES
+                ctx.fillStyle = 'rgba(255,255,255,0.1)';
+                for(let i=0; i<60; i++) {
+                    ctx.beginPath(); ctx.arc(Math.random()*canvas.width, Math.random()*canvas.height, 1, 0, 7); ctx.fill();
+                }
+                // SHARDS & PIECES
+                items.forEach(i => {
+                    i.x += i.vx; i.y += i.vy;
+                    if(i.x<0 || i.x>canvas.width) i.vx *= -1; if(i.y<0 || i.y>canvas.height) i.vy *= -1;
+                    ctx.font = i.sz + "px serif"; ctx.fillText(i.txt, i.x, i.y);
+                });
+                requestAnimationFrame(loop);
+            }
+            loop();
         }
     </script>
 </body>

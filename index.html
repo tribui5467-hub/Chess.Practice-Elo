@@ -2,38 +2,70 @@
 <html lang="en-AU">
 <head>
     <meta charset="UTF-8">
-    <title>Equinox Games | Tactical HUD v8</title>
+    <title>Equinox Games | Solaris HUD</title>
     <script src="https://cdnjs.cloudflare.com"></script>
     <style>
         :root { 
             --n-blue: #00f2ff; --n-green: #00ff00; --n-red: #ff4757; 
             --n-orange: #ff9f43; --n-yellow: #f1c40f; 
-            --bg-glass: rgba(5, 6, 8, 0.96);
+            --aura: linear-gradient(45deg, var(--n-blue), var(--n-green));
         }
         body, html { margin: 0; padding: 0; background: #000; color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; width: 100vw; }
 
-        /* 1. BOOT SCREEN (FIXED CENTERING) */
+        /* 1. BOOT SCREEN: SOLARIS APPEARANCE */
         #boot { 
             position: fixed; inset: 0; background: black; z-index: 30000; 
             display: flex; justify-content: center; align-items: center; 
             transition: opacity 1s; 
         }
-        .equinox-text { font-size: 32px; letter-spacing: 12px; font-weight: 200; color: #fff; text-transform: uppercase; animation: fade-in 1.5s forwards; }
-        .divider { width: 2px; height: 40px; background: white; margin: 0 25px; opacity: 0; animation: pop 0.5s forwards 1s; }
-        .controller-icon { font-size: 40px; opacity: 0; animation: fade-in 0.8s forwards 1.2s; }
-        @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes pop { to { opacity: 1; transform: scaleY(1); } }
+        
+        .equinox-text { 
+            font-size: 32px; letter-spacing: 12px; font-weight: 200; color: #fff; 
+            position: relative; clip-path: inset(0 100% 0 0); 
+            animation: solaris-reveal 2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        /* Solaris Shine Overlay */
+        .equinox-text::after {
+            content: "EQUINOX GAMES"; position: absolute; inset: 0;
+            color: var(--n-blue); filter: blur(10px);
+            clip-path: inset(0 100% 0 0);
+            animation: solaris-shine 2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        .divider { 
+            width: 2px; height: 40px; background: white; margin: 0 25px; 
+            transform: scaleY(0); 
+            animation: pop-divider 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards 1.8s; 
+        }
+
+        .controller-wrap { overflow: hidden; display: flex; align-items: center; }
+        .controller-icon { 
+            font-size: 40px; transform: translateX(-100%); 
+            filter: drop-shadow(0 0 15px var(--n-blue));
+            animation: baseline-slide 0.8s ease-out forwards 2.2s, aura-pulse 2s infinite alternate 3s; 
+        }
+
+        @keyframes solaris-reveal { to { clip-path: inset(0 0 0 0); } }
+        @keyframes solaris-shine { 
+            0% { clip-path: inset(0 100% 0 0); }
+            50% { clip-path: inset(0 0 0 0); opacity: 1; }
+            100% { clip-path: inset(0 0 0 100%); opacity: 0; }
+        }
+        @keyframes pop-divider { to { transform: scaleY(1); } }
+        @keyframes baseline-slide { to { transform: translateX(0); } }
+        @keyframes aura-pulse {
+            0% { filter: drop-shadow(0 0 5px var(--n-blue)); }
+            100% { filter: drop-shadow(0 0 20px var(--n-green)); transform: scale(1.1); }
+        }
 
         /* 2. LOADING SCREEN */
         #assets { position: fixed; inset: 0; background: #050608; z-index: 20000; display: none; opacity: 0; transition: 1s; }
         #physics-canvas { position: absolute; inset: 0; z-index: 1; }
-        .overlay { position: relative; z-index: 10; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0 50px; pointer-events: none; }
-        
+        .overlay { position: relative; z-index: 10; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0 50px; }
         .t-pop { color: var(--n-blue); font-size: 40px; opacity: 0; transform: translateY(30px); transition: 0.8s; }
         .l-pop { height: 2px; background: var(--n-blue); width: 0; margin: 20px 0; transition: 1.2s; }
         .d-wipe { color: #888; max-width: 650px; font-size: 14px; opacity: 0; transform: translateY(-20px); transition: 1.5s; line-height: 1.8; }
-
-        .load-hud { position: absolute; bottom: 60px; width: 400px; left: 50%; transform: translateX(-50%); z-index: 100; text-align: center; }
+        .load-hud { position: absolute; bottom: 60px; width: 400px; left: 50%; transform: translateX(-50%); z-index: 100; }
         .bar { background: #111; height: 24px; border-radius: 12px; overflow: hidden; position: relative; border: 1px solid #333; display: flex; align-items: center; justify-content: center; }
         .fill { position: absolute; left: 0; width: 0%; height: 100%; background: var(--n-blue); transition: width 0.1s linear; }
         .perc-text { position: relative; z-index: 2; font-size: 11px; font-weight: bold; color: white; mix-blend-mode: difference; }
@@ -43,31 +75,18 @@
         #game-canvas { position: absolute; inset: 0; z-index: 0; }
         .board-wrap { position: relative; z-index: 10; display: flex; flex-direction: column; align-items: center; }
         .board { width: 560px; height: 560px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid #111; background: rgba(0,0,0,0.8); }
-        .sq { width: 70px; height: 70px; display: flex; justify-content: center; align-items: center; position: relative; transition: 0.3s; box-sizing: border-box; }
+        .sq { width: 70px; height: 70px; display: flex; justify-content: center; align-items: center; position: relative; transition: 0.3s; }
         .w { background: rgba(42, 44, 51, 0.8); } .b { background: rgba(26, 28, 34, 0.8); }
         .piece { font-size: 48px; cursor: pointer; z-index: 10; transition: transform 0.3s; user-select: none; }
-        .move-hint { border: 4px solid white !important; }
-        .selected { background: rgba(0, 242, 255, 0.4) !important; }
-
-        /* 4. COMMAND HUB (BASELINE UP) */
+        
+        /* 4. SETTINGS */
         #settings-panel { 
-            position: fixed; left: 50%; bottom: 0; width: 28%; max-height: 85vh;
-            background: var(--bg-glass); border: 1px solid var(--n-blue); border-bottom: none;
-            border-radius: 15px 15px 0 0; transform: translate(-50%, 100%); 
-            transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1), height 0.4s ease; 
-            z-index: 25000; padding: 25px; overflow-y: auto; box-shadow: 0 -10px 50px rgba(0, 242, 255, 0.2);
+            position: fixed; left: 50%; bottom: 0; width: 300px; max-height: 80vh;
+            background: rgba(5,6,8,0.98); border: 1px solid var(--n-blue); border-bottom: none;
+            border-radius: 15px 15px 0 0; transform: translate(-50%, 100%); transition: 0.6s; z-index: 25000; padding: 20px; overflow-y: auto;
         }
         #settings-panel.open { transform: translate(-50%, -5%); }
-
-        .tab-btn { background: #111; border: 1px solid #333; color: #fff; width: 100%; padding: 12px; text-align: left; cursor: pointer; margin-top: 8px; transition: 0.3s; font-weight: bold; font-size: 11px; letter-spacing: 1px; }
-        .tab-btn:hover { border-color: var(--n-blue); }
-        .tab-content { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-out; font-size: 12px; color: #aaa; }
-        .tab-content.active { max-height: 600px; padding: 15px 0; }
-        
-        .unit-card { border-left: 2px solid #333; padding-left: 10px; margin-bottom: 15px; }
-        .rate-red { color: var(--n-red); } .rate-orange { color: var(--n-orange); } .rate-yellow { color: var(--n-yellow); } .rate-green { color: var(--n-green); }
-        .btn-e { background: none; border: 1px solid var(--n-blue); color: var(--n-blue); padding: 10px; cursor: pointer; transition: 0.3s; font-weight: bold; }
-        .btn-e:hover { background: var(--n-blue); color: #000; }
+        .tab-btn { background: #111; border: 1px solid #333; color: #fff; width: 100%; padding: 10px; margin-top: 5px; cursor: pointer; text-align: left; }
     </style>
 </head>
 <body>
@@ -76,16 +95,18 @@
     <div id="boot">
         <div class="equinox-text">EQUINOX GAMES</div>
         <div class="divider"></div>
-        <div class="controller-icon">🎮</div>
+        <div class="controller-wrap">
+            <div class="controller-icon">🎮</div>
+        </div>
     </div>
 
     <!-- LOADING SCREEN -->
     <div id="assets">
         <canvas id="physics-canvas"></canvas>
         <div class="overlay">
-            <h1 id="t" class="t-pop">Chess Practice | Elo</h1>
+            <h1 id="t" class="t-pop">Tactical System Analysis</h1>
             <div id="l" class="l-pop"></div>
-            <p id="d" class="d-wipe">Regular chess practice boosts your Elo rating by improving strategic understanding, anticipatory skills, and tactical abilities. It promotes critical thinking and mental agility, while game analysis helps identify patterns. Practicing with others builds community and motivation. Consistency is key to mastering chess at any skill level.</p>
+            <p id="d" class="d-wipe">Regular chess practice boosts your Elo rating by improving strategic understanding, anticipatory skills, and tactical abilities. Consistency is key to mastering chess at any skill level.</p>
         </div>
         <div class="load-hud">
             <div class="bar"><div id="fill" class="fill"></div><div id="perc" class="perc-text">0%</div></div>
@@ -96,60 +117,33 @@
     <div id="game">
         <canvas id="game-canvas"></canvas>
         <div class="board-wrap">
-            <div id="turn" style="color:var(--n-blue); margin-bottom:15px; letter-spacing:3px; font-weight:bold;">SYSTEM TURN: WHITE</div>
+            <div id="turn" style="color:var(--n-blue); margin-bottom:10px; letter-spacing:2px;">TURN: WHITE</div>
             <div id="board" class="board"></div>
         </div>
-        <button class="btn-e" style="position:fixed; bottom:30px; left:50%; transform:translateX(-50%); width:60px; height:60px; border-radius:50%; font-size:24px; z-index:100;" onclick="toggleSettings()">?</button>
+        <button style="position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:none; border:1px solid var(--n-blue); color:var(--n-blue); width:40px; height:40px; border-radius:50%; cursor:pointer; z-index:100;" onclick="toggleSettings()">?</button>
     </div>
 
-    <!-- COMMAND HUB -->
     <div id="settings-panel">
-        <span style="float:right; cursor:pointer; color:var(--n-blue); font-size:20px;" onclick="toggleSettings()">✕</span>
-        <h2 style="color:var(--n-blue); margin:0; font-size:18px;">TACTICAL COMMAND HUB</h2>
-        <button class="btn-e" style="margin-top:20px; width:100%;" onclick="location.reload()">RESTART SIMULATION</button>
-
-        <div style="color:var(--n-blue); font-size:10px; margin-top:25px; letter-spacing:2px;">DOCUMENTS // TACTICAL</div>
-
-        <button class="tab-btn" onclick="toggleTab('units')">01 // TACTICAL UNITS (ASSETS)</button>
-        <div id="units" class="tab-content">
-            <div class="unit-card">♔ <b>Monarch (King)</b>: Core CPU. One-square radius. <br>Importance: <b class="rate-red">CRITICAL [RED]</b></div>
-            <div class="unit-card">♕ <b>Superior (Queen)</b>: High-output mobile asset. <br>Importance: <b class="rate-red">CRITICAL [RED]</b></div>
-            <div class="unit-card">♖ <b>Fortress (Rook)</b>: Linear artillery specialist. <br>Importance: <b class="rate-orange">HIGH [ORANGE]</b></div>
-            <div class="unit-card">♗ <b>Interceptor (Bishop)</b>: Long-range diagonal unit. <br>Importance: <b class="rate-orange">HIGH [ORANGE]</b></div>
-            <div class="unit-card">♘ <b>Recon (Knight)</b>: L-path jump specialist. <br>Importance: <b class="rate-yellow">MODERATE [YELLOW]</b></div>
-            <div class="unit-card">♙ <b>Infantry (Pawn)</b>: Forward unit with promotion capability. <br>Importance: <b class="rate-green">EXPENDABLE [GREEN]</b></div>
-        </div>
-
-        <button class="tab-btn" onclick="toggleTab('icons')">02 // EVALUATION ICONS</button>
-        <div id="icons" class="tab-content">
-            <p>★ <b>Best</b>: Optimal engine trajectory.<br>📖 <b>Book</b>: Theory opening setup.<br>!! <b>Brilliant</b>: High-reward tactical sacrifice.<br>💀 <b>Lethal</b>: Target termination confirmed.</p>
-        </div>
-
-        <button class="tab-btn" onclick="toggleTab('mech')">03 // CORE MECHANICS</button>
-        <div id="mech" class="tab-content">
-            <p><b>Checkmate</b>: Permanent monarch entrapment. Simulation End.<br><b>Stalemate</b>: Neutral state; no legal movement available.<br><b>Promotion</b>: Asset evolution at 8th rank baseline.</p>
-        </div>
-
-        <div style="color:var(--n-blue); font-size:10px; margin-top:20px; letter-spacing:2px;">AUDIO // INTERFACE</div>
-        <iframe src="https://open.spotify.com" width="100%" height="80" frameBorder="0" allow="autoplay; encrypted-media" style="margin-top:10px;"></iframe>
+        <h3 style="color:var(--n-blue); margin-top:0;">COMMAND HUB</h3>
+        <button class="tab-btn" onclick="location.reload()">RESTART</button>
+        <div style="margin-top:15px; font-size:12px; color:#777;">AUDIO INTERFACE</div>
+        <iframe src="https://open.spotify.com" width="100%" height="80" frameBorder="0" allow="autoplay; encrypted-media"></iframe>
     </div>
 
     <script>
         const game = new Chess();
-        let selectedSq = null;
-        let ctrlToggle = false;
-        const neonColors = { k:'#ff4757', q:'#ff4757', r:'#ff9f43', b:'#ff9f43', n:'#f1c40f', p:'#00ff00' };
-
-        // 1. BOOT SEQUENCE
-        setTimeout(() => {
-            document.getElementById('boot').style.opacity = '0';
+        
+        // 1. SEQUENCE TRIGGER
+        window.onload = () => {
             setTimeout(() => {
-                document.getElementById('boot').style.display = 'none';
-                startLoading();
-            }, 1000);
-        }, 3000);
+                document.getElementById('boot').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('boot').style.display = 'none';
+                    startLoading();
+                }, 1000);
+            }, 5500); // Wait for boot animations to finish
+        };
 
-        // 2. LOADING LOGIC
         function startLoading() {
             const assets = document.getElementById('assets');
             assets.style.display = 'block';
@@ -162,15 +156,14 @@
             
             let p = 0;
             let iv = setInterval(() => {
-                p += Math.random() * 2.5;
-                if(p >= 100) { p = 100; clearInterval(iv); setTimeout(initGame, 1200); }
+                p += Math.random() * 2;
+                if(p >= 100) { p = 100; clearInterval(iv); setTimeout(initGame, 1000); }
                 document.getElementById('fill').style.width = p + '%';
                 document.getElementById('perc').innerText = Math.floor(p) + '%';
-            }, 50);
+            }, 60);
             initAssetPhysics();
         }
 
-        // 3. GAME INITIALIZATION
         function initGame() {
             document.getElementById('assets').style.opacity = '0';
             setTimeout(() => {
@@ -182,6 +175,7 @@
             }, 1000);
         }
 
+        // 2. CHESS BOARD
         function drawBoard() {
             const b = document.getElementById('board'); b.innerHTML = '';
             const glyphs = { p:'♟', r:'♜', n:'♞', b:'♝', q:'♛', k:'♚', P:'♙', R:'♖', N:'♘', B:'♗', Q:'♕', K:'♔' };
@@ -191,70 +185,41 @@
                     const piece = game.get(id);
                     const sq = document.createElement('div');
                     sq.className = `sq ${(r+c)%2==0?'w':'b'}`;
-                    sq.id = id;
                     if(piece) {
                         const p = document.createElement('div');
                         p.className = 'piece';
                         p.innerHTML = glyphs[piece.color === 'w' ? piece.type.toUpperCase() : piece.type];
                         sq.appendChild(p);
-                        sq.onmouseenter = () => {
-                            const color = neonColors[piece.type];
-                            sq.style.boxShadow = `inset 0 0 25px ${color}`;
-                            if(ctrlToggle) showMoves(id, color);
-                        };
-                        sq.onmouseleave = () => { if(!selectedSq) clearHighlights(); };
                     }
-                    sq.onclick = () => handleMove(id);
+                    sq.onclick = () => {
+                        // Simple move logic
+                        if(!window.selected) window.selected = id;
+                        else {
+                            game.move({from: window.selected, to: id, promotion: 'q'});
+                            window.selected = null;
+                            drawBoard();
+                        }
+                    };
                     b.appendChild(sq);
                 }
             }
-            document.getElementById('turn').innerText = `SYSTEM TURN: ${game.turn() === 'w' ? 'WHITE' : 'BLACK'}`;
+            document.getElementById('turn').innerText = `TURN: ${game.turn() === 'w' ? 'WHITE' : 'BLACK'}`;
         }
 
-        function handleMove(id) {
-            if(selectedSq === id) { selectedSq = null; drawBoard(); return; }
-            if(!selectedSq) {
-                if(game.get(id)) { selectedSq = id; drawBoard(); document.getElementById(id).classList.add('selected'); }
-            } else {
-                if(game.move({from: selectedSq, to: id, promotion: 'q'})) { selectedSq = null; drawBoard(); }
-                else { selectedSq = id; drawBoard(); document.getElementById(id).classList.add('selected'); }
-            }
-        }
-
-        function showMoves(id, color) {
-            game.moves({square: id, verbose: true}).forEach(m => {
-                const target = document.getElementById(m.to);
-                target.classList.add('move-hint');
-                target.style.borderColor = color;
-            });
-        }
-
-        function clearHighlights() {
-            document.querySelectorAll('.sq').forEach(s => {
-                s.style.boxShadow = 'none'; s.style.border = 'none';
-                s.classList.remove('move-hint');
-            });
-        }
-
-        // 4. BACKGROUND SYSTEMS
+        // 3. BACKGROUNDS
         function initAssetPhysics() {
             const cvs = document.getElementById('physics-canvas');
             const ctx = cvs.getContext('2d');
             cvs.width = window.innerWidth; cvs.height = window.innerHeight;
-            const pieces = ['♖','♘','♗','♕','♔','■','▨'];
-            let debris = Array.from({length: 25}, () => ({
+            let debris = Array.from({length: 15}, () => ({
                 x: Math.random()*cvs.width, y: Math.random()*cvs.height,
-                vx: (Math.random()-0.5)*2, vy: (Math.random()-0.5)*2,
-                char: pieces[Math.floor(Math.random()*pieces.length)],
-                size: 20 + Math.random()*40,
-                color: `rgba(255,255,255,${Math.random()*0.4})`
+                vx: (Math.random()-0.5), vy: (Math.random()-0.5), size: 20+Math.random()*20
             }));
             function loop() {
-                ctx.clearRect(0,0,cvs.width,cvs.height);
+                ctx.clearRect(0,0,cvs.width,cvs.height); ctx.fillStyle = 'rgba(255,255,255,0.1)';
                 debris.forEach(d => {
-                    d.x += d.vx; d.y += d.vy;
-                    if(d.x<0 || d.x>cvs.width) d.vx*=-1; if(d.y<0 || d.y>cvs.height) d.vy*=-1;
-                    ctx.fillStyle = d.color; ctx.font = `${d.size}px Arial`; ctx.fillText(d.char, d.x, d.y);
+                    d.x += d.vx; d.y += d.vy; if(d.x<0 || d.x>cvs.width) d.vx*=-1;
+                    ctx.font = d.size+'px Arial'; ctx.fillText('♖', d.x, d.y);
                 });
                 requestAnimationFrame(loop);
             }
@@ -265,30 +230,16 @@
             const cvs = document.getElementById('game-canvas');
             const ctx = cvs.getContext('2d');
             cvs.width = window.innerWidth; cvs.height = window.innerHeight;
-            let stars = Array.from({length: 120}, () => ({
-                x: Math.random()*cvs.width, y: Math.random()*cvs.height,
-                s: Math.random()*3 + 1, v: Math.random()*0.6 + 0.1
-            }));
+            let stars = Array.from({length: 100}, () => ({ x: Math.random()*cvs.width, y: Math.random()*cvs.height, v: Math.random()*0.5 }));
             function loop() {
-                ctx.clearRect(0,0,cvs.width,cvs.height);
-                ctx.fillStyle = '#ffffff88';
-                stars.forEach(s => {
-                    ctx.beginPath(); ctx.arc(s.x, s.y, s.s, 0, Math.PI*2); ctx.fill();
-                    s.y -= s.v; if(s.y < 0) s.y = cvs.height;
-                });
+                ctx.clearRect(0,0,cvs.width,cvs.height); ctx.fillStyle = '#fff';
+                stars.forEach(s => { ctx.fillRect(s.x, s.y, 2, 2); s.y -= s.v; if(s.y<0) s.y=cvs.height; });
                 requestAnimationFrame(loop);
             }
             loop();
         }
 
-        window.onkeydown = (e) => { if(e.key === 'Control') ctrlToggle = !ctrlToggle; };
         function toggleSettings() { document.getElementById('settings-panel').classList.toggle('open'); }
-        function toggleTab(id) { 
-            const el = document.getElementById(id);
-            const isActive = el.classList.contains('active');
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            if(!isActive) el.classList.add('active');
-        }
     </script>
 </body>
 </html>

@@ -3,95 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <title>Equinox Games | Solaris HUD v10</title>
-    <!-- Essential Chess Logic Library -->
     <script src="https://cdnjs.cloudflare.com"></script>
     <style>
-        :root {
-            --n-blue: #00f2ff;
-            --n-green: #00ff00;
-            --n-red: #ff4757;
-            --n-orange: #ff9f43;
-            --n-yellow: #f1c40f;
-            --bg-dark: #050608;
+        :root { 
+            --n-blue: #00f2ff; --n-green: #00ff00; --n-red: #ff4757; 
+            --n-orange: #ff9f43; --n-yellow: #f1c40f; 
         }
+        body, html { margin: 0; padding: 0; background: #000; color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; width: 100vw; }
 
-        body, html {
-            margin: 0;
-            padding: 0;
-            background: #000;
-            color: white;
-            font-family: 'Segoe UI', 'Roboto', sans-serif;
-            overflow: hidden;
-            height: 100vh;
-            width: 100vw;
+        /* 1. BOOT SCREEN: SOLARIS & NEON AURA */
+        #boot { 
+            position: fixed; inset: 0; background: black; z-index: 30000; 
+            display: flex; justify-content: center; align-items: center; 
+            transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1); 
         }
-
-        /* 1. BOOT SCREEN */
-        #boot {
-            position: fixed;
-            inset: 0;
-            background: black;
-            z-index: 30000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .equinox-text {
-            font-size: 32px;
-            letter-spacing: 12px;
-            font-weight: 200;
-            color: #fff;
-            position: relative;
-            clip-path: inset(0 100% 0 0);
+        
+        .equinox-text { 
+            font-size: 32px; letter-spacing: 12px; font-weight: 200; color: #fff; 
+            position: relative; clip-path: inset(0 100% 0 0); 
             animation: solaris-reveal 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
-
+        /* Solaris Shine Overlay */
         .equinox-text::after {
-            content: "EQUINOX GAMES";
-            position: absolute;
-            inset: 0;
-            color: var(--n-blue);
-            filter: blur(12px);
-            clip-path: inset(0 100% 0 0);
+            content: "EQUINOX GAMES"; position: absolute; inset: 0;
+            color: var(--n-blue); filter: blur(12px); clip-path: inset(0 100% 0 0);
             animation: solaris-shine 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
 
-        .divider {
-            width: 2px;
-            height: 40px;
-            background: white;
-            margin: 0 25px;
-            transform: scaleY(0);
-            animation: pop-divider 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards 2s;
+        .divider { 
+            width: 2px; height: 40px; background: white; margin: 0 25px; 
+            transform: scaleY(0); 
+            animation: pop-divider 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards 2s; 
         }
 
+        /* NEON AURA & BASELINE CONTROLLER */
         .controller-box {
-            position: relative;
-            width: 80px;
-            height: 80px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            position: relative; width: 80px; height: 80px;
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden; /* Provides the baseline clipping from the divider */
         }
 
         .aura-circle {
-            position: absolute;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            border: 3px solid var(--n-blue);
+            position: absolute; width: 60px; height: 60px;
+            border-radius: 50%; border: 3px solid var(--n-blue);
             opacity: 0;
             box-shadow: 0 0 25px var(--n-blue), inset 0 0 15px var(--n-blue);
             animation: aura-glow 1s forwards 3s, aura-color-pulse 3s infinite alternate 4s;
+            pointer-events: none; z-index: 1;
         }
 
-        .controller-icon {
-            font-size: 42px;
-            z-index: 2;
-            transform: translateX(-150%);
-            animation: baseline-slide 0.8s ease-out forwards 2.5s;
+        .controller-icon { 
+            font-size: 42px; z-index: 2; transform: translateX(-150%);
+            animation: baseline-slide 0.8s ease-out forwards 2.5s; 
         }
 
         @keyframes solaris-reveal { to { clip-path: inset(0 0 0 0); } }
@@ -108,89 +71,20 @@
             100% { border-color: var(--n-green); box-shadow: 0 0 45px var(--n-green); transform: scale(1.1); }
         }
 
-        /* 2. LOADING SCREEN */
-        #assets {
-            position: fixed;
-            inset: 0;
-            background: var(--bg-dark);
-            z-index: 20000;
-            display: none;
-            opacity: 0;
-            transition: 1.5s;
-        }
-
+        /* 2. LOADING SCREEN STYLES */
+        #assets { position: fixed; inset: 0; background: #050608; z-index: 20000; display: none; opacity: 0; transition: 1.5s; }
         #physics-canvas { position: absolute; inset: 0; }
+        .overlay { position: relative; z-index: 10; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0 50px; }
+        .t-pop { color: var(--n-blue); font-size: 40px; opacity: 0; transform: translateY(30px); transition: 0.8s; }
+        .l-pop { height: 2px; background: var(--n-blue); width: 0; margin: 20px 0; transition: 1.2s; }
+        .d-wipe { color: #888; max-width: 650px; font-size: 14px; opacity: 0; transform: translateY(-20px); transition: 1.5s; line-height: 1.8; }
+        .load-hud { position: absolute; bottom: 60px; width: 400px; left: 50%; transform: translateX(-50%); z-index: 100; }
+        #fill { position: absolute; left: 0; width: 0%; height: 100%; background: var(--n-blue); transition: width 0.1s linear; }
 
-        .overlay {
-            position: relative;
-            z-index: 10;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 0 50px;
-        }
-
-        .t-pop { color: var(--n-blue); font-size: 40px; opacity: 0; transform: translateY(30px); transition: 0.8s; text-shadow: 0 0 15px var(--n-blue); }
-        .l-pop { height: 2px; background: var(--n-blue); width: 0; margin: 20px 0; transition: 1.2s; box-shadow: 0 0 10px var(--n-blue); }
-        .d-wipe { color: #888; max-width: 600px; font-size: 14px; opacity: 0; transform: translateY(-20px); transition: 1.5s; line-height: 1.8; }
-
-        .load-hud {
-            position: absolute;
-            bottom: 60px;
-            width: 300px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 100;
-        }
-
-        #fill { 
-            position: absolute; 
-            left: 0; 
-            width: 0%; 
-            height: 100%; 
-            background: var(--n-blue); 
-            transition: width 0.1s linear; 
-            box-shadow: 0 0 15px var(--n-blue);
-        }
-
-        /* 3. GAME HUD */
-        #game {
-            display: none;
-            width: 100vw;
-            height: 100vh;
-            background: #000;
-            justify-content: center;
-            align-items: center;
-            opacity: 0;
-            transition: 1.5s;
-        }
-
+        /* 3. GAME HUD STYLES */
+        #game { display: none; width: 100vw; height: 100vh; background: #000; justify-content: center; align-items: center; opacity: 0; transition: 1.5s; }
         #game-canvas { position: absolute; inset: 0; }
-
-        .board {
-            width: 85vmin;
-            height: 85vmin;
-            display: grid;
-            grid-template: repeat(8, 1fr) / repeat(8, 1fr);
-            border: 10px solid #1a1a1a;
-            box-shadow: 0 0 50px rgba(0,0,0,0.5), 0 0 20px var(--n-blue);
-            z-index: 5;
-            background: rgba(0,0,0,0.9);
-        }
-
-        .sq {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 6vmin;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .sq:hover { background: rgba(0, 242, 255, 0.1) !important; }
+        .board { width: 560px; height: 560px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid #111; z-index: 5; background: rgba(0,0,0,0.8); }
     </style>
 </head>
 <body>
@@ -209,12 +103,12 @@
     <div id="assets">
         <canvas id="physics-canvas"></canvas>
         <div class="overlay">
-            <h1 id="t" class="t-pop">Solaris HUD | Chess</h1>
+            <h1 id="t" class="t-pop">Chess Practice | Elo</h1>
             <div id="l" class="l-pop"></div>
-            <p id="d" class="d-wipe">Synchronising neural tactics... Mastering the 64 squares requires patience, precision, and a bit of Solaris energy.</p>
+            <p id="d" class="d-wipe">Regular chess practice boosts your Elo rating by improving strategic understanding and tactical abilities. Consistency is key to mastering chess at any skill level.</p>
         </div>
         <div class="load-hud">
-            <div style="background:#111; height:12px; border-radius:6px; overflow:hidden; border:1px solid #333; position:relative;">
+            <div style="background:#111; height:24px; border-radius:12px; overflow:hidden; border:1px solid #333; position:relative;">
                 <div id="fill"></div>
             </div>
         </div>
@@ -227,11 +121,10 @@
     </div>
 
     <script>
-        // Initialize the Chess engine (chess.js)
-        const chess = new Chess();
+        const game = new Chess();
 
         window.onload = () => {
-            // Wait for boot animation to finish
+            // Sequence starts: Solaris Text -> Pop Divider -> Baseline Controller -> Aura Pulse
             setTimeout(() => {
                 const boot = document.getElementById('boot');
                 boot.style.opacity = '0';
@@ -239,30 +132,24 @@
                     boot.style.display = 'none';
                     startLoading();
                 }, 1200);
-            }, 6500); 
+            }, 7500); // Increased time for full animation cycle
         };
 
         function startLoading() {
             document.getElementById('assets').style.display = 'block';
             setTimeout(() => {
                 document.getElementById('assets').style.opacity = '1';
-                document.getElementById('t').style.opacity = '1';
-                document.getElementById('t').style.transform = 'translateY(0)';
+                document.getElementById('t').style.opacity = '1'; document.getElementById('t').style.transform = 'translateY(0)';
                 document.getElementById('l').style.width = '300px';
-                document.getElementById('d').style.opacity = '1';
-                document.getElementById('d').style.transform = 'translateY(0)';
+                document.getElementById('d').style.opacity = '1'; document.getElementById('d').style.transform = 'translateY(0)';
             }, 100);
 
             let p = 0;
             let iv = setInterval(() => {
-                p += Math.random() * 3;
-                if(p >= 100) {
-                    p = 100;
-                    clearInterval(iv);
-                    setTimeout(initGame, 800);
-                }
+                p += Math.random() * 2;
+                if(p >= 100) { p = 100; clearInterval(iv); setTimeout(initGame, 1000); }
                 document.getElementById('fill').style.width = p + '%';
-            }, 50);
+            }, 60);
             initPhysics();
         }
 
@@ -278,85 +165,36 @@
         }
 
         function drawBoard() {
-            const b = document.getElementById('board');
-            b.innerHTML = '';
-            // Chess pieces mapping
-            const pieces = {
-                'p': '♟', 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚',
-                'P': '♙', 'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔'
-            };
-
+            const b = document.getElementById('board'); b.innerHTML = '';
             for(let r=0; r<8; r++) {
                 for(let c=0; c<8; c++) {
                     const sq = document.createElement('div');
-                    sq.className = 'sq';
-                    sq.style.background = (r+c)%2==0 ? 'rgba(42,44,51,0.6)' : 'rgba(20,22,28,0.8)';
-                    
-                    // Logic to place starting pieces visually
-                    const boardState = chess.board();
-                    const piece = boardState[r][c];
-                    if(piece) {
-                        sq.innerText = pieces[piece.type === piece.type.toLowerCase() && piece.color === 'w' ? piece.type.toUpperCase() : piece.type];
-                        // Apply glow to white pieces for HUD effect
-                        if(piece.color === 'w') sq.style.color = 'var(--n-blue)';
-                    }
-                    
+                    sq.style.width = '70px'; sq.style.height = '70px';
+                    sq.style.background = (r+c)%2==0?'rgba(42,44,51,0.8)':'rgba(26,28,34,0.8)';
                     b.appendChild(sq);
                 }
             }
         }
 
         function initPhysics() {
-            const cvs = document.getElementById('physics-canvas');
-            const ctx = cvs.getContext('2d');
-            cvs.width = window.innerWidth;
-            cvs.height = window.innerHeight;
-            
-            let particles = Array.from({length: 15}, () => ({
-                x: Math.random() * cvs.width,
-                y: Math.random() * cvs.height,
-                v: 0.5 + Math.random() * 1.5,
-                char: ['♖','♘','♗','♕'].sort(() => Math.random() - 0.5)[0]
-            }));
-
+            const cvs = document.getElementById('physics-canvas'); const ctx = cvs.getContext('2d');
+            cvs.width = window.innerWidth; cvs.height = window.innerHeight;
+            let pieces = Array.from({length: 12}, () => ({ x: Math.random()*cvs.width, y: Math.random()*cvs.height, v: Math.random()*0.4 }));
             function loop() {
-                ctx.clearRect(0,0,cvs.width,cvs.height);
-                ctx.fillStyle = 'rgba(0, 242, 255, 0.15)';
-                ctx.font = '20px serif';
-                particles.forEach(p => {
-                    ctx.fillText(p.char, p.x, p.y);
-                    p.y -= p.v;
-                    if(p.y < -20) p.y = cvs.height + 20;
-                });
+                ctx.clearRect(0,0,cvs.width,cvs.height); ctx.fillStyle = 'rgba(255,255,255,0.1)';
+                pieces.forEach(p => { ctx.fillText('♖', p.x, p.y); p.y -= p.v; if(p.y<0) p.y=cvs.height; });
                 requestAnimationFrame(loop);
             }
             loop();
         }
 
         function initStarfield() {
-            const cvs = document.getElementById('game-canvas');
-            const ctx = cvs.getContext('2d');
-            cvs.width = window.innerWidth;
-            cvs.height = window.innerHeight;
-            
-            let stars = Array.from({length: 150}, () => ({
-                x: Math.random() * cvs.width,
-                y: Math.random() * cvs.height,
-                v: 0.2 + Math.random() * 0.5,
-                size: Math.random() * 2
-            }));
-
+            const cvs = document.getElementById('game-canvas'); const ctx = cvs.getContext('2d');
+            cvs.width = window.innerWidth; cvs.height = window.innerHeight;
+            let stars = Array.from({length: 120}, () => ({ x: Math.random()*cvs.width, y: Math.random()*cvs.height, v: Math.random()*0.3 }));
             function loop() {
-                // Subtle motion blur effect
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
-                ctx.fillRect(0,0,cvs.width,cvs.height);
-                
-                ctx.fillStyle = '#fff';
-                stars.forEach(s => {
-                    ctx.fillRect(s.x, s.y, s.size, s.size);
-                    s.y -= s.v;
-                    if(s.y < 0) s.y = cvs.height;
-                });
+                ctx.clearRect(0,0,cvs.width,cvs.height); ctx.fillStyle = '#fff';
+                stars.forEach(s => { ctx.fillRect(s.x, s.y, 2, 2); s.y -= s.v; if(s.y<0) s.y=cvs.height; });
                 requestAnimationFrame(loop);
             }
             loop();

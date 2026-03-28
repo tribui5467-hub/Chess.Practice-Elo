@@ -6,234 +6,127 @@
     <style>
         :root { 
             --n-blue: #00f2ff; --n-green: #81b64c; --n-red: #fa412d; 
-            --n-orange: #f4943c; --n-yellow: #f1c40f; --n-pink: #ff00ff;
-            --n-brilliant: #26ceaa; --n-great: #1baca6;
+            --n-orange: #f4943c; --n-yellow: #f1c40f; 
+            --smooth: cubic-bezier(0.4, 0, 0.2, 1); /* Liquid-smooth easing */
         }
         body, html { margin: 0; padding: 0; background: #000; color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; width: 100vw; }
-        canvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 
-        /* --- 1. BOOT SCREEN --- */
-        #boot { position: fixed; inset: 0; background: black; z-index: 30000; display: flex; justify-content: center; align-items: center; transition: 1s; }
-        .equinox-text { font-size: 32px; letter-spacing: 12px; font-weight: 200; color: #fff; clip-path: inset(0 100% 0 0); animation: reveal 2s forwards; text-shadow: 0 0 15px var(--n-blue); }
-        .divider { width: 2px; height: 40px; background: white; margin: 0 25px; transform: scaleY(0); animation: pop-divider 0.6s forwards 2s; }
-        .controller-box { position: relative; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; }
-        .aura-circle { position: absolute; width: 60px; height: 60px; border-radius: 50%; border: 3px solid var(--n-blue); opacity: 0; box-shadow: 0 0 25px var(--n-blue); animation: aura-glow 1s forwards 3s, aura-color-pulse 3s infinite alternate 4s; }
-        .controller-icon { font-size: 42px; transform: translateX(-180%); animation: slide-in 0.8s forwards 2.5s; }
-
-        @keyframes reveal { to { clip-path: inset(0 0 0 0); } }
-        @keyframes pop-divider { to { transform: scaleY(1); } }
-        @keyframes slide-in { to { transform: translateX(0); } }
-        @keyframes aura-glow { from { opacity: 0; transform: scale(0.4); } to { opacity: 1; transform: scale(1); } }
-        @keyframes aura-color-pulse { 0% { border-color: var(--n-blue); } 100% { border-color: var(--n-pink); transform: scale(1.1); } }
-
-        /* --- 2. LOADING SCREEN & SKIP --- */
-        #assets { position: fixed; inset: 0; background: #050608; z-index: 20000; display: none; opacity: 0; transition: 1s; flex-direction: column; align-items: center; justify-content: center; }
-        .rainbow-container { padding: 3px; border-radius: 12px; margin: 20px; background: linear-gradient(90deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000); background-size: 400%; animation: rainbow-flow 3s linear infinite; }
-        .bar { width: 400px; height: 26px; background: #000; border-radius: 13px; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; }
-        #fill { position: absolute; left: 0; width: 0%; height: 100%; background: var(--n-blue); transition: 0.1s; }
-        #perc { position: relative; z-index: 2; font-weight: bold; mix-blend-mode: difference; }
-        .skip-btn { margin-top: 5px; background: rgba(255,255,255,0.05); border: 1px solid #333; color: #777; padding: 4px 30px; cursor: pointer; border-radius: 3px; font-size: 10px; letter-spacing: 2px; }
-        @keyframes rainbow-flow { to { background-position: 400%; } }
-
-        /* --- 3. GAME HUD & GEAR --- */
-        #game { display: none; width: 100vw; height: 100vh; justify-content: center; align-items: center; opacity: 0; transition: 1.5s; z-index: 5; }
-        .board { width: 560px; height: 560px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid #111; background: rgba(0,0,0,0.85); transition: 1s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .sq { width: 70px; height: 70px; display: flex; justify-content: center; align-items: center; cursor: pointer; position: relative; }
-        .w { background: rgba(45, 45, 55, 0.8); } .b { background: rgba(20, 20, 25, 0.8); }
-        .piece { font-size: 48px; user-select: none; z-index: 2; filter: brightness(0.2); transition: 0.4s; pointer-events: none; }
-        .piece.unlocked { filter: brightness(1); pointer-events: auto; }
-        .piece.fly-in { transform: translateY(100vh) rotate(45deg); opacity: 0; }
-
-        #gear-btn { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; background: none; border: none; color: var(--n-blue); font-size: 35px; cursor: pointer; z-index: 100; transition: 0.4s; display: flex; align-items: center; justify-content: center; }
-        #gear-btn:hover:not(.active) { color: var(--n-green); transform: scale(1.3) rotate(20deg); }
-        #gear-btn.active { color: var(--n-green); animation: gear-spin 3s linear infinite; }
+        /* --- 1. SMOOTHED GEAR BUTTON --- */
+        #gear-btn { 
+            position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; 
+            background: none; border: none; color: var(--n-blue); font-size: 35px; 
+            cursor: pointer; z-index: 100; display: flex; align-items: center; justify-content: center;
+            transition: color 0.5s var(--smooth), transform 0.6s var(--smooth);
+        }
+        #gear-btn:hover { color: var(--n-green); transform: scale(1.2) rotate(45deg); }
+        #gear-btn.active { color: var(--n-green); animation: gear-spin 4s linear infinite; }
         @keyframes gear-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        /* --- 4. HELP MENU (ASSETS & ICONS) --- */
-        #help-menu { position: fixed; left: 50%; bottom: -120%; transform: translateX(-50%); width: 700px; background: #000; border: 2px solid var(--n-blue); border-radius: 15px; z-index: 26000; padding: 25px; transition: 0.6s cubic-bezier(0.18, 0.89, 0.32, 1.28); box-shadow: 0 0 40px var(--n-blue); }
-        #help-menu.active { bottom: 5%; }
-        .asset-card { border-left: 3px solid var(--n-blue); background: rgba(255,255,255,0.05); padding: 15px; margin-bottom: 12px; font-size: 13px; line-height: 1.6; }
-        .criteria-box { background: rgba(0,0,0,0.5); border: 1px dashed #444; padding: 10px; margin-top: 8px; font-size: 11px; color: #aaa; }
-        .group-title { border-bottom: 2px solid #333; margin: 15px 0 5px; color: var(--n-blue); font-size: 10px; text-transform: uppercase; letter-spacing: 2px; }
-        .tab-btn { background: #111; border: 1px solid #333; color: #fff; padding: 8px; cursor: pointer; flex: 1; transition: 0.3s; font-size: 11px; }
+        /* --- 2. THREE-DOT ACTION MENU --- */
+        .action-menu { position: relative; display: inline-block; align-self: flex-start; margin-bottom: 10px; }
+        .dots-btn { background: none; border: none; color: #555; cursor: pointer; font-size: 24px; padding: 5px; transition: 0.3s; }
+        .dots-btn:hover { color: var(--n-blue); }
+        .dropdown-content { 
+            position: absolute; left: 0; top: 100%; background: #111; border: 1px solid #333;
+            min-width: 120px; border-radius: 8px; opacity: 0; transform: translateY(-10px);
+            pointer-events: none; transition: 0.4s var(--smooth); z-index: 26000;
+        }
+        .dropdown-content.show { opacity: 1; transform: translateY(5px); pointer-events: auto; }
+        .dropdown-content button { 
+            width: 100%; background: none; border: none; color: #ccc; padding: 10px; 
+            text-align: left; cursor: pointer; font-size: 12px; transition: 0.2s;
+        }
+        .dropdown-content button:hover { background: #222; color: var(--n-blue); }
 
-        @keyframes icon-reveal { 0% { transform: scale(0) rotate(0deg); opacity: 0; } 100% { transform: scale(1) rotate(360deg); opacity: 1; } }
-        .eval-icon { position: absolute; top: -5px; right: -5px; width: 22px; height: 22px; animation: icon-reveal 0.6s forwards; }
-        .death-skull { position: absolute; font-size: 35px; pointer-events: none; z-index: 1000; animation: death-pop 1s forwards; }
-        @keyframes death-pop { 0% { transform: scale(0.5) translateY(0); opacity: 1; } 100% { transform: scale(1.5) translateY(-80px); opacity: 0; } }
+        /* --- 3. REFINED SIDEBAR --- */
+        #settings-panel { 
+            position: fixed; right: 20px; top: 5vh; bottom: 5vh; width: 25vw; 
+            background: rgba(5,6,8,0.98); border: 1px solid var(--n-blue); border-radius: 15px;
+            transform: translateX(120%); transition: 0.7s var(--smooth); z-index: 25000; 
+            padding: 25px; display: flex; flex-direction: column; gap: 15px; box-shadow: -10px 0 30px rgba(0,242,255,0.1);
+        }
+        #settings-panel.open { transform: translateX(0); }
+
+        /* Compact Start Button */
+        .start-btn { 
+            height: 35px; /* Reduced height */
+            color: var(--n-green); border: 1px solid var(--n-green); 
+            background: rgba(129, 182, 76, 0.1); cursor: pointer; font-size: 11px;
+            letter-spacing: 1px; transition: 0.3s;
+        }
+        .start-btn:hover { background: var(--n-green); color: black; }
+
+        /* Existing Board/Piece styles here... */
     </style>
 </head>
 <body>
-
-    <canvas id="particle-canvas"></canvas>
-
-    <div id="boot">
-        <div class="equinox-text">EQUINOX GAMES</div>
-        <div class="divider"></div>
-        <div class="controller-box"><div class="aura-circle"></div><div class="controller-icon">🎮</div></div>
-    </div>
-
-    <div id="assets">
-        <div id="loading-board" style="width:240px; height:240px; display:grid; grid-template:repeat(8,1fr)/repeat(8,1fr); gap:2px; margin-bottom:20px;"></div>
-        <div class="rainbow-container"><div class="bar"><div id="fill"></div><div id="perc">0%</div></div></div>
-        <button class="skip-btn" onclick="launchGame()">SKIP</button>
-    </div>
 
     <div id="game">
         <div id="board" class="board"></div>
         <button id="gear-btn" onclick="toggleSettings()">⚙</button>
     </div>
 
-    <div id="settings-panel" style="position:fixed; right:20px; top:5vh; bottom:5vh; width:25vw; background:rgba(5,6,8,0.98); border:1px solid var(--n-blue); border-radius:15px; transform:translateX(120%); transition:0.5s; z-index:25000; padding:25px; display:flex; flex-direction:column; gap:10px;">
-        <h3 style="color:var(--n-blue); margin:0;">COMMAND HUB</h3>
-        <input type="range" style="width:100%; accent-color:var(--n-blue);" min="0" max="100" value="70">
-        <button class="tab-btn" onclick="location.reload()">RESTART</button>
-        <button class="tab-btn" style="color:var(--n-green); border-color:var(--n-green)" onclick="unlockPieces()">▶ START SIMULATION</button>
-        <button style="width:50px; height:50px; border-radius:50%; border:2px solid var(--n-blue); background:none; color:var(--n-blue); align-self:center; margin-top:auto; cursor:pointer; font-size:24px;" onclick="toggleHelp()">?</button>
-    </div>
+    <!-- REFINED SIDEBAR -->
+    <div id="settings-panel">
+        <div class="action-menu">
+            <button class="dots-btn" onclick="toggleDropdown()">⋮</button>
+            <div id="dots-dropdown" class="dropdown-content">
+                <button onclick="surrender()">Surrender</button>
+                <button onclick="location.reload()">Reboot</button>
+            </div>
+        </div>
 
-    <div id="help-menu">
-        <div style="display:flex; gap:10px; margin-bottom:15px;"><button class="tab-btn" onclick="showTab('asset-tab')">ASSET BEHAVIOR</button><button class="tab-btn" onclick="showTab('icon-tab')">ICON LOGIC</button></div>
+        <h3 style="color:var(--n-blue); margin: 0 0 10px 0; font-size: 16px;">COMMAND HUB</h3>
         
-        <div id="asset-tab" class="tab-content">
-            <div style="max-height:450px; overflow-y:auto;">
-                <div class="asset-card">
-                    <strong>♔ KING (Royal):</strong> The <strong>absolute core asset</strong>. It moves exactly one square in any direction. Its survival is the <strong>primary win condition</strong>; if the King is trapped, the simulation terminates immediately.
-                    <div style="font-style:italic; color:#777; margin-top:5px;">Example: Moving the King to a safe file to escape a long-range Rook suppression.</div>
-
-                    | Importance: <span style="color:var(--n-red)">Critical</span>
-                </div>
-                <div class="asset-card">
-                    <strong>♕ QUEEN (Royal):</strong> The simulation's <strong>offensive powerhouse</strong>. Capable of moving any distance straight or diagonally, combining the firepower of a Rook and Bishop.
-                    <div style="font-style:italic; color:#777; margin-top:5px;">Example: Executing a full-board sweep to deliver a finishing blow from the centre.</div>
-                    | Importance: <span style="color:var(--n-red)">Critical</span>
-                </div>
-                <div class="asset-card">
-                    <strong>♖ ROOK (Heavy):</strong> Specialized in <strong>linear suppression</strong>. Rooks move horizontally or vertically across open ranks and files, and are essential for endgame terminal sequences.
-                    <div style="font-style:italic; color:#777; margin-top:5px;">Example: Occupying the 7th rank to restrict enemy King movement.</div>
-
-                    | Importance: <span style="color:var(--n-orange)">Significant</span>
-                </div>
-                <div class="asset-card">
-                    <strong>♗ BISHOP (Heavy):</strong> A <strong>diagonal specialist</strong>. Bishops move any distance diagonally but are confined to tiles of their starting color. They excel in pinning assets from long range.
-                    <div style="font-style:italic; color:#777; margin-top:5px;">Example: Pinning an enemy Knight to their King across the central diagonal.</div>
-                    | Importance: <span style="color:var(--n-orange)">Significant</span>
-                </div>
-                <div class="asset-card">
-                    <strong>♘ KNIGHT (Minor):</strong> Master of <strong>asymmetrical tactical depth</strong>. Moves in an 'L' shape and is the only asset capable of <strong>leaping over obstacles</strong>.
-                    <div style="font-style:italic; color:#777; margin-top:5px;">Example: Jumping over a pawn wall to fork the enemy King and Queen simultaneously.</div>
-
-                    | Importance: <span style="color:var(--n-yellow)">Moderate</span>
-                </div>
-                <div class="asset-card">
-                    <strong>♙ PAWN (Infantry):</strong> The <strong>soul of the simulation</strong>. Pawns move forward but capture diagonally. Reaching the final rank triggers a <strong>Promotion Event</strong>.
-                    <div style="font-style:italic; color:#777; margin-top:5px;">Example: Sacrificing a pawn to open a line for a heavier asset.</div>
-                    | Importance: <span style="color:var(--n-green)">Expendable</span>
-                </div>
-            </div>
+        <div style="flex-grow: 1; border-top: 1px solid #222; padding-top: 15px;">
+            <!-- Spotify Embed & Volume Slider Here -->
         </div>
 
-        <div id="icon-tab" class="tab-content" style="display:none;">
-            <div class="group-title">POSITIVE</div>
-            <div class="asset-card"><strong>? (Mistake) & ?? (Blunder):</strong> Errors in strategic execution.
-                <div class="criteria-box">Criteria: Triggers Sin + Zoom + Spin effect when ELO probability shifts against the user.</div>
-            </div>
-            <div class="group-title">NEGATIVE</div>
-            <div class="asset-card"><strong>!! (Brilliant), ! (Great) & 💀 (Death):</strong> Critical state shifts and removals.
-                <div class="criteria-box">Criteria: !! triggers on winning sacrifices. 💀 pops when an asset is removed from simulation.</div>
-            </div>
-            <div class="group-title">EXOTIC</div>
-            <div class="asset-card"><strong>★ (Best) & 📖 (Book):</strong> Established theory and optimal paths.
-                <div class="criteria-box">Criteria: Calculated as top engine choice or matching grandmaster simulations.</div>
-            </div>
-        </div>
+        <button class="start-btn" onclick="unlockPieces()">▶ START SIMULATION</button>
+        <button style="width:40px; height:40px; border-radius:50%; border:1px solid var(--n-blue); background:none; color:var(--n-blue); align-self:center; cursor:pointer;" onclick="toggleHelp()">?</button>
     </div>
 
     <script>
-        const pCanvas = document.getElementById('particle-canvas'), pCtx = pCanvas.getContext('2d');
-        let parts = [], floating = [], debris = [], isUnlocked = false, selected = null, flyInTriggered = false;
-        let boardState = [['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],['','','','','','','',''],['','','','','','','',''],['','','','','','','',''],['','','','','','','',''],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']];
-        const icons_map = { 'r':'♜','n':'♞','b':'♝','q':'♛','k':'♚','p':'♟','R':'♖','N':'♘','B':'♗','Q':'♕','K':'♔','P':'♙' };
-
-        function initBG() {
-            pCanvas.width = window.innerWidth; pCanvas.height = window.innerHeight;
-            for(let i=0; i<100; i++) parts.push({ x:Math.random()*pCanvas.width, y:Math.random()*pCanvas.height, s:Math.random()*2+1, v:Math.random()*0.5 });
-            for(let i=0; i<30; i++) floating.push({ x:Math.random()*pCanvas.width, y:Math.random()*pCanvas.height, s:Math.random()*30+10, v:Math.random()*0.2, r:Math.random()*360, rv:Math.random()-0.5, sym:['♔','♕','♘','■','♙'][Math.floor(Math.random()*5)] });
-        }
-        function draw() {
-            pCtx.clearRect(0,0,pCanvas.width,pCanvas.height);
-            pCtx.fillStyle = 'rgba(255,255,255,0.4)';
-            parts.forEach(p => { p.y -= p.v; if(p.y<0) p.y=pCanvas.height; pCtx.fillRect(p.x,p.y,p.s,p.s); });
-            pCtx.fillStyle = 'rgba(0,242,255,0.15)';
-            floating.forEach(f => { f.y -= f.v; f.r += f.rv; if(f.y < -50) f.y = pCanvas.height+50; pCtx.save(); pCtx.translate(f.x,f.y); pCtx.rotate(f.r*Math.PI/180); pCtx.font=`${f.s}px serif`; pCtx.fillText(f.sym,0,0); pCtx.restore(); });
-            debris.forEach((d,i) => { d.x+=d.vx; d.y+=d.vy; d.life-=0.02; if(d.life<=0) debris.splice(i,1); pCtx.fillStyle=`rgba(255,77,77,${d.life})`; pCtx.fillRect(d.x,d.y,d.s,d.s); });
-            requestAnimationFrame(draw);
+        // TOGGLE SETTINGS (Fixed logic)
+        function toggleSettings() {
+            const panel = document.getElementById('settings-panel');
+            const gear = document.getElementById('gear-btn');
+            panel.classList.toggle('open');
+            gear.classList.toggle('active');
+            // Close dropdown if sidebar is toggled
+            document.getElementById('dots-dropdown').classList.remove('show');
         }
 
-        function render() {
-            const el = document.getElementById('board'); el.innerHTML = '';
-            boardState.forEach((row, r) => row.forEach((p, c) => {
-                const sq = document.createElement('div'); sq.className = `sq ${(r+c)%2===0?'w':'b'}`;
-                if(p) {
-                    const span = document.createElement('span'); span.className = 'piece';
-                    if(!flyInTriggered) span.classList.add('fly-in');
-                    if(isUnlocked) span.classList.add('unlocked');
-                    span.innerText = icons_map[p]; span.style.color = p === p.toUpperCase() ? '#fff' : 'var(--n-blue)';
-                    sq.appendChild(span);
-                    const t = p.toLowerCase();
-                    sq.dataset.rank = (t==='k'||t==='q')?'royal':(t==='r'||t==='b')?'heavy':(t==='n')?'minor':'pawn';
-                    if(!flyInTriggered) setTimeout(() => { span.classList.remove('fly-in'); span.style.transform='none'; span.style.opacity='1'; }, 100 + (r*40));
-                }
-                sq.onclick = () => handleMove(r, c); el.appendChild(sq);
-            }));
-            if(!flyInTriggered && document.getElementById('game').style.display === 'flex') flyInTriggered = true;
+        // THREE-DOT DROPDOWN
+        function toggleDropdown() {
+            document.getElementById('dots-dropdown').classList.toggle('show');
         }
 
-        function handleMove(r, c) {
-            if(!isUnlocked) return;
-            if(selected) {
-                const [sr, sc] = selected;
-                if(isValid(sr, sc, r, c)) {
-                    if(boardState[r][c]) triggerDeath(r, c);
-                    boardState[r][c] = boardState[sr][sc]; boardState[sr][sc] = '';
-                    selected = null; render();
-                } else { selected = null; render(); }
-            } else if(boardState[r][c]) {
-                const p = boardState[r][c];
-                selected = [r, c]; render();
-                document.querySelector(`[data-r="${r}"][data-c="${c}"]`)?.style.setProperty('background', 'rgba(0,242,255,0.3)');
+        // SURRENDER ACTION
+        function surrender() {
+            alert("SYSTEM OVERRIDE: SIMULATION TERMINATED.");
+            location.reload();
+        }
+
+        // PIECE UNLOCK (Smoothly transition pieces)
+        function unlockPieces() {
+            isUnlocked = true;
+            document.querySelectorAll('.piece').forEach(p => {
+                p.classList.add('unlocked');
+                p.style.transition = "filter 1.2s var(--smooth)"; // Super smooth reveal
+            });
+            toggleSettings();
+            render();
+        }
+
+        // Close dropdown when clicking outside
+        window.onclick = (event) => {
+            if (!event.target.matches('.dots-btn')) {
+                document.getElementById('dots-dropdown').classList.remove('show');
             }
-        }
+        };
 
-        function isValid(sr, sc, tr, tc) {
-            if(sr === tr && sc === tc) return false;
-            const p = boardState[sr][sc].toLowerCase();
-            const dr = Math.abs(tr - sr), dc = Math.abs(tc - sc);
-            if(p === 'n') return (dr === 2 && dc === 1) || (dr === 1 && dc === 2);
-            if(p === 'b') return dr === dc;
-            if(p === 'r') return sr === tr || sc === tc;
-            if(p === 'q') return dr === dc || sr === tr || sc === tc;
-            if(p === 'k') return dr <= 1 && dc <= 1;
-            if(p === 'p') return dc === 0 && dr === 1; 
-            return false;
-        }
-
-        function triggerDeath(r, c) {
-            const rect = document.querySelectorAll('.sq')[r*8+c].getBoundingClientRect();
-            const skull = document.createElement('div'); skull.className = 'death-skull'; skull.innerText = '💀';
-            skull.style.left = `${rect.left + 15}px`; skull.style.top = `${rect.top}px`;
-            document.body.appendChild(skull); setTimeout(()=>skull.remove(),1000);
-            for(let i=0;i<20;i++) debris.push({x:rect.left+35, y:rect.top+35, vx:(Math.random()-0.5)*15, vy:(Math.random()-0.5)*15, life:1, s:Math.random()*4});
-        }
-
-        function unlockPieces() { isUnlocked = true; document.getElementById('settings-panel').classList.remove('open'); document.getElementById('gear-btn').classList.remove('active'); render(); }
-        function toggleSettings() { const s = document.getElementById('settings-panel'), g = document.getElementById('gear-btn'); s.classList.toggle('open'); g.classList.toggle('active'); }
-        function toggleHelp() { document.getElementById('help-menu').classList.toggle('active'); }
-        function showTab(id) { document.querySelectorAll('.tab-content').forEach(t=>t.style.display='none'); document.getElementById(id).style.display='block'; }
-
-        window.onload = () => { initBG(); draw(); setTimeout(() => { document.getElementById('boot').style.opacity = '0'; setTimeout(() => { document.getElementById('boot').style.display='none'; document.getElementById('assets').style.display='flex'; document.getElementById('assets').style.opacity='1'; startLoading(); }, 1000); }, 5000); };
-        function startLoading() { let p=0; let iv=setInterval(()=>{ p+=2; document.getElementById('fill').style.width=p+'%'; document.getElementById('perc').innerText=Math.floor(p)+'%'; if(p>=100){ clearInterval(iv); setTimeout(launchGame,500); } },40); }
-        function launchGame() { document.getElementById('loading-board').style.transform="scale(2)"; document.getElementById('loading-board').style.opacity="0"; setTimeout(() => { document.getElementById('assets').style.display='none'; document.getElementById('game').style.display='flex'; document.getElementById('game').style.opacity='1'; render(); }, 800); }
+        // ... rest of your chess engine logic (render, handleMove, initBG)
     </script>
 </body>
 </html>

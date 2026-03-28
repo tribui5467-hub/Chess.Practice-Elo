@@ -3,82 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <title>Chess-Practice | Elo</title>
-    <!-- INTERNAL CHESS ENGINE -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com"></script>
     <style>
         :root { 
             --n-blue: #00f2ff; --n-green: #00ff00; --n-red: #ff4757; 
-            --bg: #0a0b10; --neon-glow: 0 0 15px var(--n-blue);
+            --n-purple: #bb86fc; --n-book: #d5a021; --bg: #050608;
         }
         body { margin: 0; background: var(--bg); overflow: hidden; font-family: 'Segoe UI', sans-serif; color: white; user-select: none; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        
+        #particle-canvas { position: fixed; top: 0; left: 0; z-index: 0; pointer-events: none; }
 
-        /* 1. BOOT SCREEN */
-        #boot-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 5000; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 0.8s cubic-bezier(0.19, 1, 0.22, 1); }
-        #boot-screen.loaded { transform: scale(0.78); border: 2px solid var(--n-blue); border-radius: 15px; box-shadow: 0 0 35px rgba(0, 242, 255, 0.2); background: rgba(10, 11, 16, 0.98); }
-        #boot-screen.panic { transform: scale(0.78, 0) translateY(1200px); opacity: 0; }
-        .progress-bar { width: 250px; height: 2px; background: rgba(255,255,255,0.1); margin-top: 20px; position: relative; }
-        .progress-fill { height: 100%; background: var(--n-blue); width: 0%; transition: width 2s linear; box-shadow: 0 0 10px var(--n-blue); }
+        /* CANVA-STYLE OPENING ANIMATIONS */
+        @keyframes line-pop { 0% { transform: scaleX(0); opacity: 0; } 100% { transform: scaleX(1); opacity: 1; } }
+        @keyframes text-wipe { 0% { clip-path: inset(0 100% 0 0); opacity: 0; } 100% { clip-path: inset(0 0 0 0); opacity: 1; } }
+        @keyframes baseline-up { 0% { transform: translateY(30px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
 
-        /* 2. GAME UI */
-        #game-layer { display: none; width: 100vw; height: 100vh; opacity: 0; transition: opacity 1s ease-in-out; }
-        #game-layer.visible { display: flex; opacity: 1; }
-        #board-area { flex: 1; display: flex; justify-content: center; align-items: center; position: relative; }
-        .board { width: 560px; height: 560px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid rgba(0, 242, 255, 0.2); background: rgba(10, 11, 16, 0.8); box-shadow: var(--neon-glow); }
-        .sq { width: 70px; height: 70px; display: flex; justify-content: center; align-items: center; position: relative; transition: 0.3s; }
-        .w { background: rgba(255, 255, 255, 0.04); } .b { background: rgba(0, 0, 0, 0.3); }
+        .line-anim { height: 2px; background: var(--n-blue); width: 100%; margin: 15px 0; transform-origin: left; animation: line-pop 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+        .wipe-anim { animation: text-wipe 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards; line-height: 1.6; color: #bbb; font-size: 14px; }
+        .baseline-anim { animation: baseline-up 0.6s ease-out forwards; }
 
-        /* EFFECTS */
-        .board.focus .sq:not(.valid-move):not(.selected) { opacity: 0.2; filter: grayscale(1); }
-        .sq.selected { box-shadow: inset 0 0 20px var(--n-blue); background: rgba(0, 242, 255, 0.1) !important; }
-        .sq.valid-move::after { content: ''; width: 18px; height: 18px; background: var(--n-blue); border-radius: 50%; box-shadow: 0 0 10px var(--n-blue); animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
-        .sq.death-zone { background: rgba(255, 71, 87, 0.2) !important; }
-        .sq.death-zone::after { content: '☠'; font-size: 30px; color: var(--n-red); text-shadow: 0 0 10px var(--n-red); }
+        /* BOARD & FOCUS */
+        .board { width: 560px; height: 560px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 2px solid rgba(0, 242, 255, 0.3); position: relative; z-index: 10; background: rgba(10, 11, 16, 0.9); transition: 0.5s; }
+        .sq { width: 70px; height: 70px; display: flex; justify-content: center; align-items: center; position: relative; }
+        .w { background: rgba(255, 255, 255, 0.03); } .b { background: rgba(0, 0, 0, 0.4); }
+        
+        /* SYSTEM GUIDE (HELP MENU) */
+        #help-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9000; display: none; padding: 40px; justify-content: center; align-items: center; }
+        .help-container { width: 650px; background: #0a0b10; border: 1px solid var(--n-blue); padding: 35px; box-shadow: 0 0 50px rgba(0,242,255,0.15); border-radius: 4px; }
+        
+        .tab-btn { width: 100%; background: #111; border: 1px solid #222; color: #666; padding: 18px; text-align: left; cursor: pointer; margin-bottom: 5px; transition: 0.3s; font-weight: bold; font-family: monospace; }
+        .tab-btn.active { border-color: var(--n-blue); color: var(--n-blue); background: rgba(0,242,255,0.05); }
+        .tab-content { max-height: 0; overflow: hidden; transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1); background: rgba(255,255,255,0.01); }
+        .tab-content.open { max-height: 500px; padding: 20px; border-bottom: 1px solid rgba(0,242,255,0.2); }
 
-        /* PIECES */
-        .piece { font-size: 55px; z-index: 10; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; }
-        .piece:hover { transform: scale(1.2); }
-        .white-p { color: #fff; filter: drop-shadow(0 0 8px #fff); }
+        /* ICONS */
+        .help-icon-circle { width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--n-blue); display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; color: var(--n-blue); transition: 0.3s; margin: 20px auto; font-size: 20px; }
+        .help-icon-circle:hover { box-shadow: 0 0 20px var(--n-blue); background: var(--n-blue); color: black; }
+
+        .piece { font-size: 50px; cursor: pointer; transition: 0.2s; }
+        .white-p { color: #fff; filter: drop-shadow(0 0 5px #fff); }
         .black-p { color: #555; filter: drop-shadow(0 0 8px #000); }
 
-        /* HELP & SIDEBAR */
-        #help-menu { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--bg); border: 2px solid var(--n-green); padding: 30px; z-index: 6000; box-shadow: 0 0 30px rgba(0, 255, 0, 0.2); border-radius: 10px; text-align: center; }
-        #sidebar { width: 250px; background: rgba(10, 11, 16, 0.98); border-left: 2px solid var(--n-green); padding: 40px; display: flex; flex-direction: column; }
-        .btn-e { background: none; border: 2px solid var(--n-blue); color: var(--n-blue); font-weight: bold; padding: 15px; cursor: pointer; transition: 0.4s; border-radius: 5px; margin-bottom: 20px; }
-        .btn-e:hover { background: var(--n-blue); color: black; box-shadow: var(--neon-glow); }
-        #particle-canvas { position: fixed; top: 0; left: 0; z-index: -1; pointer-events: none; }
+        #sidebar { width: 250px; padding: 30px; border-left: 1px solid rgba(0, 242, 255, 0.1); z-index: 10; display: flex; flex-direction: column; }
+        .btn-e { padding: 12px; background: none; border: 1px solid var(--n-blue); color: var(--n-blue); cursor: pointer; margin-top: 10px; font-weight: bold; transition: 0.2s; letter-spacing: 1px; }
+        .btn-e:hover { background: var(--n-blue); color: #000; box-shadow: 0 0 20px var(--n-blue); }
     </style>
 </head>
 <body>
     <canvas id="particle-canvas"></canvas>
 
-    <!-- HELP OVERLAY -->
-    <div id="help-menu">
-        <h2 style="color: var(--n-green)">TACTICAL HUD GUIDE</h2>
-        <p style="color:#ccc;">• Click piece to view valid trajectories.<br>• Move to target to execute command.<br>• Hold <b>CTRL</b> for focus mode.</p>
-        <button class="btn-e" style="border-color: var(--n-green); color: var(--n-green);" onclick="toggleHelp()">DISMISS</button>
+    <!-- HELP OVERLAY (SYSTEM GUIDE) -->
+    <div id="help-overlay">
+        <div class="help-container baseline-anim">
+            <h1 style="color:var(--n-blue); text-align:center; letter-spacing:8px; margin:0;">SYSTEM GUIDE</h1>
+            <div class="line-anim"></div>
+            
+            <button class="tab-btn" id="btn-1" onclick="openTab(1)">[01] PIECE DATA</button>
+            <div id="tab-1" class="tab-content">
+                <p><b>King ♔:</b> Strategic Core. 1-square radius movement.</p>
+                <p><b>Queen ♕:</b> Tactical Superiority. Unlimited vector range.</p>
+                <p><b>Knight ♘:</b> Variable Trajectory. Bypasses frontlines.</p>
+            </div>
+
+            <button class="tab-btn" id="btn-2" onclick="openTab(2)">[02] EVALUATION</button>
+            <div id="tab-2" class="tab-content">
+                <p><b style="color:var(--n-blue)">★ Best:</b> Optimal engine solution.</p>
+                <p><b style="color:var(--n-purple)">!! Brilliant:</b> Sacrifice for decisive advantage.</p>
+            </div>
+
+            <button class="tab-btn" id="btn-3" onclick="openTab(3)">[03] MECHANICS</button>
+            <div id="tab-3" class="tab-content">
+                <p><b>Checkmate:</b> Total King immobilization. Game End.</p>
+                <p><b>Promotion:</b> Pawn evolution at rank 8 boundary.</p>
+            </div>
+            
+            <button class="btn-e" style="width:100%; margin-top:20px; border-color:var(--n-red); color:var(--n-red);" onclick="closeHelp()">TERMINATE HUD</button>
+        </div>
     </div>
 
-    <!-- BOOT SCREEN -->
-    <div id="boot-screen">
-        <div id="boot-content" style="text-align:center;">
-            <div style="letter-spacing: 5px; color: var(--n-blue);">INITIALIZING TACTICAL HUD...</div>
-            <div class="progress-bar"><div id="bar" class="progress-fill"></div></div>
+    <!-- MAIN GAME HUD -->
+    <div id="game-layer" style="display:flex; width:100%; height:100%; justify-content:center; align-items:center;">
+        <div id="board-area" style="padding: 20px;">
+            <div id="chess-board" class="board"></div>
         </div>
-        <div id="hud-container" style="display:none; text-align:center;">
-            <h1 style="letter-spacing:5px;">ELO.SYSTEM</h1>
-            <button class="btn-e" onclick="handleLaunch()">START ENGINE</button>
-        </div>
-    </div>
 
-    <!-- GAME LAYER -->
-    <div id="game-layer">
-        <div id="board-area"><div class="board" id="chess-board"></div></div>
         <div id="sidebar">
-            <h2 style="color:var(--n-green); border-bottom:1px solid var(--n-green); padding-bottom:10px;">SYSTEM</h2>
-            <button class="btn-e" onclick="toggleHelp()">HELP</button>
-            <button class="btn-e" id="play-btn" onclick="resetEngine()">RESET</button>
-            <div style="font-size:12px; color:#666; margin-top:auto;">Tactical HUD v1.0.4</div>
+            <div class="baseline-anim">
+                <h1 style="color:var(--n-blue); margin:0; font-size:24px; letter-spacing:2px;">Chess Practice | Elo</h1>
+                <div class="line-anim"></div>
+                <p class="wipe-anim">
+                    Regular chess practice boosts your Elo rating by improving strategic understanding, anticipatory skills, and tactical abilities. It promotes critical thinking and mental agility, while game analysis helps identify patterns. Practicing with others builds community and motivation. Consistency is key to mastering chess at any skill level.
+                </p>
+            </div>
+
+            <div class="help-icon-circle baseline-anim" style="animation-delay: 0.4s" onclick="openHelp()">?</div>
+            
+            <button class="btn-e baseline-anim" style="margin-top:auto; animation-delay: 0.6s" onclick="game.reset(); renderBoard();">RESET ENGINE</button>
         </div>
     </div>
 
@@ -86,72 +106,32 @@
         const game = new Chess();
         const pChars = { 'r':'♜','n':'♞','b':'♝','q':'♛','k':'♚','p':'♟','R':'♖','N':'♘','B':'♗','Q':'♕','K':'♔','P':'♙' };
         let sourceSq = null;
-        let ctrlDown = false;
 
-        window.onload = () => {
-            const bar = document.getElementById('bar');
-            // Fixed Loading: requestAnimationFrame ensures the 0% start is registered
-            requestAnimationFrame(() => { bar.style.width = '100%'; });
-            
-            setTimeout(() => {
-                document.getElementById('boot-screen').classList.add('loaded');
-                document.getElementById('boot-content').style.display = 'none';
-                document.getElementById('hud-container').style.display = 'block';
-                initParticles(); 
-                renderBoard();
-            }, 2200);
-        };
+        function openHelp() { document.getElementById('help-overlay').style.display = 'flex'; openTab(1); }
+        function closeHelp() { document.getElementById('help-overlay').style.display = 'none'; }
 
-        function handleLaunch() {
-            document.getElementById('boot-screen').classList.add('panic');
-            setTimeout(() => {
-                document.getElementById('boot-screen').style.display = 'none';
-                document.getElementById('game-layer').style.display = 'flex';
-                setTimeout(() => document.getElementById('game-layer').classList.add('visible'), 50);
-            }, 600);
-        }
-
-        function toggleHelp() {
-            const menu = document.getElementById('help-menu');
-            menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
-        }
-
-        function resetEngine() {
-            game.reset();
-            renderBoard();
-        }
-
-        // CTRL HUD FOCUS
-        window.addEventListener('keydown', e => { if(e.ctrlKey) { ctrlDown = true; updateFocus(); } });
-        window.addEventListener('keyup', e => { if(!e.ctrlKey) { ctrlDown = false; updateFocus(); } });
-        function updateFocus() {
-            const board = document.getElementById('chess-board');
-            if(ctrlDown && sourceSq) board.classList.add('focus');
-            else board.classList.remove('focus');
+        function openTab(n) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('open'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('tab-'+n).classList.add('open');
+            document.getElementById('btn-'+n).classList.add('active');
         }
 
         function renderBoard() {
             const boardEl = document.getElementById('chess-board');
             boardEl.innerHTML = '';
-            const inCheckmate = game.in_checkmate();
-
             game.board().forEach((row, rIdx) => {
                 row.forEach((piece, cIdx) => {
                     const sqId = String.fromCharCode(97 + cIdx) + (8 - rIdx);
                     const sq = document.createElement('div');
                     sq.className = `sq ${(rIdx + cIdx) % 2 === 0 ? 'w' : 'b'}`;
                     sq.id = sqId;
-                    sq.onclick = () => handleSquareClick(sqId);
-
-                    if(inCheckmate && piece && piece.type === 'k' && piece.color === game.turn()) {
-                        sq.classList.add('death-zone');
-                    }
+                    sq.onclick = () => handleMove(sqId);
 
                     if (piece) {
-                        const charKey = piece.color === 'w' ? piece.type.toUpperCase() : piece.type.toLowerCase();
                         const pEl = document.createElement('div');
                         pEl.className = `piece ${piece.color === 'w' ? 'white-p' : 'black-p'}`;
-                        pEl.innerHTML = pChars[charKey];
+                        pEl.innerHTML = pChars[piece.color === 'w' ? piece.type.toUpperCase() : piece.type.toLowerCase()];
                         sq.appendChild(pEl);
                     }
                     boardEl.appendChild(sq);
@@ -159,34 +139,42 @@
             });
         }
 
-        function handleSquareClick(sqId) {
-            const moves = game.moves({ square: sqId, verbose: true });
+        function handleMove(sqId) {
             if (sourceSq) {
                 const move = game.move({ from: sourceSq, to: sqId, promotion: 'q' });
                 if (move) { sourceSq = null; renderBoard(); return; }
             }
-            document.querySelectorAll('.sq').forEach(s => s.classList.remove('selected', 'valid-move'));
+            const moves = game.moves({ square: sqId, verbose: true });
+            document.querySelectorAll('.sq').forEach(s => s.classList.remove('selected'));
             if (moves.length > 0) {
                 sourceSq = sqId;
                 document.getElementById(sqId).classList.add('selected');
-                moves.forEach(m => document.getElementById(m.to).classList.add('valid-move'));
             } else { sourceSq = null; }
-            updateFocus();
         }
 
-        function initParticles() {
-            const canvas = document.getElementById('particle-canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-            let p = Array(35).fill().map(() => ({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, v: Math.random()*0.5+0.1 }));
-            function draw() {
-                ctx.clearRect(0,0,canvas.width,canvas.height);
-                ctx.fillStyle = "rgba(0, 242, 255, 0.15)";
-                p.forEach(i => { i.y -= i.v; if(i.y<0) i.y=canvas.height; ctx.beginPath(); ctx.arc(i.x, i.y, 1, 0, Math.PI*2); ctx.fill(); });
-                requestAnimationFrame(draw);
+        // PARTICLE SYSTEM
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+        window.onresize();
+
+        function createParticles() {
+            for(let i=0; i<120; i++) {
+                particles.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, s: Math.random()*1.5, v: Math.random()*0.4+0.1 });
             }
-            draw();
         }
+        function animate() {
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            ctx.fillStyle = "rgba(255,255,255,0.25)";
+            particles.forEach(p => {
+                p.y -= p.v; if(p.y < 0) p.y = canvas.height;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, Math.PI*2); ctx.fill();
+            });
+            requestAnimationFrame(animate);
+        }
+        createParticles(); animate();
+        window.onload = renderBoard;
     </script>
 </body>
 </html>

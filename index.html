@@ -3,163 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <title>Chess-Practice | Elo</title>
+    <!-- 1. ENGINE LOADER (ESSENTIAL FOR LEGAL MOVES) -->
+    <script src="https://cdnjs.cloudflare.com"></script>
     <style>
-        :root { --neon-blue: #00f2ff; --neon-green: #00ff00; --neon-red: #ff4757; --neon-orange: #ffa502; --bg-dark: #0a0b10; }
-        body { margin: 0; background: var(--bg-dark); overflow: hidden; font-family: 'Segoe UI', sans-serif; color: white; user-select: none; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        :root { --n-blue: #00f2ff; --n-green: #00ff00; --n-red: #ff4757; --n-orange: #ffa502; --n-yellow: #eccc68; --bg: #0a0b10; }
+        body { margin: 0; background: var(--bg); overflow: hidden; font-family: 'Segoe UI', sans-serif; color: white; user-select: none; display: flex; justify-content: center; align-items: center; height: 100vh; }
 
-        /* 1. BOOT SCREEN & HUD */
-        #boot-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-dark); z-index: 5000;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            transition: all 0.8s cubic-bezier(0.19, 1, 0.22, 1);
-        }
-        #boot-screen.loaded { transform: scale(0.78); border: 2px solid var(--neon-blue); border-radius: 15px; box-shadow: 0 0 35px rgba(0, 242, 255, 0.2); background: rgba(10, 11, 16, 0.98); }
+        /* 2. BOOT HUD */
+        #boot-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 5000; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: all 0.8s cubic-bezier(0.19, 1, 0.22, 1); }
+        #boot-screen.loaded { transform: scale(0.78); border: 2px solid var(--n-blue); border-radius: 15px; box-shadow: 0 0 35px rgba(0, 242, 255, 0.2); background: rgba(10, 11, 16, 0.98); }
         #boot-screen.panic { transform: scale(0.78, 0) translateY(1200px); opacity: 0; }
-        
-        .progress-bar { width: 250px; height: 2px; background: rgba(255,255,255,0.1); margin-top: 20px; }
-        .progress-fill { height: 100%; background: var(--neon-blue); width: 0%; transition: width 2.2s linear; }
+        .progress-fill { height: 100%; background: var(--n-blue); width: 0%; transition: width 2.2s linear; }
 
-        #hud-container { display: none; flex-direction: column; align-items: center; text-align: center; padding: 0 60px; }
-        .baseline { height: 2px; background: var(--neon-blue); margin: 15px 0; width: 0; transition: width 0.8s ease-out; box-shadow: 0 0 10px var(--neon-blue); }
+        /* 3. ELASTIC BUTTONS (SCRATCH LOGIC) */
+        .btn-e { background: none; border: 2px solid var(--n-blue); color: var(--n-blue); font-weight: bold; padding: 12px 25px; cursor: pointer; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); border-radius: 5px; text-transform: uppercase; }
+        .btn-e:hover { transform: scale(1.1); border-color: var(--n-green); color: var(--n-green); box-shadow: 0 0 20px rgba(0, 255, 0, 0.3); }
+        .btn-surrender { border-color: var(--n-red) !important; color: var(--n-red) !important; }
+        .btn-surrender:hover { box-shadow: 0 0 20px rgba(255, 71, 87, 0.4) !important; }
 
-        /* 2. ELASTIC BUTTONS */
-        .btn-elastic {
-            background: none; border: 2px solid var(--neon-blue); color: var(--neon-blue);
-            font-weight: bold; padding: 12px 25px; cursor: pointer; letter-spacing: 2px;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            text-transform: uppercase; border-radius: 5px; outline: none; margin: 5px;
-        }
-        .btn-elastic:hover { transform: scale(1.1); border-color: var(--neon-green); color: var(--neon-green); box-shadow: 0 0 20px rgba(0, 255, 0, 0.3); }
-
-        /* 3. GAME INTERFACE */
+        /* 4. GAME LAYER & SMOOTH CENTERING */
         #game-layer { display: none; width: 100vw; height: 100vh; opacity: 0; transition: opacity 1s; }
         #game-layer.visible { display: flex; opacity: 1; }
+        #board-area { flex: 1; display: flex; justify-content: center; align-items: center; transition: all 0.7s cubic-bezier(0.65, 0, 0.35, 1); }
 
-        #board-area { flex: 1; display: flex; justify-content: center; align-items: center; transition: all 0.6s cubic-bezier(0.19, 1, 0.22, 1); }
-        .board { width: 520px; height: 520px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid rgba(0, 242, 255, 0.3); background: rgba(10, 11, 16, 0.5); backdrop-filter: blur(8px); }
-        .sq { width: 65px; height: 65px; display: flex; justify-content: center; align-items: center; position: relative; cursor: default; }
+        .board { width: 520px; height: 520px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid rgba(0, 242, 255, 0.2); background: rgba(10, 11, 16, 0.5); backdrop-filter: blur(8px); }
+        .sq { width: 65px; height: 65px; display: flex; justify-content: center; align-items: center; position: relative; transition: background 0.3s; }
         .w { background: rgba(255, 255, 255, 0.05); } .b { background: rgba(0, 0, 0, 0.4); }
+
+        /* 5. PIECES (ELASTIC HOVER + NEON) */
+        .piece { font-size: 52px; z-index: 10; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; pointer-events: none; opacity: 0.3; }
+        .game-active .piece { opacity: 1; pointer-events: auto; }
+        .piece:hover { transform: scale(1.2); }
         
-        /* SELECTION HIGHLIGHT */
-        .sq.selected { box-shadow: inset 0 0 15px var(--neon-blue); border: 1px solid var(--neon-blue); }
-        .sq.valid-target { cursor: pointer; }
-        .sq.valid-target::after { content: ''; width: 15px; height: 15px; background: rgba(0, 242, 255, 0.3); border-radius: 50%; }
+        /* Neon Ranks */
+        .rank-king, .rank-queen { filter: drop-shadow(0 0 8px var(--n-red)); color: #fff; }
+        .rank-rook, .rank-bishop { filter: drop-shadow(0 0 8px var(--n-orange)); color: #fff; }
+        .rank-knight { filter: drop-shadow(0 0 8px var(--n-yellow)); color: #fff; }
+        .rank-pawn { filter: drop-shadow(0 0 8px var(--n-green)); color: #fff; }
+        .rank-promo { filter: drop-shadow(0 0 12px var(--n-blue)) !important; }
 
-        .piece { font-size: 52px; z-index: 10; opacity: 0.3; transition: transform 0.2s, opacity 0.5s; pointer-events: none; }
-        .game-active .piece { opacity: 1; pointer-events: auto; cursor: pointer; }
-        .white-p { color: #fff; filter: drop-shadow(0 0 8px #fff); }
-        .black-p { color: #555; filter: drop-shadow(0 0 8px #000); }
+        /* 6. ANALYSIS ICONS (SPIN ANIMATION) */
+        @keyframes spinIn { from { transform: scale(0) rotate(-180deg); opacity: 0; } to { transform: scale(1) rotate(0); opacity: 1; } }
+        .icon { position: absolute; top: -10px; right: -10px; width: 26px; height: 26px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 900; font-size: 13px; border: 2px solid white; color: #000; z-index: 20; animation: spinIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .brilliant { background: var(--n-blue); box-shadow: 0 0 15px var(--n-blue); }
 
-        /* ANALYSIS ICONS */
-        .icon { position: absolute; top: -8px; right: -8px; width: 24px; height: 24px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 900; font-size: 13px; border: 2px solid white; color: #000; box-shadow: 0 2px 10px rgba(0,0,0,0.5); z-index: 20; }
-        .brilliant { background: #00e6ff; } .good { background: #2ecc71; } .book { background: #a6db2d; } .blunder { background: var(--neon-red); } .mistake { background: var(--neon-orange); }
-
-        /* 4. SETTINGS SIDEBAR */
-        #settings-sidebar { 
-            width: 25vw; height: 100vh; background: rgba(10, 11, 16, 0.98); border-left: 2px solid var(--neon-green); 
-            padding: 40px; display: flex; flex-direction: column; transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1);
-            box-shadow: -10px 0 30px rgba(0, 255, 0, 0.15); box-sizing: border-box; position: relative;
-        }
-        #settings-sidebar.collapsed { transform: translateX(100%); position: absolute; right: 0; }
-
-        #reopen-btn {
-            position: fixed; right: 0; top: 50%; transform: translateY(-50%);
-            background: rgba(10, 11, 16, 0.9); border: 2px solid var(--neon-green); border-right: none;
-            padding: 15px 10px; border-radius: 10px 0 0 10px; cursor: pointer; display: none; z-index: 4500;
-        }
-        .gear { width: 32px; height: 32px; fill: var(--neon-green); animation: spin 5s linear infinite; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-
-        /* 5. HELP MODAL & COLLAPSIBLES */
-        #help-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 6000; display: none; justify-content: center; align-items: center; overflow-y: auto; }
-        .help-content { width: 90%; max-width: 700px; background: var(--bg-dark); border: 2px solid var(--neon-blue); padding: 40px; border-radius: 15px; box-shadow: 0 0 40px var(--neon-blue); margin: 20px; }
-        
-        details { background: rgba(255,255,255,0.05); margin-bottom: 10px; border-radius: 5px; overflow: hidden; border: 1px solid rgba(0,242,255,0.1); }
-        summary { padding: 15px; cursor: pointer; font-weight: bold; color: var(--neon-blue); outline: none; list-style: none; display: flex; justify-content: space-between; align-items: center; }
-        summary::-webkit-details-marker { display: none; }
-        summary::after { content: '▼'; font-size: 12px; transition: 0.3s; }
-        details[open] summary::after { transform: rotate(180deg); }
-        .details-inner { padding: 15px; color: #ccc; font-size: 14px; line-height: 1.6; border-top: 1px solid rgba(0,242,255,0.1); text-align: left; }
+        /* 7. COLLAPSIBLE SIDEBAR */
+        #settings-sidebar { width: 25vw; height: 100vh; background: rgba(10, 11, 16, 0.98); border-left: 2px solid var(--n-green); padding: 40px; display: flex; flex-direction: column; transition: transform 0.7s cubic-bezier(0.65, 0, 0.35, 1); box-sizing: border-box; }
+        #settings-sidebar.collapsed { transform: translateX(100%); margin-right: -25vw; }
+        #reopen-btn { position: fixed; right: 0; top: 50%; transform: translateY(-50%); background: rgba(10, 11, 16, 0.9); border: 2px solid var(--n-green); border-right: none; padding: 15px 10px; border-radius: 10px 0 0 10px; cursor: pointer; display: none; z-index: 4500; }
+        .gear { width: 32px; height: 32px; fill: var(--n-green); animation: rotate 5s linear infinite; }
+        @keyframes rotate { 100% { transform: rotate(360deg); } }
 
         #particle-canvas { position: fixed; top: 0; left: 0; z-index: -1; pointer-events: none; }
     </style>
 </head>
 <body>
-
     <canvas id="particle-canvas"></canvas>
+    <div id="reopen-btn" onclick="toggleSidebar()"><svg class="gear" viewBox="0 0 24 24"><path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5 3.5 3.5 0 0 1 15.5 12 3.5 3.5 0 0 1 12 15.5M19.43 12.97c.04-.32.07-.65.07-.97 0-.32-.03-.65-.07-.97l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.39-1.09-.73-1.69-.98l-.37-2.65c-.04-.24-.25-.42-.5-.42h-4c-.25 0-.46.18-.5.42h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.6.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.12.22-.07.49.12.64l2.11 1.63c-.04.32-.07.65-.07.97 0 .32.03.65.07.97l-2.11 1.63c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.31.61.22l2.49-1c.52.39 1.09.73 1.69.98l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.6-.25 1.17-.59 1.69-.98l2.49 1c.22.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.63z"></path></svg></div>
 
-    <!-- REOPEN TAB -->
-    <div id="reopen-btn" onclick="toggleSidebar()"><svg class="gear" viewBox="0 0 24 24"><path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5 3.5 3.5 0 0 1 15.5 12 3.5 3.5 0 0 1 12 15.5M19.43 12.97c.04-.32.07-.65.07-.97 0-.32-.03-.65-.07-.97l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.39-1.09-.73-1.69-.98l-.37-2.65c-.04-.24-.25-.42-.5-.42h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.6.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.12.22-.07.49.12.64l2.11 1.63c-.04.32-.07.65-.07.97 0 .32.03.65.07.97l-2.11 1.63c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.31.61.22l2.49-1c.52.39 1.09.73 1.69.98l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.6-.25 1.17-.59 1.69-.98l2.49 1c.22.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.63z"></path></svg></div>
-
-    <!-- 1. HUD BOOT -->
     <div id="boot-screen">
-        <div id="boot-content">
-            <div style="letter-spacing: 5px; color: var(--neon-blue); text-align: center;">SYSTEM CALIBRATION...</div>
-            <div class="progress-bar"><div id="bar" class="progress-fill"></div></div>
+        <div id="boot-content" style="text-align:center;">
+            <div style="letter-spacing: 5px; color: var(--n-blue);">SYSTEM CALIBRATION...</div>
+            <div style="width:250px; height:2px; background:rgba(255,255,255,0.1); margin-top:20px;"><div id="bar" class="progress-fill"></div></div>
         </div>
-        <div id="hud-container">
+        <div id="hud-container" style="display:none; flex-direction:column; align-items:center; text-align:center; padding:0 60px;">
             <h1>Chess.Practice | Elo</h1>
-            <div id="line" class="baseline"></div>
-            <p style="color: #bbb; max-width: 600px; line-height: 1.6;">Regular chess practice boosts your <b>Elo rating</b> by improving <b>strategic understanding</b>, <b>anticipatory skills</b>, and <b>tactical abilities</b>. Consistency is key to mastering chess.</p>
-            <button class="btn-elastic" style="margin-top:20px;" onclick="handleLaunch()">START ENGINE</button>
+            <div id="line" style="height:2px; background:var(--n-blue); margin:15px 0; width:0; transition:0.8s; box-shadow:0 0 10px var(--n-blue);"></div>
+            <p style="color:#bbb; max-width:600px;">Regular chess practice boosts your <b>Elo rating</b>. Master strategic thinking through analytical development.</p>
+            <button class="btn-e" style="margin-top:20px;" onclick="handleLaunch()">START ENGINE</button>
         </div>
     </div>
 
-    <!-- 2. GAME LAYER -->
     <div id="game-layer">
         <div id="board-area"><div class="board" id="chess-board"></div></div>
-        
         <div id="settings-sidebar">
-            <div style="font-weight:bold; color:var(--neon-green); border-bottom:2px solid var(--neon-green); padding-bottom:15px; display:flex; justify-content:space-between; align-items:center;">
-                SETTINGS <span style="cursor:pointer; font-size: 20px;" onclick="toggleSidebar()">✕</span>
-            </div>
-            <div style="margin-top:30px; font-size:15px; color:#aaa;">System Volume: <b>85%</b></div>
-            <div style="margin-top:20px; font-size:15px; color:#aaa;">Move Audio: <b>ON</b></div>
-            <button class="btn-elastic" style="margin-top:30px; width:100%; border-color:var(--neon-green); color:var(--neon-green);" onclick="openHelp()">?</button>
-            <button class="btn-elastic" id="play-btn" style="margin-top:auto; width:100%;" onclick="activateBoard()">PLAY</button>
-        </div>
-    </div>
-
-    <!-- 3. DETAILED HELP MODAL -->
-    <div id="help-modal">
-        <div class="help-content">
-            <h2 style="color:var(--neon-blue); margin:0 0 20px 0; letter-spacing:3px;">SYSTEM DIRECTORY</h2>
-            
-            <!-- GROUP: PIECES -->
-            <details>
-                <summary>TACTICAL PIECE OVERVIEW</summary>
-                <div class="details-inner">
-                    <p><b>♜ Rook:</b> Moves horizontally or vertically any number of squares. Essential for late-game power.</p>
-                    <p><b>♞ Knight:</b> Moves in an 'L' shape (two squares one way, one square perpendicular). It is the only piece that can jump over others.</p>
-                    <p><b>♝ Bishop:</b> Moves diagonally any number of squares. Always stays on its starting square color.</p>
-                    <p><b>♛ Queen:</b> The most powerful piece. Moves any number of squares horizontally, vertically, or diagonally.</p>
-                    <p><b>♚ King:</b> Moves one square in any direction. If the King is trapped, the session ends.</p>
-                    <p><b>♟ Pawn:</b> Moves forward one square (two on the first move). Captures diagonally.</p>
-                </div>
-            </details>
-
-            <!-- GROUP: ICONS -->
-            <details>
-                <summary>ANALYSIS ICON LEGEND</summary>
-                <div class="details-inner">
-                    <p><span class="icon brilliant" style="position:static; display:inline-flex;">!!</span> <b>Brilliant Move:</b> A move that is hard to find and significantly improves your position, often involving a sacrifice.</p>
-                    <p><span class="icon good" style="position:static; display:inline-flex; color:white;">!</span> <b>Great Move:</b> A very strong move that is the best or second-best option in a given position.</p>
-                    <p><span class="icon book" style="position:static; display:inline-flex;">📖</span> <b>Book Move:</b> Conventional opening theory. These moves follow established strategic patterns used by grandmasters.</p>
-                    <p><span class="icon mistake" style="position:static; display:inline-flex;">?</span> <b>Mistake:</b> A move that gives away some of your advantage or makes your position harder to play.</p>
-                    <p><span class="icon blunder" style="position:static; display:inline-flex;">??</span> <b>Blunder:</b> A catastrophic error that loses significant material or leads to a forced defeat.</p>
-                </div>
-            </details>
-
-            <button class="btn-elastic" style="margin-top:30px; width:100%; border-color:white; color:white;" onclick="closeHelp()">CLOSE DIRECTORY</button>
+            <div style="font-weight:bold; color:var(--n-green); border-bottom:2px solid var(--n-green); padding-bottom:15px; display:flex; justify-content:space-between; align-items:center;">SETTINGS <span style="cursor:pointer;" onclick="toggleSidebar()">✕</span></div>
+            <button class="btn-e" style="margin-top:30px; width:100%;" onclick="alert('Help Directory Open')">?</button>
+            <button class="btn-e" id="play-btn" style="margin-top:auto; width:100%; transition: 0.5s;" onclick="togglePlay()">Play</button>
         </div>
     </div>
 
     <script>
-        let selectedSq = null;
-        let isEngineOnline = false;
+        const game = new Chess();
+        const pChars = { 'r':'♜','n':'♞','b':'♝','q':'♛','k':'♚','p':'♟','R':'♖','N':'♘','B':'♗','Q':'♕','K':'♔','P':'♙' };
+        let sourceSq = null;
+        let isPlaying = false;
 
-        // --- 1. BOOT & UI ---
         window.onload = () => {
             document.getElementById('bar').style.width = '100%';
             setTimeout(() => {
@@ -168,9 +97,21 @@
                 document.getElementById('hud-container').style.display = 'flex';
                 setTimeout(() => document.getElementById('line').style.width = '100%', 100);
                 initParticles(); 
-                createBoard(); 
+                renderBoard(); 
             }, 2300);
         };
+
+        function togglePlay() {
+            const btn = document.getElementById('play-btn');
+            if(!isPlaying) {
+                isPlaying = true;
+                btn.innerText = "Surrender";
+                btn.classList.add('btn-surrender');
+                document.getElementById('chess-board').classList.add('game-active');
+            } else {
+                location.reload();
+            }
+        }
 
         function handleLaunch() {
             document.getElementById('boot-screen').classList.add('panic');
@@ -187,87 +128,62 @@
             btn.style.display = sb.classList.contains('collapsed') ? 'block' : 'none';
         }
 
-        function activateBoard() { 
-            isEngineOnline = true;
-            document.getElementById('chess-board').classList.add('game-active');
-            document.getElementById('play-btn').innerText = "ONLINE";
-            document.getElementById('play-btn').style.borderColor = "var(--neon-green)";
-            document.getElementById('play-btn').style.color = "var(--neon-green)";
+        function getPieceRankClass(p) {
+            const type = p.toLowerCase();
+            if(type === 'k' || type === 'q') return 'rank-king';
+            if(type === 'r' || type === 'b') return 'rank-rook';
+            if(type === 'n') return 'rank-knight';
+            return 'rank-pawn';
         }
 
-        function openHelp() { document.getElementById('help-modal').style.display = 'flex'; }
-        function closeHelp() { document.getElementById('help-modal').style.display = 'none'; }
+        function renderBoard(lastMove = null) {
+            const boardEl = document.getElementById('chess-board');
+            boardEl.innerHTML = '';
+            game.board().forEach((row, rIdx) => {
+                row.forEach((piece, cIdx) => {
+                    const sqId = String.fromCharCode(97 + cIdx) + (8 - rIdx);
+                    const sq = document.createElement('div');
+                    sq.className = 'sq ' + ((rIdx + cIdx) % 2 === 0 ? 'w' : 'b');
+                    sq.id = sqId;
 
-        // --- 2. MOVEMENT LOGIC (LIGHTWEIGHT) ---
-        function createBoard() {
-            const board = document.getElementById('chess-board');
-            const setup = [
-                'r','n','b','q','k','b','n','r',
-                'p','p','p','p','p','p','p','p',
-                '','','','','','','','', '','','','','','','','',
-                '','','','','','','','', '','','','','','','','',
-                'P','P','P','P','P','P','P','P',
-                'R','N','B','Q','K','B','N','R'
-            ];
-            const pChars = { 'r':'♜','n':'♞','b':'♝','q':'♛','k':'♚','p':'♟','R':'♖','N':'♘','B':'♗','Q':'♕','K':'♔','P':'♙' };
+                    if (piece) {
+                        const pEl = document.createElement('div');
+                        const rankClass = getPieceRankClass(piece.type);
+                        const isPromo = (piece.type === 'p' && (rIdx === 1 || rIdx === 6));
+                        pEl.className = `piece ${rankClass} ${isPromo ? 'rank-promo' : ''}`;
+                        pEl.innerHTML = pChars[piece.color === 'w' ? piece.type.toUpperCase() : piece.type.toLowerCase()];
+                        
+                        // Analysis Icon Logic
+                        if(lastMove && lastMove.to === sqId) {
+                            const icon = document.createElement('div');
+                            icon.className = 'icon brilliant';
+                            icon.innerHTML = '!!';
+                            sq.appendChild(icon);
+                        }
 
-            board.innerHTML = '';
-            setup.forEach((p, i) => {
-                const sq = document.createElement('div');
-                sq.className = 'sq ' + ((Math.floor(i/8)+i)%2==0 ? 'w' : 'b');
-                sq.dataset.index = i;
-                
-                if(p) {
-                    const pEl = document.createElement('div');
-                    pEl.className = 'piece ' + (p === p.toUpperCase() ? 'white-p' : 'black-p');
-                    pEl.innerHTML = pChars[p];
-                    pEl.dataset.type = p;
-                    sq.appendChild(pEl);
-                    
-                    // Demo Icons
-                    if(i===62 || i===1) sq.innerHTML += '<div class="icon book">📖</div>';
-                    if(i===60 || i===4) sq.innerHTML += '<div class="icon brilliant">!!</div>';
-                }
+                        pEl.onclick = () => { if(isPlaying) sourceSq = sqId; };
+                        sq.appendChild(pEl);
+                    }
 
-                sq.onclick = () => handleSqClick(sq);
-                board.appendChild(sq);
+                    sq.onclick = () => {
+                        if(!isPlaying || !sourceSq) return;
+                        const move = game.move({ from: sourceSq, to: sqId, promotion: 'q' });
+                        if(move) { renderBoard(move); sourceSq = null; }
+                    };
+                    boardEl.appendChild(sq);
+                });
             });
         }
 
-        function handleSqClick(sq) {
-            if(!isEngineOnline) return;
-
-            const piece = sq.querySelector('.piece');
-            
-            if (selectedSq) {
-                // MOVE PIECE
-                if (sq !== selectedSq) {
-                    const movingPiece = selectedSq.querySelector('.piece');
-                    const targetPiece = sq.querySelector('.piece');
-                    if(targetPiece) sq.removeChild(targetPiece);
-                    sq.appendChild(movingPiece);
-                }
-                // DESELECT
-                selectedSq.classList.remove('selected');
-                selectedSq = null;
-            } else if (piece) {
-                // SELECT PIECE
-                selectedSq = sq;
-                sq.classList.add('selected');
-            }
-        }
-
-        // --- 3. PARTICLES ---
-        const canvas = document.getElementById('particle-canvas');
-        const ctx = canvas.getContext('2d');
-        let particles = [];
         function initParticles() {
+            const canvas = document.getElementById('particle-canvas');
+            const ctx = canvas.getContext('2d');
             canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-            for(let i=0; i<180; i++) particles.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, s: Math.random()*2.2, v: Math.random()*0.5+0.1 });
+            let parts = Array.from({length:150}, () => ({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, v: Math.random()*0.5+0.2 }));
             function loop() {
                 ctx.clearRect(0,0,canvas.width, canvas.height);
-                ctx.fillStyle = "rgba(255,255,255,0.6)";
-                particles.forEach(p => { p.y += p.v; if(p.y > canvas.height) p.y = -5; ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, Math.PI*2); ctx.fill(); });
+                ctx.fillStyle = "rgba(255,255,255,0.5)";
+                parts.forEach(p => { p.y += p.v; if(p.y > canvas.height) p.y = -5; ctx.beginPath(); ctx.arc(p.x, p.y, 2, 0, Math.PI*2); ctx.fill(); });
                 requestAnimationFrame(loop);
             }
             loop();

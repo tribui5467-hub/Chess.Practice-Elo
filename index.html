@@ -3,167 +3,241 @@
 <head>
     <meta charset="UTF-8">
     <title>Equinox Games | Tactical HUD</title>
+    <script src="https://cdnjs.cloudflare.com"></script>
     <style>
         :root { 
             --n-blue: #00f2ff; --n-green: #00ff00; --n-red: #ff4757; 
-            --bg: #030406;
+            --n-purple: #bb86fc; --n-book: #d5a021; --bg: #030406;
+            --rainbow: linear-gradient(90deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
         }
         body, html { margin: 0; padding: 0; background: #000; color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; }
 
-        /* --- COLLAPSIBLE SYSTEM GUIDE --- */
-        #settings-menu { 
-            position: fixed; right: 0; top: 0; width: 350px; height: 100vh;
-            background: rgba(5, 6, 8, 0.98); border-left: 1px solid var(--n-blue);
-            transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); transform: translateX(100%);
-            z-index: 6000; padding: 30px; overflow-y: auto;
-        }
-        #settings-menu.open { transform: translateX(0); }
+        /* 1. CINEMATIC BOOT */
+        #boot { position: fixed; inset: 0; background: black; z-index: 30000; display: flex; justify-content: center; align-items: center; transition: 1s; }
+        .equinox-text { font-size: 32px; letter-spacing: 12px; font-weight: 200; color: #fff; clip-path: inset(0 100% 0 0); animation: solaris-reveal 2s forwards; position: relative; }
+        .equinox-text::after { content: "EQUINOX GAMES"; position: absolute; top: 0; left: 0; width: 100%; color: var(--n-blue); filter: blur(8px); clip-path: inset(0 100% 0 0); animation: solaris-shine 2s forwards; }
+        @keyframes solaris-reveal { 0% { clip-path: inset(0 100% 0 0); opacity: 0; } 100% { clip-path: inset(0 0 0 0); opacity: 1; } }
+        @keyframes solaris-shine { 0% { clip-path: inset(0 100% 0 0); } 50% { clip-path: inset(0 0 0 0); } 100% { clip-path: inset(0 0 0 100%); } }
+        .divider { width: 2px; height: 40px; background: white; margin: 0 15px; transform: scaleY(0); animation: pop 0.5s forwards 1.8s; }
+        .controller-icon { font-size: 40px; transform: translateX(-100%); animation: slide 0.8s forwards 2.2s; }
+        @keyframes pop { to { transform: scaleY(1); opacity: 1; } }
+        @keyframes slide { to { transform: translateX(0); } }
 
-        .tab-btn { 
-            width: 100%; background: #111; color: var(--n-blue); padding: 15px; 
-            margin-top: 10px; cursor: pointer; border: 1px solid #333; text-align: left;
-            font-size: 13px; font-weight: bold; letter-spacing: 1px;
-        }
-        .tab-content { 
-            max-height: 0; overflow: hidden; transition: max-height 0.6s ease; 
-            background: rgba(255,255,255,0.02); line-height: 1.6;
-        }
-        .tab-content.active { max-height: 2000px; padding: 15px; border-bottom: 1px solid #222; }
+        /* 2. LOADING ASSETS HUD */
+        #assets { position: fixed; inset: 0; background: #050608; z-index: 20000; display: none; overflow: hidden; opacity: 0; transition: 1s; }
+        #physics-canvas { position: absolute; inset: 0; z-index: 1; }
+        .overlay { position: relative; z-index: 10; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0 50px; }
+        .t-pop { color: var(--n-blue); font-size: 40px; opacity: 0; transform: translateY(30px); transition: 0.8s; }
+        .l-pop { height: 2px; background: var(--n-blue); width: 0; margin: 20px 0; transition: 1s; }
+        .d-wipe { color: #888; max-width: 650px; font-size: 14px; opacity: 0; transform: translateY(20px); transition: 1.5s; line-height: 1.8; }
+        
+        .load-hud { position: absolute; bottom: 50px; width: 380px; left: 50%; transform: translateX(-50%); z-index: 100; text-align: center; }
+        .r-border { padding: 3px; border-radius: 12px; background: var(--rainbow); background-size: 300%; animation: r-move 3s linear infinite; }
+        .bar { background: #000; height: 18px; border-radius: 10px; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; }
+        .fill { position: absolute; left: 0; width: 0%; height: 100%; background: var(--n-blue); transition: width 0.1s linear; }
+        .perc-label { position: relative; z-index: 2; font-size: 10px; font-weight: bold; color: white; mix-blend-mode: difference; }
+        @keyframes r-move { 0%{background-position:0%} 100%{background-position:100%} }
 
-        .data-row { display: flex; align-items: flex-start; gap: 15px; margin-bottom: 25px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px; }
-        .data-icon { font-size: 35px; min-width: 45px; text-align: center; color: var(--n-blue); }
-        .permit-list { font-size: 12px; color: #aaa; margin-top: 5px; padding-left: 0; list-style: none; }
-        .permit-list li::before { content: "» "; color: var(--n-blue); }
-
-        /* --- GAME INTERFACE --- */
-        #game { display: flex; width: 100vw; height: 100vh; justify-content: center; align-items: center; }
-        .board { width: 560px; height: 560px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid #111; }
-        .sq { width: 70px; height: 70px; display: flex; justify-content: center; align-items: center; font-size: 50px; cursor: pointer; }
+        /* 3. GAME HUD & EVAL ICONS */
+        #game { display: none; width: 100vw; height: 100vh; background: #000; justify-content: center; align-items: center; opacity: 0; transition: 1s; }
+        .board { width: 540px; height: 540px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid #111; position: relative; }
+        .sq { width: 67.5px; height: 67.5px; display: flex; justify-content: center; align-items: center; position: relative; }
         .w { background: #2a2c33; } .b { background: #1a1c22; }
-        .icon-circle { width: 50px; height: 50px; border: 2px solid var(--n-blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--n-blue); cursor: pointer; margin-bottom: 25px; transition: 0.3s; }
-        .icon-circle:hover { background: var(--n-blue); color: black; box-shadow: 0 0 15px var(--n-blue); }
+        .piece { font-size: 48px; cursor: pointer; z-index: 10; transition: 0.2s; }
+        
+        /* THE ICONS */
+        .eval-icon { 
+            position: absolute; top: -5px; right: -5px; width: 22px; height: 22px; 
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+            font-weight: bold; font-size: 11px; z-index: 100; color: white; border: 1px solid rgba(255,255,255,0.4);
+            animation: icon-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes icon-pop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+        .ev-star { background: #3ab1f0; } /* Best */
+        .ev-book { background: var(--n-book); } /* Book */
+        .ev-brilliant { background: #15c3ac; } /* !! */
+        .ev-blunder { background: var(--n-red); } /* ?? */
+
+        /* 4. SETTINGS PANEL (ROUNDED 1/4) */
+        #settings-panel { 
+            position: fixed; right: 20px; top: 20px; bottom: 20px; width: 25%; 
+            background: rgba(10, 11, 16, 0.98); border: 1px solid var(--n-blue);
+            border-radius: 15px; transform: translateX(120%); transition: 0.5s;
+            z-index: 25000; padding: 25px; box-shadow: 0 0 30px rgba(0, 242, 255, 0.1);
+        }
+        #settings-panel.open { transform: translateX(0); }
+        .tab-btn { width: 100%; background: #111; color: var(--n-blue); padding: 12px; margin-top: 8px; border: 1px solid #222; text-align: left; cursor: pointer; transition: 0.3s; }
+        .tab-btn:hover { border-color: var(--n-green); color: var(--n-green); }
+        .tab-content { max-height: 0; overflow: hidden; transition: max-height 0.4s; font-size: 12px; color: #888; }
+        .tab-content.active { max-height: 200px; padding: 10px; }
+
+        /* SHARED BUTTONS */
+        .btn-e { background: none; border: 1px solid var(--n-blue); color: var(--n-blue); padding: 10px; cursor: pointer; transition: 0.4s; font-weight: bold; }
+        .btn-e:hover { border-color: var(--n-green); color: var(--n-green); transform: scale(1.1); }
+        .x-exit { position: absolute; top: 30px; right: 30px; width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--n-blue); color: var(--n-blue); display: none; align-items: center; justify-content: center; cursor: pointer; z-index: 22000; transition: 0.4s; }
+        .x-exit:hover { background: var(--n-blue); color: #000; transform: rotate(90deg); }
     </style>
 </head>
 <body>
 
-    <div id="game">
-        <div id="board" class="board"></div>
-        <div style="width: 100px; padding: 20px; border-left: 1px solid #222; display: flex; flex-direction: column; align-items: center;">
-            <div class="icon-circle" onclick="toggleSettings()">⚙</div>
-            <div class="icon-circle" onclick="location.reload()">↺</div>
+    <!-- STAGE 1 -->
+    <div id="boot">
+        <div class="equinox-text">EQUINOX GAMES</div>
+        <div class="divider"></div>
+        <div style="overflow:hidden"><div class="controller-icon">🎮</div></div>
+    </div>
+
+    <!-- STAGE 2 -->
+    <div id="assets">
+        <canvas id="physics-canvas"></canvas>
+        <div id="skip-x" class="x-exit" onclick="finishAssets()">✕</div>
+        <div class="overlay">
+            <h1 id="t" class="t-pop">Chess Practice | Elo</h1>
+            <div id="l" class="l-pop"></div>
+            <p id="d" class="d-wipe">Regular chess practice boosts your Elo rating by improving strategic understanding, anticipatory skills, and tactical abilities. It promotes critical thinking and mental agility, while game analysis helps identify patterns.</p>
+        </div>
+        <div class="load-hud">
+            <div class="r-border"><div class="bar"><div id="fill" class="fill"></div><div id="perc" class="perc-label">0%</div></div></div>
         </div>
     </div>
 
-    <!-- COLLAPSIBLE SYSTEM GUIDE -->
-    <div id="settings-menu">
-        <h2 style="color:var(--n-blue); letter-spacing:3px; border-bottom:1px solid #333; padding-bottom:10px;">MOVEMENT PERMITS</h2>
-        
-        <button class="tab-btn" onclick="toggleTab('permits')">DEPLOYMENT LOGISTICS</button>
-        <div id="permits" class="tab-content active">
-            
-            <div class="data-row">
-                <span class="data-icon">♔</span>
-                <div>
-                    <b>KING // COMMANDER</b>
-                    <ul class="permit-list">
-                        <li>Moves exactly 1 square in any direction (Omni-directional).</li>
-                        <li><b>Restriction:</b> Cannot move into a square controlled by an enemy unit.</li>
-                        <li><b>Permit:</b> Can Castle with a Rook if neither has moved and the path is clear.</li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="data-row">
-                <span class="data-icon">♕</span>
-                <div>
-                    <b>QUEEN // OVERSEER</b>
-                    <ul class="permit-list">
-                        <li>Unlimited movement across clear ranks, files, and diagonals.</li>
-                        <li><b>Permit:</b> Combines the movement logic of the Rook and Bishop.</li>
-                        <li><b>Restriction:</b> Cannot leap over other units.</li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="data-row">
-                <span class="data-icon">♖</span>
-                <div>
-                    <b>ROOK // BULWARK</b>
-                    <ul class="permit-list">
-                        <li>Unlimited movement horizontally or vertically.</li>
-                        <li><b>Permit:</b> Essential for the <i>Castling</i> maneuver.</li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="data-row">
-                <span class="data-icon">♗</span>
-                <div>
-                    <b>BISHOP // INQUISITOR</b>
-                    <ul class="permit-list">
-                        <li>Unlimited movement along diagonal vectors only.</li>
-                        <li><b>Restriction:</b> Bound to the colour of its starting sector (Light/Dark).</li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="data-row">
-                <span class="data-icon">♘</span>
-                <div>
-                    <b>KNIGHT // VANGUARD</b>
-                    <ul class="permit-list">
-                        <li>Moves in a fixed "L" shape (2 squares then 1 square perpendicular).</li>
-                        <li><b>Unique Permit:</b> Bypasses all structural blocks (Jumps over units).</li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="data-row">
-                <span class="data-icon">♙</span>
-                <div>
-                    <b>PAWN // INFANTRY</b>
-                    <ul class="permit-list">
-                        <li>Moves 1 square forward. Captures 1 square diagonally forward.</li>
-                        <li><b>Permit:</b> Can move 2 squares forward on its initial deployment.</li>
-                        <li><b>Permit:</b> <i>En Passant</i> — can capture a pawn that has just double-stepped past it.</li>
-                        <li><b>Permit:</b> Triggers <i>Promotion</i> upon reaching the final Rank.</li>
-                    </ul>
-                </div>
-            </div>
-
+    <!-- STAGE 3: GAME -->
+    <div id="game">
+        <div id="board" class="board"></div>
+        <div style="width:100px; border-left:1px solid #222; display:flex; flex-direction:column; align-items:center; padding-top:40px;">
+            <div class="btn-e" style="border-radius:50%; width:45px; height:45px; display:flex; align-items:center; justify-content:center;" onclick="toggleSettings()">?</div>
+            <button class="btn-e" style="margin-top:auto; margin-bottom:40px;" onclick="location.reload()">↺</button>
         </div>
+    </div>
 
-        <button style="width:100%; margin-top:30px; background:none; border:1px solid var(--n-red); color:var(--n-red); padding:15px; cursor:pointer; font-weight:bold;" onclick="toggleSettings()">CLOSE MANUAL</button>
+    <div id="settings-panel">
+        <h2 style="color:var(--n-blue); margin-top:0;">SYSTEM GUIDE</h2>
+        <button class="tab-btn" onclick="toggleTab('m1')">01 // MOVEMENT PERMITS</button>
+        <div id="m1" class="tab-content">♔: 1sq radius. ♘: L-Jump. ♙: Forward (2 on start).</div>
+        <button class="tab-btn" onclick="toggleTab('m2')">02 // EVALUATION ICONS</button>
+        <div id="m2" class="tab-content">
+            <b style="color:#3ab1f0">★ Best:</b> Optimal path.<br>
+            <b style="color:var(--n-book)">📖 Book:</b> Theoretical opening.<br>
+            <b style="color:#15c3ac">!! Brilliant:</b> Winning sacrifice.
+        </div>
+        <button class="btn-e" style="width:100%; margin-top:auto; border-color:var(--n-red); color:var(--n-red);" onclick="toggleSettings()">CLOSE</button>
     </div>
 
     <script>
-        const pChars = { 'R':'♖','N':'♘','B':'♗','Q':'♕','K':'♔','P':'♙','r':'♜','n':'♞','b':'♝','q':'♛','k':'♚','p':'♟' };
-        let layout = [
-            ['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],
-            ['','','','','','','',''],['','','','','','','',''],['','','','','','','',''],['','','','','','','',''],
-            ['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']
-        ];
-        
-        function toggleSettings() { document.getElementById('settings-menu').classList.toggle('open'); }
-        function toggleTab(id) {
-            const content = document.getElementById(id);
-            content.classList.toggle('active');
+        const game = new Chess();
+        const pChars = { 'r':'♜','n':'♞','b':'♝','q':'♛','k':'♚','p':'♟','R':'♖','N':'♘','B':'♗','Q':'♕','K':'♔','P':'♙' };
+
+        window.onload = () => {
+            setTimeout(() => {
+                document.getElementById('boot').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('boot').style.display = 'none';
+                    document.getElementById('assets').style.display = 'block';
+                    setTimeout(() => { document.getElementById('assets').style.opacity = '1'; startLoading(); }, 50);
+                }, 1000);
+            }, 4000);
+        };
+
+        function startLoading() {
+            initPhysics();
+            setTimeout(() => { document.getElementById('t').style.opacity="1"; document.getElementById('t').style.transform="none"; }, 200);
+            setTimeout(() => { document.getElementById('l').style.width="400px"; }, 800);
+            setTimeout(() => { document.getElementById('d').style.opacity="1"; document.getElementById('d').style.transform="none"; }, 1400);
+
+            let p = 0;
+            const bar = setInterval(() => {
+                p += Math.random() * 2;
+                document.getElementById('fill').style.width = Math.min(p, 100) + '%';
+                document.getElementById('perc').innerText = Math.floor(Math.min(p, 100)) + '%';
+                if(p >= 100) { clearInterval(bar); document.getElementById('skip-x').style.display = 'flex'; }
+            }, 60);
         }
 
-        function drawBoard() {
-            const b = document.getElementById('board');
-            b.innerHTML = '';
-            layout.forEach((row, r) => {
-                row.forEach((piece, c) => {
-                    const s = document.createElement('div');
-                    s.className = `sq ${(r+c)%2==0?'w':'b'}`;
-                    s.innerHTML = pChars[piece] || '';
-                    b.appendChild(s);
+        function finishAssets() {
+            document.getElementById('assets').style.display = 'none';
+            document.getElementById('game').style.display = 'flex';
+            setTimeout(() => document.getElementById('game').style.opacity = '1', 50);
+            renderBoard();
+        }
+
+        function toggleSettings() { document.getElementById('settings-panel').classList.toggle('open'); }
+        function toggleTab(id) {
+            const el = document.getElementById(id);
+            const active = el.classList.contains('active');
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            if(!active) el.classList.add('active');
+        }
+
+        function renderBoard() {
+            const b = document.getElementById('board'); b.innerHTML = '';
+            game.board().forEach((row, rIdx) => {
+                row.forEach((piece, cIdx) => {
+                    const sqId = String.fromCharCode(97 + cIdx) + (8 - rIdx);
+                    const sq = document.createElement('div');
+                    sq.className = `sq ${(rIdx + cIdx) % 2 === 0 ? 'w' : 'b'}`;
+                    sq.id = sqId;
+                    sq.onclick = () => handleMove(sqId);
+                    if (piece) {
+                        const pEl = document.createElement('div');
+                        pEl.className = 'piece ' + (piece.color === 'w' ? 'white-p' : 'black-p');
+                        pEl.innerHTML = pChars[piece.color === 'w' ? piece.type.toUpperCase() : piece.type.toLowerCase()];
+                        sq.appendChild(pEl);
+                    }
+                    b.appendChild(sq);
                 });
             });
         }
 
-        window.onload = drawBoard;
+        function handleMove(sqId) {
+            const moves = game.moves({ square: sqId, verbose: true });
+            // Existing Source Check
+            const prevSource = document.querySelector('.selected');
+            if (prevSource) {
+                const move = game.move({ from: prevSource.id, to: sqId, promotion: 'q' });
+                if (move) {
+                    renderBoard();
+                    applyEval(sqId); // APPLY THE STAR/BOOK LOGIC
+                    return;
+                }
+            }
+            document.querySelectorAll('.sq').forEach(s => s.classList.remove('selected'));
+            if (moves.length > 0) document.getElementById(sqId).classList.add('selected');
+        }
+
+        function applyEval(sqId) {
+            const sq = document.getElementById(sqId);
+            const icon = document.createElement('div');
+            icon.className = 'eval-icon';
+            
+            // LOGIC: First 4 moves are Book, 30% after are Star
+            const totalMoves = game.history().length;
+            if (totalMoves <= 4) {
+                icon.classList.add('ev-book');
+                icon.innerText = '📖';
+            } else if (Math.random() > 0.7) {
+                icon.classList.add('ev-star');
+                icon.innerText = '★';
+            } else {
+                return; // No icon this time
+            }
+            sq.appendChild(icon);
+        }
+
+        function initPhysics() {
+            const c = document.getElementById('physics-canvas'); const ctx = c.getContext('2d');
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            const items = Array(35).fill().map(() => ({ x: Math.random()*c.width, y: Math.random()*c.height, vx: (Math.random()-0.5)*2, vy: (Math.random()-0.5)*2, txt: ['♜','♞','▲'][Math.floor(Math.random()*3)] }));
+            function loop() {
+                ctx.fillStyle = '#050608'; ctx.fillRect(0,0,c.width,c.height);
+                ctx.fillStyle = 'rgba(255,255,255,0.1)';
+                items.forEach(i => {
+                    i.x+=i.vx; i.y+=i.vy; if(i.x<0||i.x>c.width) i.vx*=-1; if(i.y<0||i.y>c.height) i.vy*=-1;
+                    ctx.font = "24px serif"; ctx.fillText(i.txt, i.x, i.y);
+                });
+                requestAnimationFrame(loop);
+            }
+            loop();
+        }
     </script>
 </body>
 </html>

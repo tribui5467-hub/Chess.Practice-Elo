@@ -3,52 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <title>Equinox Games | Tactical HUD</title>
-    <script src="https://cdnjs.cloudflare.com"></script>
     <style>
-        :root { --n-blue: #00f2ff; --bg: #030406; --rainbow: linear-gradient(90deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000); }
-        body, html { margin: 0; padding: 0; background: #000; color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; }
+        :root { --n-blue: #00f2ff; --bg: #030406; --rainbow: linear-gradient(90deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00); }
+        body, html { margin: 0; padding: 0; background: #000; color: white; font-family: sans-serif; overflow: hidden; height: 100vh; }
 
-        /* 1. BOOT SCREEN (SHINE EFFECT) */
+        /* STAGE 1: SOLARIS SHINE */
         #boot { position: fixed; inset: 0; background: #000; z-index: 999; display: flex; justify-content: center; align-items: center; }
-        .shine-text { font-size: 32px; letter-spacing: 12px; font-weight: 200; position: relative; color: #444; }
+        .shine-text { font-size: 28px; letter-spacing: 10px; font-weight: 200; color: #333; position: relative; }
         .shine-text::after {
             content: "EQUINOX GAMES"; position: absolute; inset: 0; color: #fff;
-            clip-path: inset(0 100% 0 0); animation: shine 2s ease-in-out forwards;
+            clip-path: inset(0 100% 0 0); animation: solaris-shine 2.5s forwards;
         }
-        @keyframes shine { 0% { clip-path: inset(0 100% 0 0); } 100% { clip-path: inset(0 0 0 0); } }
+        @keyframes solaris-shine { 0% { clip-path: inset(0 100% 0 0); } 100% { clip-path: inset(0 0 0 0); } }
         
-        .divider { width: 2px; height: 40px; background: #fff; margin: 0 15px; transform: scaleY(0); animation: v-pop 0.5s forwards 2.2s; }
-        .controller { font-size: 35px; opacity: 0; transform: translateX(-20px); animation: c-slide 0.6s forwards 2.5s; }
-        @keyframes v-pop { to { transform: scaleY(1); } }
-        @keyframes c-slide { to { opacity: 1; transform: translateX(0); } }
+        .divider { width: 2px; height: 30px; background: #fff; margin: 0 15px; opacity: 0; animation: pop 0.5s forwards 2.5s; }
+        .controller { font-size: 30px; opacity: 0; animation: emerge 0.6s forwards 2.8s; }
+        @keyframes pop { to { opacity: 1; } }
+        @keyframes emerge { to { opacity: 1; } }
 
-        /* 2. ASSET SCREEN (RAINBOW & CANVA) */
-        #assets { position: fixed; inset: 0; background: var(--bg); z-index: 888; display: none; overflow: hidden; }
-        #canvas { position: absolute; inset: 0; z-index: 1; }
-        
-        .overlay { position: relative; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding: 0 50px; }
-        .t-pop { color: var(--n-blue); font-size: 40px; margin: 0; opacity: 0; transform: translateY(20px); transition: 0.8s; }
-        .l-pop { height: 2px; background: var(--n-blue); width: 0; margin: 20px 0; transition: 1s; }
-        .d-wipe { color: #888; max-width: 600px; font-size: 14px; opacity: 0; transition: 1.5s; }
+        /* STAGE 2: ASSET LOADING */
+        #assets { position: fixed; inset: 0; background: #050608; z-index: 888; display: none; text-align: center; }
+        .overlay { height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 0 40px; }
+        .t-pop { color: var(--n-blue); font-size: 32px; opacity: 0; transition: 1s; }
+        .l-pop { height: 2px; background: var(--n-blue); width: 0; margin: 15px 0; transition: 1.2s; }
+        .d-wipe { color: #777; max-width: 550px; font-size: 13px; opacity: 0; transition: 2s; line-height: 1.6; }
 
-        .loading-ui { position: absolute; bottom: 50px; width: 300px; left: 50%; transform: translateX(-50%); z-index: 20; }
-        .r-border { padding: 2px; border-radius: 10px; background: var(--rainbow); background-size: 400% 400%; animation: r-move 3s linear infinite; }
-        .bar { background: #000; height: 10px; border-radius: 8px; overflow: hidden; }
-        .fill { width: 0%; height: 100%; background: var(--n-blue); }
-        @keyframes r-move { 0%{background-position:0% 50%} 100%{background-position:100% 50%} }
+        .load-hud { position: absolute; bottom: 50px; width: 280px; left: 50%; transform: translateX(-50%); }
+        .r-border { padding: 2px; border-radius: 10px; background: var(--rainbow); background-size: 300%; animation: r-move 3s linear infinite; }
+        .bar { background: #000; height: 8px; border-radius: 6px; overflow: hidden; }
+        .fill { width: 0%; height: 100%; background: var(--n-blue); transition: width 0.2s; }
+        @keyframes r-move { 0%{background-position:0%} 100%{background-position:100%} }
 
-        /* 3. FINAL X */
+        /* EXIT X */
         .x-btn { 
-            position: fixed; top: 30px; right: 30px; width: 50px; height: 50px; 
+            position: fixed; top: 20px; right: 20px; width: 45px; height: 45px; 
             border-radius: 50%; border: 2px solid var(--n-blue); color: var(--n-blue);
             display: none; align-items: center; justify-content: center; cursor: pointer;
-            z-index: 9999; font-size: 20px; transition: 0.3s;
+            z-index: 9999; font-weight: bold;
         }
-        .x-btn:hover { background: var(--n-blue); color: #000; transform: rotate(90deg); }
 
-        /* 4. GAME LAYER */
-        #game { display: none; width: 100vw; height: 100vh; background: #000; justify-content: center; align-items: center; z-index: 777; }
-        .board { width: 560px; height: 560px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid #222; }
+        /* STAGE 3: CHESS GRID */
+        #game { display: none; width: 100vw; height: 100vh; background: #000; justify-content: center; align-items: center; }
+        .board { width: 480px; height: 480px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 2px solid #222; }
+        .sq { width: 60px; height: 60px; }
     </style>
 </head>
 <body>
@@ -60,88 +57,58 @@
     </div>
 
     <div id="assets">
-        <canvas id="canvas"></canvas>
         <div class="overlay">
             <h1 id="t" class="t-pop">Chess Practice | Elo</h1>
             <div id="l" class="l-pop"></div>
             <p id="d" class="d-wipe">Regular chess practice boosts your Elo rating by improving strategic understanding, anticipatory skills, and tactical abilities. It promotes critical thinking and mental agility, while game analysis helps identify patterns. Practicing with others builds community and motivation. Consistency is key to mastering chess at any skill level.</p>
         </div>
-        <div class="loading-ui">
-            <div id="perc" style="text-align:right; font-size:12px; color:var(--n-blue); margin-bottom:5px;">0%</div>
+        <div class="load-hud">
+            <div id="perc" style="text-align:right; font-size:11px; color:var(--n-blue); margin-bottom:4px;">0%</div>
             <div class="r-border"><div class="bar"><div id="fill" class="fill"></div></div></div>
+            <button onclick="launchNow()" style="background:none; border:none; color:#333; font-size:9px; cursor:pointer; margin-top:8px;">SKIP ASSETS</button>
         </div>
     </div>
 
-    <div id="x" class="x-btn" onclick="showGame()">✕</div>
+    <div id="x" class="x-btn" onclick="launchNow()">✕</div>
     <div id="game"><div id="board" class="board"></div></div>
 
     <script>
-        const game = new Chess();
-        
-        // STAGE 1 -> 2 (Hard Swap)
+        // STAGE 1 -> 2 (Hard Reset)
         setTimeout(() => {
             document.getElementById('boot').style.display = 'none';
-            const assetLayer = document.getElementById('assets');
-            assetLayer.style.display = 'block';
+            document.getElementById('assets').style.display = 'block';
             
-            // Start Physics & Canva Text
-            runPhysics();
-            setTimeout(() => { document.getElementById('t').style.opacity = "1"; document.getElementById('t').style.transform = "none"; }, 100);
-            setTimeout(() => { document.getElementById('l').style.width = "400px"; }, 600);
-            setTimeout(() => { document.getElementById('d').style.opacity = "1"; }, 1200);
+            // Canva Anim Trigger
+            setTimeout(() => { document.getElementById('t').style.opacity = "1"; }, 200);
+            setTimeout(() => { document.getElementById('l').style.width = "100%"; }, 800);
+            setTimeout(() => { document.getElementById('d').style.opacity = "1"; }, 1500);
             
-            // Start Loading Bar
+            // Loading Loop
             let p = 0;
-            const barInterval = setInterval(() => {
-                p += Math.random() * 2;
+            const bar = setInterval(() => {
+                p += Math.random() * 3;
                 if (p > 100) p = 100;
                 document.getElementById('fill').style.width = p + '%';
                 document.getElementById('perc').innerText = Math.floor(p) + '%';
                 if (p >= 100) {
-                    clearInterval(barInterval);
+                    clearInterval(bar);
                     document.getElementById('x').style.display = 'flex';
                 }
-            }, 50);
+            }, 60);
         }, 5000);
 
-        function showGame() {
+        function launchNow() {
             document.getElementById('assets').style.display = 'none';
             document.getElementById('x').style.display = 'none';
             document.getElementById('game').style.display = 'flex';
-            drawBoard();
-        }
-
-        function runPhysics() {
-            const c = document.getElementById('canvas');
-            const ctx = c.getContext('2d');
-            c.width = window.innerWidth; c.height = window.innerHeight;
-            const items = Array(30).fill().map(() => ({
-                x: Math.random()*c.width, y: Math.random()*c.height,
-                vx: (Math.random()-0.5)*3, vy: (Math.random()-0.5)*3,
-                txt: ['♜','♞','▰','▲'][Math.floor(Math.random()*4)],
-                sz: 20+Math.random()*30
-            }));
-            function loop() {
-                ctx.fillStyle = '#030406'; ctx.fillRect(0,0,c.width,c.height);
-                ctx.fillStyle = 'rgba(255,255,255,0.1)';
-                items.forEach(i => {
-                    i.x += i.vx; i.y += i.vy;
-                    if(i.x<0 || i.x>c.width) i.vx *= -1;
-                    if(i.y<0 || i.y>c.height) i.vy *= -1;
-                    ctx.font = i.sz + "px serif";
-                    ctx.fillText(i.txt, i.x, i.y);
-                });
-                requestAnimationFrame(loop);
-            }
-            loop();
-        }
-
-        function drawBoard() {
+            
+            // Generate board manually to avoid external engine blocks
             const b = document.getElementById('board');
             b.innerHTML = '';
             for(let i=0; i<64; i++) {
                 const s = document.createElement('div');
-                s.style.background = (Math.floor(i/8)+i%8)%2==0 ? '#333' : '#111';
+                s.className = 'sq';
+                s.style.background = (Math.floor(i/8)+i%8)%2==0 ? '#222' : '#111';
                 b.appendChild(s);
             }
         }

@@ -5,75 +5,54 @@
     <title>Equinox Games | Tactical HUD</title>
     <script src="https://cdnjs.cloudflare.com"></script>
     <style>
-        :root { 
-            --n-blue: #00f2ff; --n-green: #00ff00; --n-red: #ff4757; 
-            --n-purple: #bb86fc; --n-book: #d5a021; --bg: #050608;
-        }
+        :root { --n-blue: #00f2ff; --n-green: #00ff00; --n-red: #ff4757; --bg: #050608; }
         body, html { margin: 0; padding: 0; background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; }
 
-        /* 1. SOLARIS 0.6 SHINE BOOT (REPLICATED) */
+        /* 1. SOLARIS 0.6 BOOT */
         #solaris-boot { position: fixed; inset: 0; background: black; z-index: 30000; display: flex; justify-content: center; align-items: center; transition: 1s; }
         .equinox-text { font-size: 32px; letter-spacing: 12px; font-weight: 200; color: #fff; clip-path: inset(0 100% 0 0); animation: solaris-reveal 2s forwards; position: relative; }
         .equinox-text::after { content: "EQUINOX GAMES"; position: absolute; top: 0; left: 0; width: 100%; color: var(--n-blue); filter: blur(8px); clip-path: inset(0 100% 0 0); animation: solaris-shine 2s forwards; }
-        
         @keyframes solaris-reveal { 0% { clip-path: inset(0 100% 0 0); opacity: 0; } 100% { clip-path: inset(0 0 0 0); opacity: 1; } }
         @keyframes solaris-shine { 0% { clip-path: inset(0 100% 0 0); } 50% { clip-path: inset(0 0 0 0); } 100% { clip-path: inset(0 0 0 100%); } }
-        
         .divider { width: 2px; height: 40px; background: white; margin: 0 15px; transform: scaleY(0); animation: pop 0.5s forwards 1.8s; }
         .controller-icon { font-size: 40px; transform: translateX(-100%); animation: slide 0.8s forwards 2.2s; }
         @keyframes pop { to { transform: scaleY(1); opacity: 1; } }
         @keyframes slide { to { transform: translateX(0); } }
 
-        /* 2. ASSET LOADING (Broken Pieces & Particles) */
-        #asset-loading { position: fixed; inset: 0; background: #030406; z-index: 20000; display: none; overflow: hidden; }
+        /* 2. ASSET LOADING (Broken Shards + Particles) */
+        #asset-loading { position: fixed; inset: 0; background: #030406; z-index: 20000; display: none; overflow: hidden; transition: 1s; }
         .loading-hud { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); width: 300px; text-align: center; z-index: 100; }
         .bar { width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; }
         .fill { width: 0%; height: 100%; background: var(--n-blue); transition: width 0.1s linear; }
 
-        /* 3. CANVA STORY SCREEN (WIPE ANIMATION) */
+        /* 3. CANVA STORY SCREEN */
         #story-screen { position: fixed; inset: 0; background: var(--bg); z-index: 10000; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
-        
-        .top-left-x { 
-            position: absolute; top: 40px; left: 40px; width: 50px; height: 50px; 
-            border-radius: 50%; border: 2px solid var(--n-blue); display: none; 
-            justify-content: center; align-items: center; cursor: pointer; color: var(--n-blue); 
-            transition: 0.5s; transform: scale(0) rotate(-180deg);
-        }
+        .top-left-x { position: absolute; top: 40px; left: 40px; width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--n-blue); display: none; justify-content: center; align-items: center; cursor: pointer; color: var(--n-blue); transition: 0.5s; transform: scale(0) rotate(-180deg); }
         .top-left-x:hover { background: var(--n-blue); color: black; transform: scale(1.2) rotate(90deg); }
-
-        .title-pop { opacity: 0; color: var(--n-blue); font-size: 42px; transform: scale(0.8); transition: 0.8s; letter-spacing: 2px; }
-        .line-pop { height: 2px; background: var(--n-blue); width: 0; margin: 20px 0; transition: 1.2s cubic-bezier(0.22, 1, 0.36, 1); }
-        
-        /* CANVA TEXT WIPE */
-        .desc-wipe { 
-            opacity: 0; max-width: 700px; color: #888; font-size: 14px; line-height: 1.8;
-            clip-path: inset(0 100% 0 0); transition: 3s cubic-bezier(0.4, 0, 0.2, 1), clip-path 3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+        .title-pop { opacity: 0; color: var(--n-blue); font-size: 42px; transform: scale(0.8); transition: 0.8s; }
+        .line-pop { height: 2px; background: var(--n-blue); width: 0; margin: 20px 0; transition: 1s; }
+        .desc-wipe { opacity: 0; max-width: 650px; color: #888; font-size: 14px; line-height: 1.8; clip-path: inset(0 100% 0 0); transition: 3s; }
         .desc-wipe.active { opacity: 1; clip-path: inset(0 0 0 0); }
 
-        /* 4. TACTICAL HUD GAME LAYER */
-        #game-layer { display: none; width: 100vw; height: 100vh; opacity: 0; transition: 1s ease-out; justify-content: center; align-items: center; }
-        .board { width: 560px; height: 560px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 2px solid rgba(0, 242, 255, 0.3); background: rgba(10, 11, 16, 0.9); box-shadow: 0 0 20px rgba(0,242,255,0.1); }
+        /* 4. GAME LAYER */
+        #game-layer { display: none; width: 100vw; height: 100vh; opacity: 0; transition: 1.2s; justify-content: center; align-items: center; }
+        .board { width: 560px; height: 560px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 2px solid rgba(0, 242, 255, 0.3); background: rgba(10, 11, 16, 0.9); }
         .sq { width: 70px; height: 70px; display: flex; justify-content: center; align-items: center; position: relative; }
         .w { background: rgba(255, 255, 255, 0.03); } .b { background: rgba(0, 0, 0, 0.4); }
-
-        .piece { font-size: 50px; cursor: pointer; transition: 0.2s; }
+        .piece { font-size: 50px; cursor: pointer; }
         .white-p { color: #fff; filter: drop-shadow(0 0 5px #fff); }
         .black-p { color: #555; filter: drop-shadow(0 0 8px #000); }
     </style>
 </head>
 <body>
-    <!-- PHYSICS ELEMENTS -->
     <canvas id="bg-canvas" style="position:fixed; inset:0; z-index:0; pointer-events:none;"></canvas>
 
-    <!-- STAGE 1: BOOT -->
     <div id="solaris-boot">
         <div class="equinox-text">EQUINOX GAMES</div>
         <div class="divider"></div>
         <div style="overflow:hidden"><div class="controller-icon">🎮</div></div>
     </div>
 
-    <!-- STAGE 2: LOADING -->
     <div id="asset-loading">
         <canvas id="physics-canvas" style="position:absolute; inset:0"></canvas>
         <div class="loading-hud">
@@ -82,7 +61,6 @@
         </div>
     </div>
 
-    <!-- STAGE 3: STORY -->
     <div id="story-screen">
         <div id="enter-x" class="top-left-x" onclick="enterGame()">✕</div>
         <h1 id="title" class="title-pop">Chess Practice | Elo</h1>
@@ -92,12 +70,11 @@
         </p>
     </div>
 
-    <!-- STAGE 4: GAME -->
     <div id="game-layer">
         <div id="chess-board" class="board"></div>
-        <div style="width:150px; padding:30px; border-left:1px solid rgba(0,242,255,0.1); display:flex; flex-direction:column; align-items:center;">
-            <h3 style="color:var(--n-blue); letter-spacing:2px;">ELO.HUD</h3>
-            <button style="background:none; border:1px solid var(--n-blue); color:var(--n-blue); padding:10px 20px; cursor:pointer; margin-top:auto" onclick="location.reload()">REBOOT</button>
+        <div style="width:150px; padding:30px; border-left:1px solid rgba(0,242,255,0.2); height:100vh; display:flex; flex-direction:column; align-items:center;">
+            <h3 style="color:var(--n-blue)">ELO.HUD</h3>
+            <button style="margin-top:auto; background:none; border:1px solid var(--n-blue); color:var(--n-blue); padding:10px 20px; cursor:pointer;" onclick="location.reload()">REBOOT</button>
         </div>
     </div>
 
@@ -106,7 +83,6 @@
         const pChars = { 'r':'♜','n':'♞','b':'♝','q':'♛','k':'♚','p':'♟','R':'♖','N':'♘','B':'♗','Q':'♕','K':'♔','P':'♙' };
 
         window.onload = () => {
-            // BOOT SEQUENCE
             setTimeout(() => {
                 document.getElementById('solaris-boot').style.opacity = '0';
                 setTimeout(() => {
@@ -132,35 +108,26 @@
             document.getElementById('asset-loading').style.opacity = '0';
             setTimeout(() => {
                 document.getElementById('asset-loading').style.display = 'none';
-                startStory();
+                document.getElementById('story-screen').style.display = 'flex';
+                setTimeout(() => { document.getElementById('title').style.opacity="1"; document.getElementById('title').style.transform="scale(1)"; }, 200);
+                setTimeout(() => { document.getElementById('line').style.width="400px"; }, 800);
+                setTimeout(() => { document.getElementById('desc').classList.add('active'); }, 1500);
+                setTimeout(() => { 
+                    const x = document.getElementById('enter-x');
+                    x.style.display="flex"; 
+                    setTimeout(()=> { x.style.opacity="1"; x.style.transform="scale(1) rotate(0deg)"; }, 50);
+                }, 4500);
             }, 1000);
-        }
-
-        function startStory() {
-            document.getElementById('story-screen').style.display = 'flex';
-            // CANVA ANIMATIONS
-            setTimeout(() => { 
-                document.getElementById('title').style.opacity="1"; 
-                document.getElementById('title').style.transform="scale(1)"; 
-            }, 200);
-            setTimeout(() => { document.getElementById('line').style.width="450px"; }, 800);
-            setTimeout(() => { document.getElementById('desc').classList.add('active'); }, 1500);
-            setTimeout(() => { 
-                const x = document.getElementById('enter-x');
-                x.style.display="flex"; 
-                setTimeout(()=> { x.style.opacity="1"; x.style.transform="scale(1) rotate(0deg)"; }, 50);
-            }, 4500);
         }
 
         function enterGame() {
             const story = document.getElementById('story-screen');
-            story.style.transition = "1s cubic-bezier(0.7, 0, 0.3, 1)";
             story.style.transform = "scale(1.2)";
             story.style.opacity = "0";
             setTimeout(() => {
                 story.style.display = 'none';
                 document.getElementById('game-layer').style.display = 'flex';
-                setTimeout(() => document.getElementById('game-layer').style.opacity = '1', 50);
+                setTimeout(() => { document.getElementById('game-layer').style.opacity = '1'; }, 50);
                 renderBoard();
             }, 1000);
         }
@@ -183,12 +150,11 @@
             });
         }
 
-        // PHYSICS & PARTICLES
         function initPhysics() {
             const canvas = document.getElementById('physics-canvas');
             const ctx = canvas.getContext('2d');
             canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-            const items = Array(35).fill().map(() => ({
+            const items = Array(40).fill().map(() => ({
                 x: Math.random()*canvas.width, y: Math.random()*canvas.height,
                 vx: (Math.random()-0.5)*3, vy: (Math.random()-0.5)*3,
                 char: ['♜','♞','▰','▲'][Math.floor(Math.random()*4)],

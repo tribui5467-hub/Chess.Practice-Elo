@@ -2,299 +2,266 @@
 <html lang="en-AU">
 <head>
     <meta charset="UTF-8">
-    <title>Equinox Games | Tactical HUD v4</title>
-    <!-- Chess Logic Dependency -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <title>Equinox Games | Tactical HUD v7</title>
+    <script src="https://cdnjs.cloudflare.com"></script>
     <style>
         :root { 
             --n-blue: #00f2ff; --n-green: #00ff00; --n-red: #ff4757; 
-            --n-orange: #ff9f43; --n-yellow: #f1c40f; --n-book: #d5a021;
-            --rainbow: linear-gradient(90deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+            --n-orange: #ff9f43; --n-yellow: #f1c40f; 
+            --bg-glass: rgba(5, 6, 8, 0.95);
         }
         body, html { margin: 0; padding: 0; background: #000; color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; }
 
-        /* 1. BOOT SCREEN */
-        #boot { position: fixed; inset: 0; background: black; z-index: 30000; display: flex; justify-content: center; align-items: center; transition: opacity 0.8s; }
-        .equinox-text { font-size: 32px; letter-spacing: 12px; font-weight: 200; color: #fff; clip-path: inset(0 100% 0 0); animation: solaris-reveal 2s forwards; position: relative; }
-        @keyframes solaris-reveal { 0% { clip-path: inset(0 100% 0 0); opacity: 0; } 100% { clip-path: inset(0 0 0 0); opacity: 1; } }
-
-        /* 2. LOADING SCREEN */
+        /* LOADING & STARFIELD */
         #assets { position: fixed; inset: 0; background: #050608; z-index: 20000; display: none; opacity: 0; transition: 1s; }
-        #physics-canvas { position: absolute; inset: 0; z-index: 1; }
-        .overlay { position: relative; z-index: 10; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0 50px; pointer-events: none; }
+        #physics-canvas, #game-canvas { position: absolute; inset: 0; }
+        .overlay { position: relative; z-index: 10; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0 50px; }
         
-        /* Animations */
-        .t-pop { color: var(--n-blue); font-size: 40px; opacity: 0; transform: translateY(30px); transition: 0.8s; }
-        .l-pop { height: 2px; background: var(--n-blue); width: 0; margin: 20px 0; transition: 1.2s; }
-        .d-wipe { color: #888; max-width: 650px; font-size: 14px; opacity: 0; transform: translateY(-20px); transition: 1.5s; line-height: 1.8; }
-
-        .load-hud { position: absolute; bottom: 50px; width: 380px; left: 50%; transform: translateX(-50%); z-index: 100; text-align: center; }
-        .r-border { padding: 3px; border-radius: 12px; background: var(--rainbow); background-size: 300%; animation: r-move 3s linear infinite; }
-        .bar { background: #000; height: 18px; border-radius: 10px; overflow: hidden; position: relative; }
-        .fill { position: absolute; left: 0; width: 0%; height: 100%; background: var(--n-blue); transition: width 0.1s linear; }
-        @keyframes r-move { 0%{background-position:0%} 100%{background-position:100%} }
-
-        /* 3. GAME INTERFACE */
+        /* HUD ELEMENTS */
         #game { display: none; width: 100vw; height: 100vh; background: #000; justify-content: center; align-items: center; opacity: 0; transition: 1s; }
-        .board-container { display: flex; flex-direction: column; align-items: center; }
-        .turn-indicator { margin-bottom: 20px; font-size: 18px; letter-spacing: 2px; color: var(--n-blue); text-transform: uppercase; }
-        .board { width: 560px; height: 560px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid #111; position: relative; }
+        .board { width: 560px; height: 560px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid #111; position: relative; z-index: 10; background: rgba(0,0,0,0.8); }
         .sq { width: 70px; height: 70px; display: flex; justify-content: center; align-items: center; position: relative; transition: 0.3s; }
-        .w { background: #2a2c33; } .b { background: #1a1c22; }
-        
-        .piece { font-size: 48px; cursor: pointer; z-index: 10; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); user-select: none; }
-        .sq:hover .piece { transform: scale(1.2); }
-        .selected { background: rgba(0, 242, 255, 0.4) !important; }
-        .move-hint { border: 4px solid white !important; box-sizing: border-box; }
+        .w { background: rgba(42, 44, 51, 0.8); } .b { background: rgba(26, 28, 34, 0.8); }
+        .piece { font-size: 48px; cursor: pointer; z-index: 10; transition: transform 0.3s; user-select: none; }
 
-        /* Icons */
-        .eval-icon { 
-            position: absolute; top: -5px; right: -5px; width: 22px; height: 22px; border-radius: 50%; 
-            display: flex; align-items: center; justify-content: center; font-size: 11px; z-index: 100; color: white;
-            animation: spin-in 0.6s ease forwards;
-        }
-        @keyframes spin-in { 0% { transform: rotate(-540deg) scale(0); } 100% { transform: rotate(0) scale(1); } }
-        .spin-out { animation: spin-out 0.6s ease forwards; }
-        @keyframes spin-out { 0% { transform: rotate(0) scale(1); } 100% { transform: rotate(540deg) scale(0); } }
-
-        /* 4. SETTINGS (1/4 Width) */
+        /* CENTRAL SETTINGS MENU (BASELINE UP ANIMATION) */
         #settings-panel { 
-            position: fixed; right: 0; top: 0; bottom: 0; width: 25%; background: rgba(5, 6, 8, 0.98); 
-            border-left: 2px solid var(--n-blue); transform: translateX(100%); transition: 0.5s; z-index: 25000; padding: 25px; overflow-y: auto;
+            position: fixed; 
+            left: 50%; 
+            bottom: 0; 
+            width: 25%; 
+            max-height: 80vh;
+            background: var(--bg-glass); 
+            border: 1px solid var(--n-blue); 
+            border-bottom: none;
+            border-radius: 15px 15px 0 0;
+            transform: translate(-50%, 100%); 
+            transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1), height 0.4s ease; 
+            z-index: 25000; 
+            padding: 25px; 
+            overflow-y: auto;
+            box-shadow: 0 -10px 40px rgba(0, 242, 255, 0.2);
+            display: flex;
+            flex-direction: column;
         }
-        #settings-panel.open { transform: translateX(0); }
-        .close-btn { float: right; cursor: pointer; color: var(--n-blue); font-size: 24px; }
-        .btn-e { background: none; border: 1px solid var(--n-blue); color: var(--n-blue); padding: 12px; margin: 10px 0; cursor: pointer; transition: 0.3s; width: 100%; font-weight: bold; }
-        .btn-e:hover { background: var(--n-blue); color: #000; }
-        .tab-content { max-height: 0; overflow: hidden; transition: 0.5s; font-size: 12px; color: #aaa; }
-        .tab-content.active { max-height: 1000px; padding: 10px 0; }
+        #settings-panel.open { transform: translate(-50%, -10%); } /* Baseline up to centre-ish */
+
+        .section-title { color: var(--n-blue); font-size: 12px; letter-spacing: 2px; margin: 20px 0 10px; border-bottom: 1px solid #222; }
+        .tab-btn { background: #111; border: 1px solid #333; color: #fff; width: 100%; padding: 12px; text-align: left; cursor: pointer; margin-bottom: 5px; transition: 0.3s; }
+        .tab-btn:hover { border-color: var(--n-blue); background: #1a1a1a; }
         
-        .rate-red { color: var(--n-red); } .rate-orange { color: var(--n-orange); } 
-        .rate-yellow { color: var(--n-yellow); } .rate-green { color: var(--n-green); }
+        .tab-content { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-out; font-size: 13px; color: #aaa; }
+        .tab-content.active { max-height: 500px; padding: 10px 0; }
+
+        /* UNIT STYLING */
+        .unit-info { margin-bottom: 15px; border-left: 2px solid #444; padding-left: 10px; }
+        .rate-red { color: var(--n-red); } .rate-orange { color: var(--n-orange); } .rate-yellow { color: var(--n-yellow); } .rate-green { color: var(--n-green); }
+
+        .btn-e { background: none; border: 1px solid var(--n-blue); color: var(--n-blue); padding: 10px; cursor: pointer; transition: 0.3s; font-weight: bold; }
+        .btn-e:hover { background: var(--n-blue); color: #000; }
+        
+        .close-hub { position: absolute; top: 15px; right: 20px; cursor: pointer; color: var(--n-blue); font-size: 20px; }
+        
+        .move-dot { border: 4px solid white !important; box-sizing: border-box; }
+        .selected { background: rgba(0, 242, 255, 0.4) !important; }
     </style>
 </head>
 <body>
 
-    <div id="boot">
-        <div class="equinox-text">EQUINOX GAMES</div>
-    </div>
+    <div id="boot"><h1>EQUINOX GAMES</h1></div>
 
     <div id="assets">
         <canvas id="physics-canvas"></canvas>
         <div class="overlay">
-            <h1 id="t" class="t-pop">Chess Practice | Elo</h1>
-            <div id="l" class="l-pop"></div>
-            <p id="d" class="d-wipe">Regular chess practice boosts your Elo rating by improving strategic understanding, anticipatory skills, and tactical abilities. It promotes critical thinking and mental agility, while game analysis helps identify patterns. Practicing with others builds community and motivation. Consistency is key to mastering chess at any skill level.</p>
-        </div>
-        <div class="load-hud">
-            <div class="r-border"><div class="bar"><div id="fill" class="fill"></div></div></div>
+            <h1 style="color:var(--n-blue); font-size:40px;">Chess Practice | Elo</h1>
+            <div style="height:2px; background:var(--n-blue); width:300px; margin:20px 0;"></div>
+            <p style="color:#888; max-width:600px; font-size:14px; line-height:1.8;">Regular chess practice boosts your Elo rating by improving strategic understanding... Consistency is key to mastering chess at any skill level.</p>
         </div>
     </div>
 
     <div id="game">
-        <div class="board-container">
-            <div id="turn" class="turn-indicator">System Turn: White</div>
+        <canvas id="game-canvas"></canvas>
+        <div style="display:flex; flex-direction:column; align-items:center; z-index:10;">
+            <div id="turn" style="color:var(--n-blue); margin-bottom:15px; letter-spacing:3px;">SYSTEM TURN: WHITE</div>
             <div id="board" class="board"></div>
         </div>
-        <button class="btn-e" style="position:fixed; top:20px; right:20px; width:50px; border-radius:50%;" onclick="toggleSettings()">?</button>
+        <button class="btn-e" style="position:fixed; bottom:30px; left:50%; transform:translateX(-50%); width:60px; height:60px; border-radius:50%; font-size:24px;" onclick="toggleSettings()">?</button>
     </div>
 
+    <!-- INTEGRATED CENTRAL SETTINGS & HELP HUB -->
     <div id="settings-panel">
-        <span class="close-btn" onclick="toggleSettings()">✕</span>
-        <h2 style="color:var(--n-blue);">TACTICAL HUB</h2>
+        <span class="close-hub" onclick="toggleSettings()">✕</span>
+        <h2 style="color:var(--n-blue); margin:0; font-size:20px;">TACTICAL COMMAND HUB</h2>
         
-        <button class="btn-e" onclick="location.reload()">PLAY / RESET</button>
+        <button class="btn-e" style="margin-top:20px;" onclick="location.reload()">RESTART SIMULATION</button>
 
-        <div style="margin: 20px 0;">
-            <label style="font-size:10px;">VOLUME</label>
-            <input type="range" style="width:100%; accent-color:var(--n-blue);">
-            <label style="font-size:10px; margin-top:10px; display:block;">MUSIC (SPOTIFY)</label>
-            <iframe style="border-radius:12px" src="https://open.spotify.com/embed/playlist/37i9dQZF1DX8Ueb9W7YUMp" width="100%" height="80" frameBorder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
-        </div>
-
-        <button class="btn-e" onclick="toggleTab('units')">TACTICAL UNITS</button>
+        <div class="section-title">SYSTEM DOCUMENTATION</div>
+        
+        <!-- Tab 1: Units -->
+        <button class="tab-btn" onclick="toggleTab('units')">01 // TACTICAL UNITS (ASSETS)</button>
         <div id="units" class="tab-content">
-            <p>♔ <b>King</b> - Importance: <b class="rate-red">CRITICAL</b></p>
-            <p>♕ <b>Queen</b> - Importance: <b class="rate-red">CRITICAL</b></p>
-            <p>♖ <b>Rook</b> - Importance: <b class="rate-orange">HIGH</b></p>
-            <p>♗ <b>Bishop</b> - Importance: <b class="rate-orange">HIGH</b></p>
-            <p>♘ <b>Knight</b> - Importance: <b class="rate-yellow">MODERATE</b></p>
-            <p>♙ <b>Pawn</b> - Importance: <b class="rate-green">EXPENDABLE</b></p>
+            <div class="unit-info">♔ <b>Monarch (King)</b>: High-value core. One-square radius. <br>Importance: <b class="rate-red">CRITICAL [RED]</b></div>
+            <div class="unit-info">♕ <b>Superior (Queen)</b>: Omnidirectional strike unit. <br>Importance: <b class="rate-red">CRITICAL [RED]</b></div>
+            <div class="unit-info">♖ <b>Fortress (Rook)</b>: Linear artillery specialist. <br>Importance: <b class="rate-orange">HIGH [ORANGE]</b></div>
+            <div class="unit-info">♗ <b>Interceptor (Bishop)</b>: Long-range diagonal unit. <br>Importance: <b class="rate-orange">HIGH [ORANGE]</b></div>
+            <div class="unit-info">♘ <b>Recon (Knight)</b>: L-path jump capability. <br>Importance: <b class="rate-yellow">MODERATE [YELLOW]</b></div>
+            <div class="unit-info">♙ <b>Infantry (Pawn)</b>: Baseline units with promotion potential. <br>Importance: <b class="rate-green">EXPENDABLE [GREEN]</b></div>
         </div>
 
-        <button class="btn-e" onclick="toggleTab('icons')">ICON DECODER</button>
+        <!-- Tab 2: Icons -->
+        <button class="tab-btn" onclick="toggleTab('icons')">02 // EVALUATION ICONS</button>
         <div id="icons" class="tab-content">
             <p>★ <b>Best</b>: Optimal engine trajectory.</p>
             <p>📖 <b>Book</b>: Established theory opening.</p>
             <p>!! <b>Brilliant</b>: High-complexity sacrifice.</p>
-            <p>?? <b>Blunder</b>: Severe logical error.</p>
-            <p>💀 <b>Lethal</b>: Immediate asset termination detected.</p>
+            <p>💀 <b>Lethal</b>: Target termination confirmed.</p>
         </div>
+
+        <!-- Tab 3: Mechanics -->
+        <button class="tab-btn" onclick="toggleTab('mech')">03 // CORE MECHANICS</button>
+        <div id="mech" class="tab-content">
+            <p><b>Checkmate</b>: Enemy monarch trapped. Victory.</p>
+            <p><b>Stalemate</b>: No legal moves, monarch safe. Draw.</p>
+            <p><b>Promotion</b>: Infantry evolution at 8th rank.</p>
+        </div>
+
+        <div class="section-title">AUDIO INTERFACE</div>
+        <iframe src="https://open.spotify.com" width="100%" height="80" frameBorder="0" allow="autoplay; encrypted-media"></iframe>
     </div>
 
     <script>
         const game = new Chess();
         let selectedSq = null;
-        let ctrlDown = false;
+        let ctrlToggle = false;
+        const neon = { k:'#ff4757', q:'#ff4757', r:'#ff9f43', b:'#ff9f43', n:'#f1c40f', p:'#00ff00' };
 
-        // ANIMATION SEQUENCE
+        // 1. BOOT & LOAD
         setTimeout(() => {
-            document.getElementById('boot').style.opacity = '0';
-            setTimeout(() => {
-                document.getElementById('boot').style.display = 'none';
-                startLoading();
-            }, 800);
-        }, 3000);
-
-        function startLoading() {
+            document.getElementById('boot').style.display = 'none';
             document.getElementById('assets').style.display = 'block';
-            setTimeout(() => {
-                document.getElementById('assets').style.opacity = '1';
-                document.getElementById('t').style.opacity = '1';
-                document.getElementById('t').style.transform = 'translateY(0)';
-                document.getElementById('l').style.width = '300px';
-                document.getElementById('d').style.opacity = '1';
-                document.getElementById('d').style.transform = 'translateY(0)';
-            }, 100);
-
-            let p = 0;
-            const iv = setInterval(() => {
-                p += Math.random() * 3;
-                if(p >= 100) {
-                    p = 100; clearInterval(iv);
-                    setTimeout(initGame, 1000);
-                }
-                document.getElementById('fill').style.width = p + '%';
-            }, 50);
-            initParticles();
-        }
+            setTimeout(() => document.getElementById('assets').style.opacity = '1', 50);
+            setTimeout(initGame, 4000);
+            initAssetPhysics();
+        }, 2000);
 
         function initGame() {
-            document.getElementById('assets').style.opacity = '0';
-            setTimeout(() => {
-                document.getElementById('assets').style.display = 'none';
-                document.getElementById('game').style.display = 'flex';
-                setTimeout(() => document.getElementById('game').style.opacity = '1', 50);
-                drawBoard();
-            }, 1000);
+            document.getElementById('assets').style.display = 'none';
+            document.getElementById('game').style.display = 'flex';
+            document.getElementById('game').style.opacity = '1';
+            drawBoard();
+            initGameParticles();
         }
 
+        // 2. CHESS LOGIC
         function drawBoard() {
-            const board = document.getElementById('board');
-            board.innerHTML = '';
-            const pieces = { p:'♟', r:'♜', n:'♞', b:'♝', q:'♛', k:'♚', P:'♙', R:'♖', N:'♘', B:'♗', Q:'♕', K:'♔' };
-            const importance = { k:'red', q:'red', r:'orange', b:'orange', n:'yellow', p:'green' };
-
+            const b = document.getElementById('board'); b.innerHTML = '';
+            const glyphs = { p:'♟', r:'♜', n:'♞', b:'♝', q:'♛', k:'♚', P:'♙', R:'♖', N:'♘', B:'♗', Q:'♕', K:'♔' };
             for(let r=0; r<8; r++) {
                 for(let c=0; c<8; c++) {
-                    const sqId = String.fromCharCode(97+c) + (8-r);
-                    const piece = game.get(sqId);
-                    const el = document.createElement('div');
-                    el.className = `sq ${(r+c)%2==0?'w':'b'}`;
-                    el.id = sqId;
-
+                    const id = String.fromCharCode(97+c) + (8-r);
+                    const piece = game.get(id);
+                    const sq = document.createElement('div');
+                    sq.className = `sq ${(r+c)%2==0?'w':'b'}`;
+                    sq.id = id;
                     if(piece) {
                         const p = document.createElement('div');
                         p.className = 'piece';
-                        p.innerHTML = pieces[piece.color === 'w' ? piece.type.toUpperCase() : piece.type];
-                        el.appendChild(p);
-
-                        const colorClass = importance[piece.type];
-                        el.onmouseenter = () => {
-                            const neon = { red: '#ff4757', orange: '#ff9f43', yellow: '#f1c40f', green: '#00ff00' }[colorClass];
-                            el.style.boxShadow = `inset 0 0 20px ${neon}`;
-                            el.style.backgroundColor = `${neon}22`;
-                            if(ctrlDown) showPath(sqId, neon);
+                        p.innerHTML = glyphs[piece.color === 'w' ? piece.type.toUpperCase() : piece.type];
+                        sq.appendChild(p);
+                        sq.onmouseenter = () => {
+                            const color = neon[piece.type];
+                            sq.style.boxShadow = `inset 0 0 25px ${color}`;
+                            if(ctrlToggle) showMoves(id, color);
                         };
-                        el.onmouseleave = () => {
-                            el.style.boxShadow = 'none';
-                            el.style.backgroundColor = '';
-                            clearPaths();
-                        };
+                        sq.onmouseleave = () => { if(!selectedSq) clearHighlights(); };
                     }
-
-                    el.onclick = () => handleSqClick(sqId);
-                    board.appendChild(el);
+                    sq.onclick = () => handleMove(id);
+                    b.appendChild(sq);
                 }
             }
-            document.getElementById('turn').innerText = `System Turn: ${game.turn() === 'w' ? 'White' : 'Black'}`;
+            document.getElementById('turn').innerText = `SYSTEM TURN: ${game.turn() === 'w' ? 'WHITE' : 'BLACK'}`;
         }
 
-        function handleSqClick(sqId) {
-            if(selectedSq === sqId) {
-                selectedSq = null;
-                drawBoard();
-                return;
-            }
+        function handleMove(id) {
+            if(selectedSq === id) { selectedSq = null; drawBoard(); return; }
             if(!selectedSq) {
-                if(game.get(sqId)) {
-                    selectedSq = sqId;
-                    drawBoard();
-                    document.getElementById(sqId).classList.add('selected');
-                }
+                if(game.get(id)) { selectedSq = id; drawBoard(); document.getElementById(id).classList.add('selected'); }
             } else {
-                const move = game.move({ from: selectedSq, to: sqId, promotion: 'q' });
-                if(move) {
-                    selectedSq = null;
-                    drawBoard();
-                    triggerSpinIcon(sqId);
-                } else {
-                    selectedSq = sqId;
-                    drawBoard();
-                    document.getElementById(sqId).classList.add('selected');
-                }
+                if(game.move({from: selectedSq, to: id, promotion: 'q'})) { selectedSq = null; drawBoard(); }
+                else { selectedSq = id; drawBoard(); document.getElementById(id).classList.add('selected'); }
             }
         }
 
-        function showPath(sqId, color) {
-            const moves = game.moves({ square: sqId, verbose: true });
-            moves.forEach(m => {
+        function showMoves(id, color) {
+            game.moves({square: id, verbose: true}).forEach(m => {
                 const target = document.getElementById(m.to);
-                target.classList.add('move-hint');
+                target.classList.add('move-dot');
                 target.style.borderColor = color;
             });
         }
 
-        function clearPaths() {
+        function clearHighlights() {
             document.querySelectorAll('.sq').forEach(s => {
-                s.classList.remove('move-hint');
-                s.style.borderColor = '';
+                s.style.boxShadow = 'none'; s.style.border = 'none';
+                s.classList.remove('move-dot');
             });
         }
 
-        function triggerSpinIcon(sqId) {
-            const sq = document.getElementById(sqId);
-            const icon = document.createElement('div');
-            icon.className = 'eval-icon ev-star';
-            icon.innerHTML = '★';
-            sq.appendChild(icon);
-            setTimeout(() => {
-                icon.classList.add('spin-out');
-                setTimeout(() => icon.remove(), 600);
-            }, 2500);
+        // 3. UI ANIMATIONS
+        function toggleSettings() { document.getElementById('settings-panel').classList.toggle('open'); }
+        
+        function toggleTab(id) {
+            const el = document.getElementById(id);
+            const active = el.classList.contains('active');
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            if(!active) el.classList.add('active');
         }
 
-        function initParticles() {
-            const canvas = document.getElementById('physics-canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-            let p = Array.from({length: 60}, () => ({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, v: Math.random()*0.5+0.2 }));
+        // 4. BACKGROUND SYSTEMS
+        function initAssetPhysics() {
+            const cvs = document.getElementById('physics-canvas');
+            const ctx = cvs.getContext('2d');
+            cvs.width = window.innerWidth; cvs.height = window.innerHeight;
+            let debris = Array.from({length: 20}, () => ({
+                x: Math.random()*cvs.width, y: Math.random()*cvs.height,
+                vx: (Math.random()-0.5), vy: (Math.random()-0.5),
+                char: ['♖','♘','■','▨'][Math.floor(Math.random()*4)],
+                size: 30 + Math.random()*30
+            }));
             function loop() {
-                ctx.clearRect(0,0,canvas.width,canvas.height);
-                ctx.fillStyle = '#ffffff44';
-                p.forEach(i => {
-                    ctx.beginPath(); ctx.arc(i.x, i.y, 1.5, 0, Math.PI*2); ctx.fill();
-                    i.y -= i.v; if(i.y < 0) i.y = canvas.height;
+                ctx.clearRect(0,0,cvs.width,cvs.height);
+                ctx.fillStyle = '#ffffff22';
+                debris.forEach(d => {
+                    d.x += d.vx; d.y += d.vy;
+                    if(d.x<0 || d.x>cvs.width) d.vx*=-1; if(d.y<0 || d.y>cvs.height) d.vy*=-1;
+                    ctx.font = `${d.size}px Arial`; ctx.fillText(d.char, d.x, d.y);
                 });
                 requestAnimationFrame(loop);
             }
             loop();
         }
 
-        window.onkeydown = (e) => { if(e.key === 'Control') ctrlDown = true; };
-        window.onkeyup = (e) => { if(e.key === 'Control') ctrlDown = false; };
-        function toggleSettings() { document.getElementById('settings-panel').classList.toggle('open'); }
-        function toggleTab(id) { document.getElementById(id).classList.toggle('active'); }
+        function initGameParticles() {
+            const cvs = document.getElementById('game-canvas');
+            const ctx = cvs.getContext('2d');
+            cvs.width = window.innerWidth; cvs.height = window.innerHeight;
+            let stars = Array.from({length: 100}, () => ({
+                x: Math.random()*cvs.width, y: Math.random()*cvs.height,
+                s: Math.random()*2, v: Math.random()*0.5 + 0.1
+            }));
+            function loop() {
+                ctx.clearRect(0,0,cvs.width,cvs.height);
+                ctx.fillStyle = '#fff';
+                stars.forEach(s => {
+                    ctx.beginPath(); ctx.arc(s.x, s.y, s.s, 0, Math.PI*2); ctx.fill();
+                    s.y -= s.v; if(s.y < 0) s.y = cvs.height;
+                });
+                requestAnimationFrame(loop);
+            }
+            loop();
+        }
+
+        window.onkeydown = (e) => { if(e.key === 'Control') ctrlToggle = !ctrlToggle; };
     </script>
 </body>
 </html>

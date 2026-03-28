@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>Chess-Practice | Elo</title>
-    <script src="https://cdnjs.cloudflare.com"></script>
     <style>
         :root { --neon-blue: #00f2ff; --neon-green: #00ff00; --bg-dark: #0a0b10; }
         body { margin: 0; background: var(--bg-dark); overflow: hidden; font-family: 'Segoe UI', sans-serif; color: white; user-select: none; }
@@ -24,63 +23,57 @@
         #hud-container { display: none; flex-direction: column; align-items: center; text-align: center; padding: 0 60px; }
         .baseline { height: 2px; background: var(--neon-blue); margin: 15px 0; width: 0; transition: width 0.8s ease-out; box-shadow: 0 0 10px var(--neon-blue); }
 
-        /* 2. BUTTONS (SCRATCH-STYLE ELASTIC TRANSITION) */
+        /* 2. SCRATCH-STYLE ELASTIC BUTTONS */
         .btn-elastic {
             background: none; border: 2px solid var(--neon-blue); color: var(--neon-blue);
             font-weight: bold; padding: 15px 30px; cursor: pointer; letter-spacing: 2px;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Matches your Scratch image logic */
-            text-transform: uppercase; border-radius: 5px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-transform: uppercase; border-radius: 5px; outline: none;
         }
         .btn-elastic:hover {
-            transform: scale(1.12); /* 115% size logic */
+            transform: scale(1.12);
             border-color: var(--neon-green); color: var(--neon-green);
             box-shadow: 0 0 20px rgba(0, 255, 0, 0.4);
         }
 
-        /* 3. GAME INTERFACE & CENTERING */
+        /* 3. GAME LAYER & SIDEBAR */
         #game-layer { display: none; width: 100vw; height: 100vh; opacity: 0; transition: opacity 1s; }
         #game-layer.visible { display: flex; opacity: 1; }
 
-        #board-area { flex: 1; display: flex; justify-content: center; align-items: center; transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
-        .board { width: 520px; height: 520px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid rgba(0, 242, 255, 0.3); background: rgba(10, 11, 16, 0.5); backdrop-filter: blur(8px); }
+        #board-area { flex: 1; display: flex; justify-content: center; align-items: center; transition: all 0.6s cubic-bezier(0.19, 1, 0.22, 1); }
+        .board { width: 520px; height: 520px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid rgba(0, 242, 255, 0.3); background: rgba(10, 11, 16, 0.5); backdrop-filter: blur(8px); position: relative; }
         .sq { width: 65px; height: 65px; display: flex; justify-content: center; align-items: center; position: relative; }
         .w { background: rgba(255, 255, 255, 0.05); } .b { background: rgba(0, 0, 0, 0.4); }
+        
         .piece { font-size: 52px; cursor: grab; z-index: 10; opacity: 0.3; transition: opacity 0.5s; pointer-events: none; }
         .game-active .piece { opacity: 1; pointer-events: auto; }
+        .white-p { color: #fff; filter: drop-shadow(0 0 8px #fff); }
+        .black-p { color: #555; filter: drop-shadow(0 0 8px #000); }
 
-        /* ICONS */
-        .icon { position: absolute; top: -8px; right: -8px; width: 24px; height: 24px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 900; font-size: 13px; border: 2px solid white; color: #000; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+        /* ANALYSIS ICONS */
+        .icon { position: absolute; top: -8px; right: -8px; width: 24px; height: 24px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 900; font-size: 13px; border: 2px solid white; color: #000; box-shadow: 0 2px 10px rgba(0,0,0,0.5); z-index: 20; }
         .brilliant { background: #00e6ff; } .book { background: #a6db2d; }
 
-        /* 4. COLLAPSIBLE SIDEBAR */
+        /* 4. SETTINGS SIDEBAR */
         #settings-sidebar { 
             width: 25vw; height: 100vh; background: rgba(10, 11, 16, 0.98); border-left: 2px solid var(--neon-green); 
             padding: 40px; display: flex; flex-direction: column; transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1);
-            box-shadow: -10px 0 30px rgba(0, 255, 0, 0.15); box-sizing: border-box;
+            box-shadow: -10px 0 30px rgba(0, 255, 0, 0.15); box-sizing: border-box; position: relative;
         }
         #settings-sidebar.collapsed { transform: translateX(100%); width: 0; padding: 0; border: none; }
 
-        /* REOPEN TAB */
-        #reopen-tab {
-            position: fixed; right: 0; top: 50%; transform: translateY(-50%);
+        .gear-tab {
+            position: absolute; left: -60px; top: 50%; transform: translateY(-50%);
             background: rgba(10, 11, 16, 0.9); border: 2px solid var(--neon-green); border-right: none;
-            padding: 15px 10px; border-radius: 10px 0 0 10px; cursor: pointer; display: none; z-index: 4000;
+            padding: 15px 10px; border-radius: 10px 0 0 10px; cursor: pointer; display: none;
         }
-        .gear { width: 30px; height: 30px; fill: var(--neon-green); animation: spin 4s linear infinite; }
+        .gear { width: 32px; height: 32px; fill: var(--neon-green); animation: spin 5s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        /* 5. "?" HELP MENU MODAL */
-        #help-modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.85); z-index: 6000;
-            display: none; justify-content: center; align-items: center;
-        }
-        .help-content {
-            width: 80%; max-width: 600px; background: var(--bg-dark); border: 2px solid var(--neon-blue);
-            padding: 30px; border-radius: 15px; box-shadow: 0 0 30px var(--neon-blue);
-        }
-        .guide-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; text-align: left; }
-        .guide-item { display: flex; align-items: center; gap: 15px; border-bottom: 1px solid rgba(0,242,255,0.2); padding-bottom: 10px; }
+        /* 5. HELP MODAL */
+        #help-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 6000; display: none; justify-content: center; align-items: center; }
+        .help-content { width: 85%; max-width: 650px; background: var(--bg-dark); border: 2px solid var(--neon-blue); padding: 40px; border-radius: 15px; box-shadow: 0 0 40px var(--neon-blue); text-align: center; }
+        .guide-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid rgba(0,242,255,0.2); }
 
         #particle-canvas { position: fixed; top: 0; left: 0; z-index: -1; pointer-events: none; }
     </style>
@@ -89,9 +82,10 @@
 
     <canvas id="particle-canvas"></canvas>
 
+    <!-- 1. HUD BOOT -->
     <div id="boot-screen">
-        <div id="boot-content" style="text-align:center;">
-            <div style="letter-spacing: 5px; color: var(--neon-blue);">SYSTEM CALIBRATION...</div>
+        <div id="boot-content">
+            <div style="letter-spacing: 5px; color: var(--neon-blue); text-align: center;">SYSTEM CALIBRATION...</div>
             <div class="progress-bar"><div id="bar" class="progress-fill"></div></div>
         </div>
         <div id="hud-container">
@@ -102,43 +96,42 @@
         </div>
     </div>
 
-    <div id="reopen-tab" onclick="toggleSidebar()"><svg class="gear" viewBox="0 0 24 24"><path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5 3.5 3.5 0 0 1 15.5 12 3.5 3.5 0 0 1 12 15.5M19.43 12.97c.04-.32.07-.65.07-.97 0-.32-.03-.65-.07-.97l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.39-1.09-.73-1.69-.98l-.37-2.65c-.04-.24-.25-.42-.5-.42h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.6.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.12.22-.07.49.12.64l2.11 1.63c-.04.32-.07.65-.07.97 0 .32.03.65.07.97l-2.11 1.63c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.31.61.22l2.49-1c.52.39 1.09.73 1.69.98l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.6-.25 1.17-.59 1.69-.98l2.49 1c.22.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.63z"></path></svg></div>
+    <!-- 2. REOPEN TAB -->
+    <div id="gear-tab" class="gear-tab" onclick="toggleSidebar()"><svg class="gear" viewBox="0 0 24 24"><path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5 3.5 3.5 0 0 1 15.5 12 3.5 3.5 0 0 1 12 15.5M19.43 12.97c.04-.32.07-.65.07-.97 0-.32-.03-.65-.07-.97l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.39-1.09-.73-1.69-.98l-.37-2.65c-.04-.24-.25-.42-.5-.42h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.6.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.12.22-.07.49.12.64l2.11 1.63c-.04.32-.07.65-.07.97 0 .32.03.65.07.97l-2.11 1.63c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.31.61.22l2.49-1c.52.39 1.09.73 1.69.98l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.6-.25 1.17-.59 1.69-.98l2.49 1c.22.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.63z"></path></svg></div>
 
+    <!-- 3. GAME LAYER -->
     <div id="game-layer">
         <div id="board-area"><div class="board" id="chess-board"></div></div>
+        
         <div id="settings-sidebar">
-            <div style="font-weight:bold; color:var(--neon-green); border-bottom:2px solid var(--neon-green); padding-bottom:10px; font-size:1.2rem; display:flex; justify-content:space-between;">SETTINGS <span style="cursor:pointer;" onclick="toggleSidebar()">✕</span></div>
+            <div style="font-weight:bold; color:var(--neon-green); border-bottom:2px solid var(--neon-green); padding-bottom:15px; display:flex; justify-content:space-between; align-items:center;">
+                SETTINGS <span style="cursor:pointer; font-size: 20px;" onclick="toggleSidebar()">✕</span>
+            </div>
             <div style="margin-top:30px; font-size:15px; color:#aaa;">System Volume: <b>85%</b></div>
-            <div style="margin-top:20px; font-size:15px; color:#aaa;">Analysis Depth: <b>24-Ply</b></div>
-            <button class="btn-elastic" style="margin-top:30px; width:100%; border-color:var(--neon-green); color:var(--neon-green);" onclick="openHelp()">?</button>
+            <div style="margin-top:20px; font-size:15px; color:#aaa;">Move Audio: <b>ON</b></div>
+            <button class="btn-elastic" style="margin-top:30px; width:100%;" onclick="openHelp()">?</button>
             <button class="btn-elastic" id="play-btn" style="margin-top:auto; width:100%;" onclick="activateBoard()">PLAY</button>
         </div>
     </div>
 
-    <!-- PIECE GUIDE MODAL -->
+    <!-- 4. HELP MODAL -->
     <div id="help-modal">
         <div class="help-content">
-            <h2 style="color:var(--neon-blue); margin-top:0;">MOVEMENT GUIDE</h2>
-            <div class="guide-grid">
-                <div class="guide-item"><span style="font-size:30px;">♜</span> <b>Rook:</b> Straight Lines</div>
-                <div class="guide-item"><span style="font-size:30px;">♝</span> <b>Bishop:</b> Diagonals</div>
-                <div class="guide-item"><span style="font-size:30px;">♞</span> <b>Knight:</b> "L" Shape</div>
-                <div class="guide-item"><span style="font-size:30px;">♛</span> <b>Queen:</b> Any Direction</div>
-            </div>
+            <h2 style="color:var(--neon-blue); margin:0 0 20px 0;">MOVEMENT GUIDE</h2>
+            <div class="guide-row"><span>♜ ROOK: Straight Lines</span> <span>♝ BISHOP: Diagonals</span></div>
+            <div class="guide-row"><span>♞ KNIGHT: 'L' Shape</span> <span>♛ QUEEN: Any Path</span></div>
             <div class="baseline" style="width:100%; opacity:1; margin:25px 0;"></div>
             <h2 style="color:var(--neon-green);">ANALYSIS ICONS</h2>
-            <div style="display:flex; gap:20px; justify-content:center;">
-                <div style="text-align:center;"><div class="icon brilliant" style="position:static; margin:0 auto 5px;">!!</div> Brilliant</div>
-                <div style="text-align:center;"><div class="icon book" style="position:static; margin:0 auto 5px;">📖</div> Theory</div>
+            <div style="display:flex; justify-content:space-around; align-items:center; margin-top:20px;">
+                <div style="text-align:center;"><div class="icon brilliant" style="position:static; margin:0 auto 10px;">!!</div> Brilliant Move</div>
+                <div style="text-align:center;"><div class="icon book" style="position:static; margin:0 auto 10px;">📖</div> Theory/Book</div>
             </div>
-            <button class="btn-elastic" style="margin-top:30px; width:100%; border-color:white; color:white;" onclick="closeHelp()">CLOSE</button>
+            <button class="btn-elastic" style="margin-top:40px; width:100%; border-color:white; color:white;" onclick="closeHelp()">CLOSE SYSTEM GUIDE</button>
         </div>
     </div>
 
     <script>
-        const game = new Chess();
-        const pChars = { 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚', 'p': '♟', 'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔', 'P': '♙' };
-
+        // --- 1. BOOT & UI ---
         window.onload = () => {
             document.getElementById('bar').style.width = '100%';
             setTimeout(() => {
@@ -147,7 +140,7 @@
                 document.getElementById('hud-container').style.display = 'flex';
                 setTimeout(() => document.getElementById('line').style.width = '100%', 100);
                 initParticles(); 
-                renderBoard(); 
+                createBoard(); // Internal board draw
             }, 2300);
         };
 
@@ -161,7 +154,7 @@
 
         function toggleSidebar() {
             const sb = document.getElementById('settings-sidebar');
-            const tab = document.getElementById('reopen-tab');
+            const tab = document.getElementById('gear-tab');
             sb.classList.toggle('collapsed');
             tab.style.display = sb.classList.contains('collapsed') ? 'block' : 'none';
         }
@@ -169,57 +162,64 @@
         function activateBoard() { 
             document.getElementById('chess-board').classList.add('game-active');
             document.getElementById('play-btn').innerText = "ONLINE";
-            document.getElementById('play-btn').style.borderColor = "#00ff00";
+            document.getElementById('play-btn').style.borderColor = "var(--neon-green)";
+            document.getElementById('play-btn').style.color = "var(--neon-green)";
         }
 
         function openHelp() { document.getElementById('help-modal').style.display = 'flex'; }
         function closeHelp() { document.getElementById('help-modal').style.display = 'none'; }
 
-        function renderBoard() {
-            const boardEl = document.getElementById('chess-board');
-            boardEl.innerHTML = '';
-            game.board().forEach((row, rIdx) => {
-                row.forEach((piece, cIdx) => {
-                    const sqId = String.fromCharCode(97 + cIdx) + (8 - rIdx);
-                    const sq = document.createElement('div');
-                    sq.className = 'sq ' + ((rIdx + cIdx) % 2 === 0 ? 'w' : 'b');
-                    if (piece) {
-                        const pEl = document.createElement('div');
-                        pEl.className = 'piece ' + (piece.color === 'w' ? 'white' : 'black');
-                        pEl.innerHTML = pChars[piece.color === 'w' ? piece.type.toUpperCase() : piece.type.toLowerCase()];
-                        pEl.draggable = true;
-                        if (sqId === 'g1' || sqId === 'b8') {
-                            const icon = document.createElement('div');
-                            icon.className = 'icon book'; icon.innerHTML = '📖'; sq.appendChild(icon);
-                        }
-                        if (sqId === 'e1' || sqId === 'e8') {
-                            const icon = document.createElement('div');
-                            icon.className = 'icon brilliant'; icon.innerHTML = '!!'; sq.appendChild(icon);
-                        }
-                        pEl.addEventListener('dragstart', () => { window.sourceSq = sqId; });
-                        sq.appendChild(pEl);
+        // --- 2. INTERNAL BOARD RENDER (No External Library Required) ---
+        function createBoard() {
+            const board = document.getElementById('chess-board');
+            const setup = [
+                'r','n','b','q','k','b','n','r',
+                'p','p','p','p','p','p','p','p',
+                '','','','','','','','', '','','','','','','','',
+                '','','','','','','','', '','','','','','','','',
+                'P','P','P','P','P','P','P','P',
+                'R','N','B','Q','K','B','N','R'
+            ];
+            const pChars = { 'r':'♜','n':'♞','b':'♝','q':'♛','k':'♚','p':'♟','R':'♖','N':'♘','B':'♗','Q':'♕','K':'♔','P':'♙' };
+
+            board.innerHTML = '';
+            setup.forEach((p, i) => {
+                const sq = document.createElement('div');
+                sq.className = 'sq ' + ((Math.floor(i/8)+i)%2==0 ? 'w' : 'b');
+                if(p) {
+                    const pEl = document.createElement('div');
+                    pEl.className = 'piece ' + (p === p.toUpperCase() ? 'white-p' : 'black-p');
+                    pEl.innerHTML = pChars[p];
+                    
+                    // Specific icons for start
+                    if(i===62 || i===1) {
+                        const icon = document.createElement('div');
+                        icon.className = 'icon book'; icon.innerHTML = '📖'; sq.appendChild(icon);
                     }
-                    sq.addEventListener('dragover', e => e.preventDefault());
-                    sq.addEventListener('drop', e => {
-                        e.preventDefault();
-                        if (game.move({ from: window.sourceSq, to: sqId, promotion: 'q' })) renderBoard();
-                    });
-                    boardEl.appendChild(sq);
-                });
+                    if(i===60 || i===4) {
+                        const icon = document.createElement('div');
+                        icon.className = 'icon brilliant'; icon.innerHTML = '!!'; sq.appendChild(icon);
+                    }
+                    sq.appendChild(pEl);
+                }
+                board.appendChild(sq);
             });
         }
 
+        // --- 3. WHITE PARTICLES ---
         const canvas = document.getElementById('particle-canvas');
         const ctx = canvas.getContext('2d');
         let particles = [];
         function initParticles() {
             canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-            for(let i=0; i<150; i++) particles.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, s: Math.random()*2, v: Math.random()*0.5+0.2 });
-            setInterval(() => {
+            for(let i=0; i<180; i++) particles.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, s: Math.random()*2.2, v: Math.random()*0.5+0.1 });
+            function loop() {
                 ctx.clearRect(0,0,canvas.width, canvas.height);
-                ctx.fillStyle = "rgba(255,255,255,0.5)";
+                ctx.fillStyle = "rgba(255,255,255,0.6)";
                 particles.forEach(p => { p.y += p.v; if(p.y > canvas.height) p.y = -5; ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, Math.PI*2); ctx.fill(); });
-            }, 30);
+                requestAnimationFrame(loop);
+            }
+            loop();
         }
 
         document.addEventListener('keydown', e => { if (e.key === '=') window.location.href = "https://schools.compass.education"; });

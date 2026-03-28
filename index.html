@@ -6,143 +6,148 @@
     <style>
         :root { 
             --n-blue: #00f2ff; --n-green: #00ff00; --n-red: #ff4757; 
-            --bg: #030406; --rainbow: linear-gradient(90deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+            --bg: #030406;
         }
         body, html { margin: 0; padding: 0; background: #000; color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; }
 
-        /* 1. SOLARIS 0.6 SHINE BOOT */
-        #boot { position: fixed; inset: 0; background: #000; z-index: 9000; display: flex; justify-content: center; align-items: center; }
-        .shine-text { font-size: 28px; letter-spacing: 10px; font-weight: 200; color: #222; position: relative; }
-        .shine-text::after {
-            content: "EQUINOX GAMES"; position: absolute; inset: 0; color: #fff;
-            clip-path: inset(0 100% 0 0); animation: solaris-shine 2.5s forwards;
+        /* --- COLLAPSIBLE SYSTEM GUIDE --- */
+        #settings-menu { 
+            position: fixed; right: 0; top: 0; width: 350px; height: 100vh;
+            background: rgba(5, 6, 8, 0.98); border-left: 1px solid var(--n-blue);
+            transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); transform: translateX(100%);
+            z-index: 6000; padding: 30px; overflow-y: auto;
         }
-        @keyframes solaris-shine { 0% { clip-path: inset(0 100% 0 0); } 100% { clip-path: inset(0 0 0 0); } }
-        .divider { width: 2px; height: 30px; background: #fff; margin: 0 15px; opacity: 0; animation: pop 0.5s forwards 2.5s; }
-        .controller { font-size: 30px; opacity: 0; animation: emerge 0.6s forwards 2.8s; }
-        @keyframes pop { to { opacity: 1; } }
-        @keyframes emerge { to { opacity: 1; } }
+        #settings-menu.open { transform: translateX(0); }
 
-        /* 2. ASSET LOADING (Physics + Particles) */
-        #assets { position: fixed; inset: 0; background: #050608; z-index: 8000; display: none; }
-        #physics-canvas { position: absolute; inset: 0; z-index: 1; }
-        
-        .overlay { position: relative; z-index: 10; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 0 40px; text-align: center; }
-        .t-pop { color: var(--n-blue); font-size: 32px; opacity: 0; transition: 1s; transform: translateY(20px); }
-        .l-pop { height: 2px; background: var(--n-blue); width: 0; margin: 15px 0; transition: 1s; }
-        .d-wipe { color: #777; max-width: 550px; font-size: 13px; opacity: 0; transition: 1.5s; line-height: 1.6; }
+        .tab-btn { 
+            width: 100%; background: #111; color: var(--n-blue); padding: 15px; 
+            margin-top: 10px; cursor: pointer; border: 1px solid #333; text-align: left;
+            font-size: 13px; font-weight: bold; letter-spacing: 1px;
+        }
+        .tab-content { 
+            max-height: 0; overflow: hidden; transition: max-height 0.6s ease; 
+            background: rgba(255,255,255,0.02); line-height: 1.6;
+        }
+        .tab-content.active { max-height: 2000px; padding: 15px; border-bottom: 1px solid #222; }
 
-        .load-hud { position: absolute; bottom: 50px; width: 300px; left: 50%; transform: translateX(-50%); z-index: 20; }
-        .r-border { padding: 2px; border-radius: 10px; background: var(--rainbow); background-size: 300%; animation: r-move 3s linear infinite; }
-        .bar { background: #000; height: 10px; border-radius: 8px; overflow: hidden; }
-        .fill { width: 0%; height: 100%; background: var(--n-blue); transition: width 0.2s; }
-        @keyframes r-move { 0%{background-position:0%} 100%{background-position:100%} }
+        .data-row { display: flex; align-items: flex-start; gap: 15px; margin-bottom: 25px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px; }
+        .data-icon { font-size: 35px; min-width: 45px; text-align: center; color: var(--n-blue); }
+        .permit-list { font-size: 12px; color: #aaa; margin-top: 5px; padding-left: 0; list-style: none; }
+        .permit-list li::before { content: "» "; color: var(--n-blue); }
 
-        /* 3. GAME LAYER */
-        #game { display: none; width: 100vw; height: 100vh; background: #000; justify-content: center; align-items: center; }
-        .board { width: 520px; height: 520px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid #111; box-shadow: 0 0 30px rgba(0, 242, 255, 0.1); }
-        .sq { width: 65px; height: 65px; display: flex; justify-content: center; align-items: center; font-size: 45px; cursor: pointer; transition: 0.2s; }
-        .w { background: #222; } .b { background: #111; }
-        .sq:hover { background: rgba(0, 242, 255, 0.1); }
-        .sq.selected { background: rgba(0, 242, 255, 0.3) !important; box-shadow: inset 0 0 15px var(--n-blue); }
-
-        /* SETTINGS / SYSTEM GUIDE */
-        #guide { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; display: none; justify-content: center; align-items: center; }
-        .menu { width: 400px; background: #0a0b10; border: 1px solid var(--n-blue); padding: 30px; border-radius: 5px; }
-        .tab { background: #111; color: var(--n-blue); padding: 12px; margin-bottom: 5px; cursor: pointer; border: 1px solid #222; font-weight: bold; }
-
-        .x-btn { position: fixed; top: 20px; right: 20px; width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--n-blue); color: var(--n-blue); display: none; align-items: center; justify-content: center; cursor: pointer; z-index: 8500; font-weight: bold; }
+        /* --- GAME INTERFACE --- */
+        #game { display: flex; width: 100vw; height: 100vh; justify-content: center; align-items: center; }
+        .board { width: 560px; height: 560px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid #111; }
+        .sq { width: 70px; height: 70px; display: flex; justify-content: center; align-items: center; font-size: 50px; cursor: pointer; }
+        .w { background: #2a2c33; } .b { background: #1a1c22; }
+        .icon-circle { width: 50px; height: 50px; border: 2px solid var(--n-blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--n-blue); cursor: pointer; margin-bottom: 25px; transition: 0.3s; }
+        .icon-circle:hover { background: var(--n-blue); color: black; box-shadow: 0 0 15px var(--n-blue); }
     </style>
 </head>
 <body>
 
-    <div id="boot">
-        <div class="shine-text">EQUINOX GAMES</div>
-        <div class="divider"></div>
-        <div class="controller">🎮</div>
-    </div>
-
-    <div id="assets">
-        <canvas id="physics-canvas"></canvas>
-        <div class="overlay">
-            <h1 id="t" class="t-pop">Chess Practice | Elo</h1>
-            <div id="l" class="l-pop"></div>
-            <p id="d" class="d-wipe">Regular chess practice boosts your Elo rating by improving strategic understanding, anticipatory skills, and tactical abilities. It promotes critical thinking and mental agility, while game analysis helps identify patterns. Practicing with others builds community and motivation. Consistency is key to mastering chess at any skill level.</p>
-        </div>
-        <div class="load-hud">
-            <div id="perc" style="text-align:right; font-size:11px; color:var(--n-blue); margin-bottom:4px;">0%</div>
-            <div class="r-border"><div class="bar"><div id="fill" class="fill"></div></div></div>
-        </div>
-    </div>
-
-    <div id="x" class="x-btn" onclick="launchGame()">✕</div>
-
     <div id="game">
         <div id="board" class="board"></div>
-        <div style="width: 150px; padding: 20px; border-left: 1px solid #222; display: flex; flex-direction: column;">
-            <div style="width:40px; height:40px; border:2px solid var(--n-blue); border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--n-blue); cursor:pointer; font-weight:bold;" onclick="toggleGuide()">?</div>
-            <p style="font-size:10px; color:#444; margin-top:10px;">SYSTEM: ACTIVE</p>
-            <button style="margin-top:auto; background:none; border:1px solid var(--n-blue); color:var(--n-blue); cursor:pointer; padding:10px;" onclick="location.reload()">REBOOT</button>
+        <div style="width: 100px; padding: 20px; border-left: 1px solid #222; display: flex; flex-direction: column; align-items: center;">
+            <div class="icon-circle" onclick="toggleSettings()">⚙</div>
+            <div class="icon-circle" onclick="location.reload()">↺</div>
         </div>
     </div>
 
-    <div id="guide" onclick="toggleGuide()">
-        <div class="menu" onclick="event.stopPropagation()">
-            <h2 style="color:var(--n-blue); margin-top:0;">SYSTEM GUIDE</h2>
-            <div class="tab">01 // PIECE MOVEMENT</div>
-            <div class="tab">02 // EVALUATION ICONS</div>
-            <div class="tab">03 // GAME MECHANICS</div>
-            <button style="width:100%; margin-top:20px; background:none; border:1px solid var(--n-red); color:var(--n-red); padding:10px; cursor:pointer;" onclick="toggleGuide()">CLOSE</button>
+    <!-- COLLAPSIBLE SYSTEM GUIDE -->
+    <div id="settings-menu">
+        <h2 style="color:var(--n-blue); letter-spacing:3px; border-bottom:1px solid #333; padding-bottom:10px;">MOVEMENT PERMITS</h2>
+        
+        <button class="tab-btn" onclick="toggleTab('permits')">DEPLOYMENT LOGISTICS</button>
+        <div id="permits" class="tab-content active">
+            
+            <div class="data-row">
+                <span class="data-icon">♔</span>
+                <div>
+                    <b>KING // COMMANDER</b>
+                    <ul class="permit-list">
+                        <li>Moves exactly 1 square in any direction (Omni-directional).</li>
+                        <li><b>Restriction:</b> Cannot move into a square controlled by an enemy unit.</li>
+                        <li><b>Permit:</b> Can Castle with a Rook if neither has moved and the path is clear.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="data-row">
+                <span class="data-icon">♕</span>
+                <div>
+                    <b>QUEEN // OVERSEER</b>
+                    <ul class="permit-list">
+                        <li>Unlimited movement across clear ranks, files, and diagonals.</li>
+                        <li><b>Permit:</b> Combines the movement logic of the Rook and Bishop.</li>
+                        <li><b>Restriction:</b> Cannot leap over other units.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="data-row">
+                <span class="data-icon">♖</span>
+                <div>
+                    <b>ROOK // BULWARK</b>
+                    <ul class="permit-list">
+                        <li>Unlimited movement horizontally or vertically.</li>
+                        <li><b>Permit:</b> Essential for the <i>Castling</i> maneuver.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="data-row">
+                <span class="data-icon">♗</span>
+                <div>
+                    <b>BISHOP // INQUISITOR</b>
+                    <ul class="permit-list">
+                        <li>Unlimited movement along diagonal vectors only.</li>
+                        <li><b>Restriction:</b> Bound to the colour of its starting sector (Light/Dark).</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="data-row">
+                <span class="data-icon">♘</span>
+                <div>
+                    <b>KNIGHT // VANGUARD</b>
+                    <ul class="permit-list">
+                        <li>Moves in a fixed "L" shape (2 squares then 1 square perpendicular).</li>
+                        <li><b>Unique Permit:</b> Bypasses all structural blocks (Jumps over units).</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="data-row">
+                <span class="data-icon">♙</span>
+                <div>
+                    <b>PAWN // INFANTRY</b>
+                    <ul class="permit-list">
+                        <li>Moves 1 square forward. Captures 1 square diagonally forward.</li>
+                        <li><b>Permit:</b> Can move 2 squares forward on its initial deployment.</li>
+                        <li><b>Permit:</b> <i>En Passant</i> — can capture a pawn that has just double-stepped past it.</li>
+                        <li><b>Permit:</b> Triggers <i>Promotion</i> upon reaching the final Rank.</li>
+                    </ul>
+                </div>
+            </div>
+
         </div>
+
+        <button style="width:100%; margin-top:30px; background:none; border:1px solid var(--n-red); color:var(--n-red); padding:15px; cursor:pointer; font-weight:bold;" onclick="toggleSettings()">CLOSE MANUAL</button>
     </div>
 
     <script>
         const pChars = { 'R':'♖','N':'♘','B':'♗','Q':'♕','K':'♔','P':'♙','r':'♜','n':'♞','b':'♝','q':'♛','k':'♚','p':'♟' };
-        let source = null;
-
-        // INITIAL DATA (Piece positions)
         let layout = [
-            ['r','n','b','q','k','b','n','r'],
-            ['p','p','p','p','p','p','p','p'],
+            ['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],
             ['','','','','','','',''],['','','','','','','',''],['','','','','','','',''],['','','','','','','',''],
-            ['P','P','P','P','P','P','P','P'],
-            ['R','N','B','Q','K','B','N','R']
+            ['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']
         ];
-
-        window.onload = () => {
-            // BOOT -> ASSETS
-            setTimeout(() => {
-                document.getElementById('boot').style.display = 'none';
-                document.getElementById('assets').style.display = 'block';
-                initPhysics();
-                
-                // CANVA ANIMS
-                setTimeout(() => { document.getElementById('t').style.opacity = "1"; document.getElementById('t').style.transform = "none"; }, 200);
-                setTimeout(() => { document.getElementById('l').style.width = "400px"; }, 800);
-                setTimeout(() => { document.getElementById('d').style.opacity = "1"; }, 1500);
-
-                // LOADING BAR
-                let p = 0;
-                const bar = setInterval(() => {
-                    p += Math.random() * 2;
-                    if (p > 100) p = 100;
-                    document.getElementById('fill').style.width = p + '%';
-                    document.getElementById('perc').innerText = Math.floor(p) + '%';
-                    if (p >= 100) { clearInterval(bar); document.getElementById('x').style.display = 'flex'; }
-                }, 60);
-            }, 5000);
-        };
-
-        function launchGame() {
-            document.getElementById('assets').style.display = 'none';
-            document.getElementById('x').style.display = 'none';
-            document.getElementById('game').style.display = 'flex';
-            drawBoard();
-        }
-
-        function toggleGuide() {
-            const g = document.getElementById('guide');
-            g.style.display = (g.style.display === 'flex') ? 'none' : 'flex';
+        
+        function toggleSettings() { document.getElementById('settings-menu').classList.toggle('open'); }
+        function toggleTab(id) {
+            const content = document.getElementById(id);
+            content.classList.toggle('active');
         }
 
         function drawBoard() {
@@ -153,52 +158,12 @@
                     const s = document.createElement('div');
                     s.className = `sq ${(r+c)%2==0?'w':'b'}`;
                     s.innerHTML = pChars[piece] || '';
-                    s.onclick = () => handleSq(r, c);
                     b.appendChild(s);
                 });
             });
         }
 
-        function handleSq(r, c) {
-            if (source) {
-                layout[r][c] = layout[source.r][source.c];
-                layout[source.r][source.c] = '';
-                source = null;
-                drawBoard();
-            } else if (layout[r][c]) {
-                source = {r, c};
-                drawBoard();
-                document.getElementById('board').children[r*8+c].classList.add('selected');
-            }
-        }
-
-        function initPhysics() {
-            const canvas = document.getElementById('physics-canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-            const items = Array(40).fill().map(() => ({
-                x: Math.random()*canvas.width, y: Math.random()*canvas.height,
-                vx: (Math.random()-0.5)*2, vy: (Math.random()-0.5)*2,
-                txt: ['♜','♞','♟','▰','▲'][Math.floor(Math.random()*5)],
-                sz: 20+Math.random()*40
-            }));
-            function loop() {
-                ctx.fillStyle = '#050608'; ctx.fillRect(0,0,canvas.width,canvas.height);
-                // WHITE PARTICLES
-                ctx.fillStyle = 'rgba(255,255,255,0.1)';
-                for(let i=0; i<60; i++) {
-                    ctx.beginPath(); ctx.arc(Math.random()*canvas.width, Math.random()*canvas.height, 1, 0, 7); ctx.fill();
-                }
-                // SHARDS & PIECES
-                items.forEach(i => {
-                    i.x += i.vx; i.y += i.vy;
-                    if(i.x<0 || i.x>canvas.width) i.vx *= -1; if(i.y<0 || i.y>canvas.height) i.vy *= -1;
-                    ctx.font = i.sz + "px serif"; ctx.fillText(i.txt, i.x, i.y);
-                });
-                requestAnimationFrame(loop);
-            }
-            loop();
-        }
+        window.onload = drawBoard;
     </script>
 </body>
 </html>

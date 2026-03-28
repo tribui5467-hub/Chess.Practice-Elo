@@ -8,97 +8,105 @@
         :root { 
             --n-blue: #00f2ff; --n-green: #00ff00; --n-red: #ff4757; 
             --n-purple: #bb86fc; --n-book: #d5a021; --bg: #050608;
+            --trans: cubic-bezier(0.4, 0, 0.2, 1);
         }
         body { margin: 0; background: var(--bg); overflow: hidden; font-family: 'Segoe UI', sans-serif; color: white; user-select: none; display: flex; justify-content: center; align-items: center; height: 100vh; }
         
         #particle-canvas { position: fixed; top: 0; left: 0; z-index: 0; pointer-events: none; }
 
-        /* CANVA-STYLE OPENING ANIMATIONS */
-        @keyframes line-pop { 0% { transform: scaleX(0); opacity: 0; } 100% { transform: scaleX(1); opacity: 1; } }
-        @keyframes text-wipe { 0% { clip-path: inset(0 100% 0 0); opacity: 0; } 100% { clip-path: inset(0 0 0 0); opacity: 1; } }
-        @keyframes baseline-up { 0% { transform: translateY(30px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+        /* DYNAMIC HOVER EFFECTS */
+        .btn-e { 
+            padding: 12px; background: none; border: 1px solid var(--n-blue); color: var(--n-blue); 
+            cursor: pointer; transition: all 0.4s var(--trans); font-weight: bold; 
+            letter-spacing: 1px; transform-origin: center; 
+        }
+        .btn-e:hover { 
+            background: rgba(0, 255, 0, 0.1); border-color: var(--n-green); 
+            color: var(--n-green); transform: scale(1.08); box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+        }
 
-        .line-anim { height: 2px; background: var(--n-blue); width: 100%; margin: 15px 0; transform-origin: left; animation: line-pop 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
-        .wipe-anim { animation: text-wipe 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards; line-height: 1.6; color: #bbb; font-size: 14px; }
-        .baseline-anim { animation: baseline-up 0.6s ease-out forwards; }
+        /* SYSTEM GUIDE STYLES */
+        #help-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.96); z-index: 9000; display: none; padding: 40px; justify-content: center; align-items: center; }
+        .help-container { width: 750px; background: #0a0b10; border: 1px solid var(--n-blue); padding: 35px; border-radius: 8px; }
+        
+        .tab-btn { 
+            width: 100%; background: #111; border: 1px solid #222; color: #666; 
+            padding: 18px; text-align: left; cursor: pointer; margin-bottom: 5px; 
+            transition: 0.3s; font-weight: bold; 
+        }
+        .tab-btn.active { border-color: var(--n-blue); color: var(--n-blue); background: rgba(0,242,255,0.05); transform: translateX(10px); }
+        .tab-content { max-height: 0; overflow: hidden; transition: max-height 0.6s var(--trans); background: rgba(255,255,255,0.01); }
+        .tab-content.open { max-height: 800px; padding: 25px; border-bottom: 1px solid rgba(0,242,255,0.2); }
 
-        /* BOARD & FOCUS */
-        .board { width: 560px; height: 560px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 2px solid rgba(0, 242, 255, 0.3); position: relative; z-index: 10; background: rgba(10, 11, 16, 0.9); transition: 0.5s; }
+        /* ICON REPLICAS */
+        .help-row { display: flex; align-items: flex-start; gap: 25px; margin-bottom: 30px; }
+        .icon-box { min-width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; }
+        .ev-star { background: #3ab1f0; } /* Best Move */
+        .ev-brilliant { background: #15c3ac; } /* !! */
+        .ev-blunder { background: #b00020; border: 2px solid var(--n-red); } /* ?? */
+        .ev-book { background: var(--n-book); } /* 📖 */
+
+        /* GAME BOARD */
+        .board { width: 560px; height: 560px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 2px solid rgba(0, 242, 255, 0.3); z-index: 10; background: rgba(10, 11, 16, 0.9); }
         .sq { width: 70px; height: 70px; display: flex; justify-content: center; align-items: center; position: relative; }
         .w { background: rgba(255, 255, 255, 0.03); } .b { background: rgba(0, 0, 0, 0.4); }
-        
-        /* SYSTEM GUIDE (HELP MENU) */
-        #help-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9000; display: none; padding: 40px; justify-content: center; align-items: center; }
-        .help-container { width: 650px; background: #0a0b10; border: 1px solid var(--n-blue); padding: 35px; box-shadow: 0 0 50px rgba(0,242,255,0.15); border-radius: 4px; }
-        
-        .tab-btn { width: 100%; background: #111; border: 1px solid #222; color: #666; padding: 18px; text-align: left; cursor: pointer; margin-bottom: 5px; transition: 0.3s; font-weight: bold; font-family: monospace; }
-        .tab-btn.active { border-color: var(--n-blue); color: var(--n-blue); background: rgba(0,242,255,0.05); }
-        .tab-content { max-height: 0; overflow: hidden; transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1); background: rgba(255,255,255,0.01); }
-        .tab-content.open { max-height: 500px; padding: 20px; border-bottom: 1px solid rgba(0,242,255,0.2); }
+        .piece { font-size: 50px; cursor: pointer; transition: transform 0.2s; }
 
-        /* ICONS */
-        .help-icon-circle { width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--n-blue); display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; color: var(--n-blue); transition: 0.3s; margin: 20px auto; font-size: 20px; }
-        .help-icon-circle:hover { box-shadow: 0 0 20px var(--n-blue); background: var(--n-blue); color: black; }
-
-        .piece { font-size: 50px; cursor: pointer; transition: 0.2s; }
-        .white-p { color: #fff; filter: drop-shadow(0 0 5px #fff); }
-        .black-p { color: #555; filter: drop-shadow(0 0 8px #000); }
-
-        #sidebar { width: 250px; padding: 30px; border-left: 1px solid rgba(0, 242, 255, 0.1); z-index: 10; display: flex; flex-direction: column; }
-        .btn-e { padding: 12px; background: none; border: 1px solid var(--n-blue); color: var(--n-blue); cursor: pointer; margin-top: 10px; font-weight: bold; transition: 0.2s; letter-spacing: 1px; }
-        .btn-e:hover { background: var(--n-blue); color: #000; box-shadow: 0 0 20px var(--n-blue); }
+        #sidebar { width: 120px; padding: 30px; border-left: 1px solid rgba(255,255,255,0.05); z-index: 10; display: flex; flex-direction: column; align-items: center; }
     </style>
 </head>
 <body>
     <canvas id="particle-canvas"></canvas>
 
-    <!-- HELP OVERLAY (SYSTEM GUIDE) -->
+    <!-- BOOT SCREEN REVERTED -->
+    <div id="boot-screen" style="position:fixed; inset:0; background:var(--bg); z-index:10000; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
+        <h1 style="color:var(--n-blue); letter-spacing:4px; font-size:36px; margin:0;">Chess Practice | Elo</h1>
+        <div style="height:2px; background:var(--n-blue); width:400px; margin:20px; animation: line-pop 1s forwards;"></div>
+        <p style="max-width:650px; color:#888; font-size:14px; line-height:1.7; animation: text-wipe 4s forwards;">
+            Regular chess practice boosts your Elo rating by improving strategic understanding, anticipatory skills, and tactical abilities. It promotes critical thinking and mental agility, while game analysis helps identify patterns. Practicing with others builds community and motivation. Consistency is key to mastering chess at any skill level.
+        </p>
+        <button class="btn-e" style="margin-top:20px; padding: 15px 45px;" onclick="document.getElementById('boot-screen').style.display='none'; renderBoard();">LAUNCH ENGINE</button>
+    </div>
+
+    <!-- SYSTEM GUIDE -->
     <div id="help-overlay">
-        <div class="help-container baseline-anim">
+        <div class="help-container">
             <h1 style="color:var(--n-blue); text-align:center; letter-spacing:8px; margin:0;">SYSTEM GUIDE</h1>
-            <div class="line-anim"></div>
+            <div style="height:1px; background:var(--n-blue); margin: 20px 0;"></div>
             
-            <button class="tab-btn" id="btn-1" onclick="openTab(1)">[01] PIECE DATA</button>
+            <button class="tab-btn" id="btn-1" onclick="openTab(1)">01 // TACTICAL UNITS (PIECES)</button>
             <div id="tab-1" class="tab-content">
-                <p><b>King ♔:</b> Strategic Core. 1-square radius movement.</p>
-                <p><b>Queen ♕:</b> Tactical Superiority. Unlimited vector range.</p>
-                <p><b>Knight ♘:</b> Variable Trajectory. Bypasses frontlines.</p>
+                <div class="help-row"><span style="font-size:45px">♔</span><div><b>The King:</b> High-value asset. Movement restricted to 1-square radius. If trapped, system enters Terminal Lockdown (Checkmate).</div></div>
+                <div class="help-row"><span style="font-size:45px">♕</span><div><b>The Queen:</b> Primary Offensive Vector. Unlimited range in all vectors (Horizontal, Vertical, Diagonal).</div></div>
+                <div class="help-row"><span style="font-size:45px">♘</span><div><b>The Knight:</b> Infiltration Specialist. Only unit capable of bypassing structural blocks via non-linear "L" trajectory.</div></div>
+                <div class="help-row"><span style="font-size:45px">♙</span><div><b>The Pawn:</b> Frontline Infantry. Forward movement only; diagonal capture. Strategic importance for Rank-8 Promotion.</div></div>
             </div>
 
-            <button class="tab-btn" id="btn-2" onclick="openTab(2)">[02] EVALUATION</button>
+            <button class="tab-btn" id="btn-2" onclick="openTab(2)">02 // EVALUATION PROTOCOLS</button>
             <div id="tab-2" class="tab-content">
-                <p><b style="color:var(--n-blue)">★ Best:</b> Optimal engine solution.</p>
-                <p><b style="color:var(--n-purple)">!! Brilliant:</b> Sacrifice for decisive advantage.</p>
+                <div class="help-row"><div class="icon-box ev-star">★</div><div><b>Best Move:</b> The single most efficient engine calculation for the current sector.</div></div>
+                <div class="help-row"><div class="icon-box ev-brilliant">!!</div><div><b>Brilliant:</b> A critical sacrifice that secures a massive winning advantage.</div></div>
+                <div class="help-row"><div class="icon-box ev-book">📖</div><div><b>Book:</b> Moves verified by deep theoretical historical data (Openings).</div></div>
+                <div class="help-row"><div class="icon-box ev-blunder">??</div><div><b>Blunder:</b> Catastrophic error. Results in major material loss or immediate defeat.</div></div>
             </div>
 
-            <button class="tab-btn" id="btn-3" onclick="openTab(3)">[03] MECHANICS</button>
+            <button class="tab-btn" id="btn-3" onclick="openTab(3)">03 // GAME MECHANICS</button>
             <div id="tab-3" class="tab-content">
-                <p><b>Checkmate:</b> Total King immobilization. Game End.</p>
-                <p><b>Promotion:</b> Pawn evolution at rank 8 boundary.</p>
+                <p><b>Checkmate:</b> Tactical mission failure. The King has zero legal escape vectors.</p>
+                <p><b>Stalemate:</b> Gridlock. The player to move is not in check but has zero legal trajectories. Results in a strategic draw.</p>
+                <p><b>Promotion:</b> Pawn evolution. When infantry reaches the final rank, it transforms into a High-Value Major Piece.</p>
             </div>
             
-            <button class="btn-e" style="width:100%; margin-top:20px; border-color:var(--n-red); color:var(--n-red);" onclick="closeHelp()">TERMINATE HUD</button>
+            <button class="btn-e" style="width:100%; margin-top:20px; border-color:var(--n-red); color:var(--n-red);" onclick="document.getElementById('help-overlay').style.display='none'">CLOSE HUD MANUAL</button>
         </div>
     </div>
 
-    <!-- MAIN GAME HUD -->
-    <div id="game-layer" style="display:flex; width:100%; height:100%; justify-content:center; align-items:center;">
-        <div id="board-area" style="padding: 20px;">
-            <div id="chess-board" class="board"></div>
-        </div>
-
+    <!-- GAME LAYER -->
+    <div id="game-layer" style="display:flex;">
+        <div id="chess-board" class="board"></div>
         <div id="sidebar">
-            <div class="baseline-anim">
-                <h1 style="color:var(--n-blue); margin:0; font-size:24px; letter-spacing:2px;">Chess Practice | Elo</h1>
-                <div class="line-anim"></div>
-                <p class="wipe-anim">
-                    Regular chess practice boosts your Elo rating by improving strategic understanding, anticipatory skills, and tactical abilities. It promotes critical thinking and mental agility, while game analysis helps identify patterns. Practicing with others builds community and motivation. Consistency is key to mastering chess at any skill level.
-                </p>
-            </div>
-
-            <div class="help-icon-circle baseline-anim" style="animation-delay: 0.4s" onclick="openHelp()">?</div>
-            
-            <button class="btn-e baseline-anim" style="margin-top:auto; animation-delay: 0.6s" onclick="game.reset(); renderBoard();">RESET ENGINE</button>
+            <div style="width:45px; height:45px; border-radius:50%; border:2px solid var(--n-blue); display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--n-blue); font-weight:bold; font-size:22px; transition:0.3s;" onclick="document.getElementById('help-overlay').style.display='flex'; openTab(1);">?</div>
+            <button class="btn-e" style="margin-top:auto" onclick="game.reset(); renderBoard();">RESET</button>
         </div>
     </div>
 
@@ -106,9 +114,6 @@
         const game = new Chess();
         const pChars = { 'r':'♜','n':'♞','b':'♝','q':'♛','k':'♚','p':'♟','R':'♖','N':'♘','B':'♗','Q':'♕','K':'♔','P':'♙' };
         let sourceSq = null;
-
-        function openHelp() { document.getElementById('help-overlay').style.display = 'flex'; openTab(1); }
-        function closeHelp() { document.getElementById('help-overlay').style.display = 'none'; }
 
         function openTab(n) {
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('open'));
@@ -127,7 +132,6 @@
                     sq.className = `sq ${(rIdx + cIdx) % 2 === 0 ? 'w' : 'b'}`;
                     sq.id = sqId;
                     sq.onclick = () => handleMove(sqId);
-
                     if (piece) {
                         const pEl = document.createElement('div');
                         pEl.className = `piece ${piece.color === 'w' ? 'white-p' : 'black-p'}`;
@@ -158,23 +162,14 @@
         let particles = [];
         window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
         window.onresize();
-
-        function createParticles() {
-            for(let i=0; i<120; i++) {
-                particles.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, s: Math.random()*1.5, v: Math.random()*0.4+0.1 });
-            }
-        }
+        function createParticles() { for(let i=0; i<100; i++) { particles.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, s: Math.random()*1.5, v: Math.random()*0.4+0.1 }); } }
         function animate() {
             ctx.clearRect(0,0,canvas.width,canvas.height);
             ctx.fillStyle = "rgba(255,255,255,0.25)";
-            particles.forEach(p => {
-                p.y -= p.v; if(p.y < 0) p.y = canvas.height;
-                ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, Math.PI*2); ctx.fill();
-            });
+            particles.forEach(p => { p.y -= p.v; if(p.y < 0) p.y = canvas.height; ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, Math.PI*2); ctx.fill(); });
             requestAnimationFrame(animate);
         }
         createParticles(); animate();
-        window.onload = renderBoard;
     </script>
 </body>
 </html>

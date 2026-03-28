@@ -7,6 +7,7 @@
         :root { 
             --n-blue: #00f2ff; --n-green: #81b64c; --n-red: #fa412d; 
             --n-orange: #f4943c; --n-yellow: #f1c40f; --n-pink: #ff00ff;
+            --n-brilliant: #26ceaa; --n-great: #1baca6;
         }
         body, html { margin: 0; padding: 0; background: #000; color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; width: 100vw; }
         canvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
@@ -14,7 +15,16 @@
         /* --- 1. BOOT SCREEN --- */
         #boot { position: fixed; inset: 0; background: black; z-index: 30000; display: flex; justify-content: center; align-items: center; transition: 1s; }
         .equinox-text { font-size: 32px; letter-spacing: 12px; font-weight: 200; color: #fff; clip-path: inset(0 100% 0 0); animation: reveal 2s forwards; text-shadow: 0 0 15px var(--n-blue); }
+        .divider { width: 2px; height: 40px; background: white; margin: 0 25px; transform: scaleY(0); animation: pop-divider 0.6s forwards 2s; }
+        .controller-box { position: relative; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .aura-circle { position: absolute; width: 60px; height: 60px; border-radius: 50%; border: 3px solid var(--n-blue); opacity: 0; box-shadow: 0 0 25px var(--n-blue); animation: aura-glow 1s forwards 3s, aura-color-pulse 3s infinite alternate 4s; }
+        .controller-icon { font-size: 42px; transform: translateX(-180%); animation: slide-in 0.8s forwards 2.5s; opacity: 1; }
+
         @keyframes reveal { to { clip-path: inset(0 0 0 0); } }
+        @keyframes pop-divider { to { transform: scaleY(1); opacity: 1; } }
+        @keyframes slide-in { to { transform: translateX(0); opacity: 1; } }
+        @keyframes aura-glow { from { opacity: 0; transform: scale(0.4); } to { opacity: 1; transform: scale(1); } }
+        @keyframes aura-color-pulse { 0% { border-color: var(--n-blue); } 100% { border-color: var(--n-pink); transform: scale(1.1); } }
 
         /* --- 2. LOADING SCREEN --- */
         #assets { position: fixed; inset: 0; background: #050608; z-index: 20000; display: none; opacity: 0; transition: 1s; flex-direction: column; align-items: center; justify-content: center; }
@@ -22,47 +32,65 @@
         .bar { width: 400px; height: 10px; background: #000; border-radius: 5px; overflow: hidden; }
         #fill { width: 0%; height: 100%; background: var(--n-blue); box-shadow: 0 0 15px var(--n-blue); }
         @keyframes rainbow-flow { to { background-position: 400%; } }
+        .skip-btn { margin-top: 10px; background: none; border: 1px solid #333; color: #555; padding: 5px 25px; cursor: pointer; border-radius: 5px; }
 
-        /* --- 3. GAME ENGINE & GEAR --- */
+        /* --- 3. GAME HUD & GEAR --- */
         #game { display: none; width: 100vw; height: 100vh; justify-content: center; align-items: center; opacity: 0; transition: 1.5s; z-index: 5; }
-        .board { width: 560px; height: 560px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid #111; background: rgba(0,0,0,0.85); transition: 1s; }
+        .board { width: 560px; height: 560px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid #111; background: rgba(0,0,0,0.85); transition: 1s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .sq { width: 70px; height: 70px; display: flex; justify-content: center; align-items: center; cursor: pointer; position: relative; }
         .w { background: rgba(45, 45, 55, 0.8); } .b { background: rgba(20, 20, 25, 0.8); }
         
-        .piece { font-size: 48px; user-select: none; z-index: 2; transition: 0.8s; filter: brightness(0.2); pointer-events: none; }
+        .piece { font-size: 48px; user-select: none; z-index: 2; transition: 0.8s cubic-bezier(0.2, 0.8, 0.2, 1.1); filter: brightness(0.2); pointer-events: none; }
         .piece.unlocked { filter: brightness(1); pointer-events: auto; }
+        .piece.fly-in { transform: translateY(100vh) rotate(45deg); opacity: 0; }
 
         #gear-btn { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; background: none; border: none; color: var(--n-blue); font-size: 35px; cursor: pointer; z-index: 100; transition: 0.4s; }
         #gear-btn:hover:not(.active) { color: var(--n-green); transform: scale(1.3) rotate(20deg); }
         #gear-btn.active { color: var(--n-green); animation: gear-spin 3s linear infinite; }
         @keyframes gear-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        /* --- 4. SIDEBAR --- */
-        #settings-panel { position: fixed; right: 20px; top: 5vh; bottom: 5vh; width: 25vw; background: rgba(5,6,8,0.98); border: 1px solid var(--n-blue); border-radius: 15px; transform: translateX(120%); transition: 0.5s; z-index: 25000; padding: 25px; display: flex; flex-direction: column; gap: 15px; }
-        #settings-panel.open { transform: translateX(0); }
-        .tab-btn { background: #111; border: 1px solid #333; color: #fff; padding: 10px; cursor: pointer; }
+        /* --- 4. ICON & DEATH ANIMS --- */
+        @keyframes icon-reveal {
+            0% { transform: scale(0) rotate(0deg) translate(-20px, 50px); opacity: 0; }
+            100% { transform: scale(1.2) rotate(360deg) translate(0, 0); opacity: 1; }
+        }
+        .eval-icon { position: absolute; top: -5px; right: -5px; width: 26px; height: 26px; z-index: 100; animation: icon-reveal 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; pointer-events: none; }
         
-        /* Volume Slider Styling */
-        .vol-slider { width: 100%; height: 5px; background: #333; border-radius: 5px; outline: none; appearance: none; }
-        .vol-slider::-webkit-slider-thumb { appearance: none; width: 15px; height: 15px; background: var(--n-blue); border-radius: 50%; cursor: pointer; }
+        @keyframes death-float {
+            0% { transform: scale(0.5) translateY(0); opacity: 1; }
+            100% { transform: scale(1.5) translateY(-80px); opacity: 0; }
+        }
+        .death-skull { position: absolute; font-size: 35px; pointer-events: none; z-index: 1000; animation: death-float 1.2s ease-out forwards; }
 
-        #help-menu { position: fixed; left: 50%; bottom: -110%; transform: translateX(-50%); width: 600px; background: #000; border: 2px solid var(--n-blue); border-radius: 12px; z-index: 26000; padding: 25px; transition: 0.6s; }
-        #help-menu.active { bottom: 10%; }
+        /* --- 5. SIDEBAR & HELP --- */
+        #settings-panel { position: fixed; right: 20px; top: 5vh; bottom: 5vh; width: 25vw; background: rgba(5,6,8,0.98); border: 1px solid var(--n-blue); border-radius: 15px; transform: translateX(120%); transition: 0.5s; z-index: 25000; padding: 25px; display: flex; flex-direction: column; gap: 10px; }
+        #settings-panel.open { transform: translateX(0); }
+        #help-menu { position: fixed; left: 50%; bottom: -120%; transform: translateX(-50%); width: 650px; background: #000; border: 2px solid var(--n-blue); border-radius: 12px; z-index: 26000; padding: 25px; transition: 0.6s; }
+        #help-menu.active { bottom: 8%; }
         .asset-card { border-left: 3px solid var(--n-blue); background: rgba(255,255,255,0.05); padding: 15px; margin-bottom: 15px; font-size: 13px; line-height: 1.6; }
+        .tab-btn { background: #111; border: 1px solid #333; color: #fff; padding: 10px; cursor: pointer; transition: 0.3s; }
+        .tab-btn:hover { border-color: var(--n-blue); }
     </style>
 </head>
 <body>
 
     <canvas id="particle-canvas"></canvas>
 
-    <div id="boot"><div class="equinox-text">EQUINOX GAMES</div></div>
+    <div id="boot">
+        <div class="equinox-text">EQUINOX GAMES</div>
+        <div class="divider"></div>
+        <div class="controller-box">
+            <div class="aura-circle"></div>
+            <div class="controller-icon">🎮</div>
+        </div>
+    </div>
 
     <div id="assets">
         <h1 style="color:var(--n-blue); letter-spacing:5px;">INITIALISING SOLARIS</h1>
         <div id="loading-board" style="width:280px; height:280px; display:grid; grid-template:repeat(8,1fr)/repeat(8,1fr); gap:2px; transition: 1s;"></div>
         <div class="rainbow-container"><div class="bar"><div id="fill"></div></div></div>
         <p id="perc">0%</p>
-        <button class="skip-btn" onclick="launch()" style="margin-top:15px; background:none; border:1px solid #333; color:#555; padding:5px 25px; cursor:pointer;">SKIP</button>
+        <button class="skip-btn" onclick="launch()">SKIP INITIALIZATION</button>
     </div>
 
     <div id="game">
@@ -71,46 +99,57 @@
     </div>
 
     <div id="settings-panel">
-        <h3 style="color:var(--n-blue)">COMMAND HUB</h3>
+        <h3 style="color:var(--n-blue); margin-top:0;">EQUINOX GAMES | CHESS</h3>
+        <div style="font-size:11px; color:#777;">SYSTEM VOLUME</div>
+        <input type="range" style="width:100%; accent-color:var(--n-blue);" min="0" max="100" value="70">
+        <div style="font-size:11px; color:#777; margin-top:10px;">ATMOSPHERIC FREQUENCY</div>
+        <iframe src="https://open.spotify.com" width="100%" height="152" frameBorder="0" allow="autoplay; encrypted-media" style="border-radius:12px"></iframe>
         
-        <!-- AUDIO CONTROLS -->
-        <div style="font-size:12px; color:#777; margin-bottom:5px;">SYSTEM VOLUME</div>
-        <input type="range" class="vol-slider" min="0" max="100" value="50">
-
-        <!-- SPOTIFY EMBED -->
-        <div style="font-size:12px; color:#777; margin-top:10px; margin-bottom:5px;">ATMOSPHERIC FREQUENCY</div>
-        <iframe style="border-radius:12px" src="https://open.spotify.com" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
-
-        <button class="tab-btn" onclick="location.reload()">RESTART SIM</button>
+        <button class="tab-btn" onclick="location.reload()">RESTART SIMULATION</button>
         <button class="tab-btn" style="color:var(--n-green); border-color:var(--n-green)" onclick="unlockPieces()">▶ START SIMULATION</button>
-        <button style="width:50px; height:50px; border-radius:50%; border:1px solid var(--n-blue); background:none; color:var(--n-blue); align-self:center; margin-top:auto; cursor:pointer;" onclick="toggleHelp()">?</button>
+        <button style="width:55px; height:55px; border-radius:50%; border:2px solid var(--n-blue); background:none; color:var(--n-blue); align-self:center; margin-top:auto; cursor:pointer; font-size:24px;" onclick="toggleHelp()">?</button>
     </div>
 
     <div id="help-menu">
-        <div class="asset-card">
-            <strong>♔ KING (Royal)</strong><br>
-            The King is the <strong>absolute core</strong> of the simulation. Survival is the primary <strong>win condition</strong>.
-            <div style="background:rgba(0,0,0,0.3); padding:8px; margin-top:8px;"><em>Example: Escaping check by moving to a safe diagonal square.</em></div>
-            Importance: <span style="color:var(--n-red)">Critical</span>
+        <div style="display:flex; gap:10px; margin-bottom:15px;"><button class="tab-btn" style="flex:1">ASSET BEHAVIOR</button><button class="tab-btn" style="flex:1">MOVE LOGIC</button></div>
+        <div style="max-height:450px; overflow-y:auto; padding-right:10px;">
+            <div class="asset-card">
+                <strong>♔ KING (Royal)</strong><br>
+                The King is the <strong>absolute core</strong> of the simulation. It moves exactly one square in any direction. Its survival is the <strong>only victory condition</strong>.
+                <div style="background:rgba(0,0,0,0.3); padding:8px; margin-top:8px;"><em>Example: Escaping check by moving to a safe square on the file.</em></div>
+                Importance: <span style="color:var(--n-red)">Critical</span>
+            </div>
+            <div class="asset-card">
+                <strong>!! BRILLIANT</strong><br>
+                An exceptionally rare move involving a <strong>calculated sacrifice</strong> that drastically improves the simulation state.
+                Importance: <span style="color:var(--n-brilliant)">Brilliant</span>
+            </div>
         </div>
     </div>
 
     <script>
         const pCanvas = document.getElementById('particle-canvas');
         const pCtx = pCanvas.getContext('2d');
-        let parts = [], floating = [], isUnlocked = false, selected = null;
+        let parts = [], floating = [], debris = [], isUnlocked = false, selected = null;
         let state = [['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],['','','','','','','',''],['','','','','','','',''],['','','','','','','',''],['','','','','','','',''],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']];
         const icons = { 'r':'♜','n':'♞','b':'♝','q':'♛','k':'♚','p':'♟','R':'♖','N':'♘','B':'♗','Q':'♕','K':'♔','P':'♙' };
 
         function initBG() {
             pCanvas.width = window.innerWidth; pCanvas.height = window.innerHeight;
-            for(let i=0; i<100; i++) parts.push({ x:Math.random()*pCanvas.width, y:Math.random()*pCanvas.height, s:Math.random()*2, v:Math.random()*0.5 });
+            for(let i=0; i<120; i++) parts.push({ x:Math.random()*pCanvas.width, y:Math.random()*pCanvas.height, s:Math.random()*2+1, v:Math.random()*0.6 });
+            for(let i=0; i<40; i++) floating.push({ x:Math.random()*pCanvas.width, y:Math.random()*pCanvas.height, s:Math.random()*35+10, v:Math.random()*0.2+0.1, r:Math.random()*360, rv:Math.random()-0.5, sym:['♔','♕','♖','♗','♘','♙','■'][Math.floor(Math.random()*7)] });
         }
 
         function draw() {
             pCtx.clearRect(0,0,pCanvas.width,pCanvas.height);
-            pCtx.fillStyle = 'rgba(255,255,255,0.4)';
-            parts.forEach(p => { p.y -= p.v; if(p.y<0) p.y=pCanvas.height; pCtx.fillRect(p.x,p.y,p.s,p.s); });
+            pCtx.fillStyle = 'rgba(0, 242, 255, 0.15)';
+            floating.forEach(a => {
+                a.y -= a.v; a.r += a.rv; if(a.y < -50) a.y = pCanvas.height+50;
+                pCtx.save(); pCtx.translate(a.x, a.y); pCtx.rotate(a.r*Math.PI/180); pCtx.font=`${a.s}px serif`; pCtx.fillText(a.sym,0,0); pCtx.restore();
+            });
+            pCtx.fillStyle = 'rgba(255,255,255,0.45)';
+            parts.forEach(p => { p.y -= p.v; if(p.y<0) p.y=pCanvas.height; pCtx.beginPath(); pCtx.arc(p.x,p.y,p.s,0,Math.PI*2); pCtx.fill(); });
+            debris.forEach((d,i) => { d.x+=d.vx; d.y+=d.vy; d.life-=0.02; if(d.life<=0) debris.splice(i,1); pCtx.fillStyle=`rgba(255,77,77,${d.life})`; pCtx.fillRect(d.x,d.y,d.s,d.s); });
             requestAnimationFrame(draw);
         }
 
@@ -118,11 +157,15 @@
             const el = document.getElementById('board'); el.innerHTML = '';
             state.forEach((row,r)=>row.forEach((p,c)=>{
                 const sq = document.createElement('div'); sq.className = `sq ${(r+c)%2===0?'w':'b'}`;
+                sq.dataset.r = r; sq.dataset.c = c;
                 if(p) {
-                    const span = document.createElement('span'); span.className='piece'; 
+                    const span = document.createElement('span'); span.className='piece fly-in'; 
                     if(isUnlocked) span.classList.add('unlocked');
                     span.innerText=icons[p]; span.style.color = p===p.toUpperCase()?'#fff':'var(--n-blue)';
                     sq.appendChild(span);
+                    const t = p.toLowerCase();
+                    sq.dataset.rank = (t==='k'||t==='q')?'royal':(t==='r'||t==='b')?'heavy':(t==='n')?'minor':'pawn';
+                    setTimeout(() => { span.classList.remove('fly-in'); span.style.transform='none'; span.style.opacity='1'; }, 100 + (r*40));
                 }
                 sq.onclick = ()=>handleClick(r,c); el.appendChild(sq);
             }));
@@ -130,26 +173,65 @@
 
         function handleClick(r,c) {
             if(!isUnlocked) return;
-            if(selected) { state[r][c]=state[selected[0]][selected[1]]; state[selected[0]][selected[1]]=''; selected=null; render(); }
-            else if(state[r][c]) { selected=[r,c]; render(); }
+            if(selected) {
+                const [sr,sc] = selected;
+                if(state[r][c] && (state[r][c]===state[r][c].toUpperCase()) !== (state[sr][sc]===state[sr][sc].toUpperCase())) {
+                    triggerDeath(r, c);
+                }
+                state[r][c]=state[sr][sc]; state[sr][sc]=''; selected=null; 
+                render(); addEvalIcon(r, c);
+            } else if(state[r][c]) { selected=[r,c]; render(); document.querySelector(`[data-r="${r}"][data-c="${c}"]`).style.background="rgba(0, 242, 255, 0.3)"; }
+        }
+
+        function triggerDeath(r, c) {
+            const rect = document.querySelector(`[data-r="${r}"][data-c="${c}"]`).getBoundingClientRect();
+            const skull = document.createElement('div'); skull.className = 'death-skull'; skull.innerText = '💀';
+            skull.style.left = `${rect.left + 15}px`; skull.style.top = `${rect.top}px`;
+            document.body.appendChild(skull); setTimeout(() => skull.remove(), 1200);
+            for(let i=0;i<25;i++) debris.push({x:rect.left+35, y:rect.top+35, vx:(Math.random()-0.5)*16, vy:(Math.random()-0.5)*16, life:1, s:Math.random()*5+2});
+        }
+
+        function addEvalIcon(r, c) {
+            const types = ['brilliant','great','best','book','mistake','blunder'];
+            const type = types[Math.floor(Math.random()*types.length)];
+            const colors = {'brilliant':'#26ceaa','great':'#1baca6','best':'#f1c40f','book':'#a88865','mistake':'#f4943c','blunder':'#fa412d'};
+            const syms = {'brilliant':'!!','great':'!','best':'★','book':'📖','mistake':'?','blunder':'??'};
+            
+            const sq = document.querySelector(`[data-r="${r}"][data-c="${c}"]`);
+            const icon = document.createElement('div'); icon.className = 'eval-icon';
+            icon.innerHTML = `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="${colors[type]}"/><text x="12" y="17" text-anchor="middle" fill="white" font-size="12" font-weight="bold">${syms[type]}</text></svg>`;
+            sq.appendChild(icon);
         }
 
         function unlockPieces() { isUnlocked = true; toggleSettings(); render(); }
-        function toggleSettings() { 
-            document.getElementById('settings-panel').classList.toggle('open'); 
-            document.getElementById('gear-btn').classList.toggle('active');
-        }
+        function toggleSettings() { const s = document.getElementById('settings-panel'), g = document.getElementById('gear-btn'); s.classList.toggle('open'); g.classList.toggle('active'); }
         function toggleHelp() { document.getElementById('help-menu').classList.toggle('active'); }
 
         window.onload = () => {
             initBG(); draw();
             const lb = document.getElementById('loading-board');
             for(let i=0; i<64; i++){ let d=document.createElement('div'); d.style.background=(Math.floor(i/8)+i)%2===0?'#111':'#080808'; lb.appendChild(d); }
-            setTimeout(() => { document.getElementById('boot').style.display='none'; document.getElementById('assets').style.display='flex'; document.getElementById('assets').style.opacity='1'; launch(); }, 4000);
+            setTimeout(() => {
+                document.getElementById('boot').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('boot').style.display='none';
+                    document.getElementById('assets').style.display='flex';
+                    setTimeout(()=>document.getElementById('assets').style.opacity='1',50);
+                    let p=0; let iv=setInterval(()=>{
+                        p+=1.2; document.getElementById('fill').style.width=p+'%'; document.getElementById('perc').innerText=Math.floor(p)+'%';
+                        if(p>=100){ clearInterval(iv); setTimeout(launch,500); }
+                    },40);
+                }, 1000);
+            }, 5000);
         };
 
-        function launch() { 
-            let p=0; let iv=setInterval(()=>{ p+=5; document.getElementById('fill').style.width=p+'%'; document.getElementById('perc').innerText=p+'%'; if(p>=100){ clearInterval(iv); document.getElementById('assets').style.display='none'; document.getElementById('game').style.display='flex'; document.getElementById('game').style.opacity='1'; render(); } },50);
+        function launch() {
+            const lb = document.getElementById('loading-board'); lb.style.transform="scale(2.5)"; lb.style.opacity="0";
+            setTimeout(() => {
+                document.getElementById('assets').style.display='none';
+                document.getElementById('game').style.display='flex';
+                setTimeout(()=> { document.getElementById('game').style.opacity='1'; render(); }, 100);
+            }, 800);
         }
     </script>
 </body>

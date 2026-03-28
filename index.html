@@ -7,66 +7,61 @@
         :root { 
             --n-blue: #00f2ff; --n-green: #81b64c; --n-red: #fa412d; 
             --n-orange: #f4943c; --n-yellow: #f1c40f; --n-pink: #ff00ff;
+            --n-brilliant: #26ceaa; --n-great: #1baca6;
         }
         body, html { margin: 0; padding: 0; background: #000; color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; width: 100vw; }
-
         canvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 
         /* --- 1. BOOT SCREEN --- */
         #boot { position: fixed; inset: 0; background: black; z-index: 30000; display: flex; justify-content: center; align-items: center; transition: opacity 1s ease; }
-        .equinox-text { font-size: 32px; letter-spacing: 12px; font-weight: 200; color: #fff; clip-path: inset(0 100% 0 0); animation: reveal 2.5s forwards; }
+        .equinox-text { font-size: 32px; letter-spacing: 12px; font-weight: 200; color: #fff; clip-path: inset(0 100% 0 0); animation: reveal 2s forwards; }
         .divider { width: 2px; height: 40px; background: white; margin: 0 25px; transform: scaleY(0); animation: pop-divider 0.6s forwards 2s; }
-        .controller-box { position: relative; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; }
-        .aura-circle {
-            position: absolute; width: 60px; height: 60px; border-radius: 50%; border: 3px solid var(--n-blue);
-            opacity: 0; box-shadow: 0 0 25px var(--n-blue);
-            animation: aura-glow 1s forwards 3s, aura-color-pulse 3s infinite alternate 4s;
-        }
-        .controller-icon { font-size: 42px; transform: translateX(-150%); animation: slide-in 0.8s forwards 2.5s; }
+        .controller-box { position: relative; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .aura-circle { position: absolute; width: 60px; height: 60px; border-radius: 50%; border: 3px solid var(--n-blue); opacity: 0; box-shadow: 0 0 25px var(--n-blue); animation: aura-glow 1s forwards 3s, aura-color-pulse 3s infinite alternate 4s; }
+        .controller-icon { font-size: 42px; transform: translateX(-180%); animation: slide-in 0.8s forwards 2.5s; }
 
         @keyframes reveal { to { clip-path: inset(0 0 0 0); } }
         @keyframes pop-divider { to { transform: scaleY(1); } }
         @keyframes slide-in { to { transform: translateX(0); } }
         @keyframes aura-glow { from { opacity: 0; transform: scale(0.4); } to { opacity: 1; transform: scale(1); } }
-        @keyframes aura-color-pulse { 0% { border-color: var(--n-blue); box-shadow: 0 0 20px var(--n-blue); } 100% { border-color: var(--n-pink); box-shadow: 0 0 40px var(--n-pink); transform: scale(1.1); } }
+        @keyframes aura-color-pulse { 0% { border-color: var(--n-blue); } 100% { border-color: var(--n-pink); transform: scale(1.1); } }
 
         /* --- 2. LOADING SCREEN --- */
         #assets { position: fixed; inset: 0; background: #050608; z-index: 20000; display: none; opacity: 0; transition: 1s; flex-direction: column; align-items: center; justify-content: center; }
-        .rainbow-container {
-            padding: 3px; border-radius: 10px; margin: 20px;
-            background: linear-gradient(90deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
-            background-size: 400%; animation: rainbow-flow 3s linear infinite;
-        }
+        .rainbow-container { padding: 3px; border-radius: 10px; margin: 20px; background: linear-gradient(90deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000); background-size: 400%; animation: rainbow-flow 3s linear infinite; }
         .bar { width: 400px; height: 14px; background: #000; border-radius: 7px; overflow: hidden; }
         #fill { width: 0%; height: 100%; background: var(--n-blue); box-shadow: 0 0 15px var(--n-blue); }
         @keyframes rainbow-flow { to { background-position: 400%; } }
 
         /* --- 3. GAME HUD --- */
         #game { display: none; width: 100vw; height: 100vh; justify-content: center; align-items: center; opacity: 0; transition: 1.5s; z-index: 5; position: relative; }
-        .board { width: 560px; height: 560px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid #111; background: rgba(0,0,0,0.85); }
+        .board { width: 560px; height: 560px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid #111; background: rgba(0,0,0,0.85); position: relative; z-index: 10; }
         .sq { width: 70px; height: 70px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s; position: relative; }
         .w { background: rgba(45, 45, 55, 0.8); } .b { background: rgba(20, 20, 25, 0.8); }
-        .piece { font-size: 48px; user-select: none; z-index: 2; transition: transform 0.2s; }
+        .piece { font-size: 48px; user-select: none; z-index: 2; }
 
-        /* NEON HOVER SYSTEM */
+        #gear-btn { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; background: none; border: none; color: var(--n-blue); font-size: 35px; cursor: pointer; z-index: 100; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex; align-items: center; justify-content: center; }
+        #gear-btn.spinning { animation: gear-spin 4s linear infinite; }
+        #gear-btn:hover { color: var(--n-green); transform: rotate(15deg) scale(1.3); }
+        @keyframes gear-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
         .sq:hover { z-index: 10; outline: 2px solid; }
-        .sq[data-rank="royal"]:hover { outline-color: var(--n-red); box-shadow: 0 0 20px var(--n-red), inset 0 0 10px var(--n-red); }
-        .sq[data-rank="heavy"]:hover { outline-color: var(--n-orange); box-shadow: 0 0 20px var(--n-orange), inset 0 0 10px var(--n-orange); }
-        .sq[data-rank="minor"]:hover { outline-color: var(--n-yellow); box-shadow: 0 0 20px var(--n-yellow), inset 0 0 10px var(--n-yellow); }
-        .sq[data-rank="pawn"]:hover { outline-color: var(--n-green); box-shadow: 0 0 20px var(--n-green), inset 0 0 10px var(--n-green); }
+        .sq[data-rank="royal"]:hover { outline-color: var(--n-red); box-shadow: 0 0 20px var(--n-red); }
+        .sq[data-rank="heavy"]:hover { outline-color: var(--n-orange); box-shadow: 0 0 20px var(--n-orange); }
+        .sq[data-rank="minor"]:hover { outline-color: var(--n-yellow); box-shadow: 0 0 20px var(--n-yellow); }
+        .sq[data-rank="pawn"]:hover { outline-color: var(--n-green); box-shadow: 0 0 20px var(--n-green); }
 
-        .death-icon { position: absolute; font-size: 30px; pointer-events: none; z-index: 1000; animation: death-pop 1s forwards; }
-        @keyframes death-pop { 0% { transform: scale(0.5) translateY(0); opacity: 1; } 100% { transform: scale(1.5) translateY(-60px); opacity: 0; } }
-
-        /* --- 4. SIDEBAR & LEGEND --- */
+        /* --- 4. SIDEBAR & HELP MENU --- */
         #settings-panel { position: fixed; right: 20px; top: 5vh; bottom: 5vh; width: 25vw; background: rgba(5,6,8,0.98); border: 1px solid var(--n-blue); border-radius: 15px; transform: translateX(120%); transition: 0.5s; z-index: 25000; padding: 25px; display: flex; flex-direction: column; }
         #settings-panel.open { transform: translateX(0); }
-        #icon-legend { position: fixed; left: 50%; bottom: -100%; transform: translateX(-50%); width: 450px; background: #000; border: 2px solid var(--n-blue); border-radius: 12px; box-shadow: 0 0 30px var(--n-blue); z-index: 26000; padding: 20px; transition: 0.6s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
-        #icon-legend.active { bottom: 20%; }
-        .tab-content { display: none; max-height: 400px; overflow-y: auto; }
+        #icon-legend { position: fixed; left: 50%; bottom: -110%; transform: translateX(-50%); width: 600px; background: #000; border: 2px solid var(--n-blue); border-radius: 12px; box-shadow: 0 0 30px var(--n-blue); z-index: 26000; padding: 25px; transition: 0.6s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
+        #icon-legend.active { bottom: 10%; }
+        .tab-content { display: none; max-height: 550px; overflow-y: auto; padding-right: 15px; }
         .tab-content.active { display: block; }
-        .asset-card { border-left: 3px solid var(--n-blue); background: rgba(255,255,255,0.05); padding: 10px; margin-bottom: 12px; font-size: 12px; line-height: 1.4; }
-        .tab-btn { background: #111; border: 1px solid #333; color: #fff; padding: 8px; cursor: pointer; flex: 1; font-size: 11px; }
+        .asset-card { border-left: 3px solid var(--n-blue); background: rgba(255,255,255,0.05); padding: 15px; margin-bottom: 15px; font-size: 13px; line-height: 1.6; }
+        .example-box { background: rgba(0, 242, 255, 0.1); border-radius: 5px; padding: 10px; margin-top: 10px; font-style: italic; color: #ccc; }
+        .tab-btn { background: #111; border: 1px solid #333; color: #fff; padding: 10px; cursor: pointer; flex: 1; font-size: 12px; margin-bottom: 10px; transition: 0.3s; }
+        .tab-btn:hover { background: #222; border-color: var(--n-blue); }
     </style>
 </head>
 <body>
@@ -83,8 +78,8 @@
     </div>
 
     <div id="assets">
-        <h1 style="color:var(--n-blue); letter-spacing:5px;">DEPLOYING ASSETS</h1>
-        <div id="loading-board" style="width:240px; height:240px; display:grid; grid-template:repeat(8,1fr)/repeat(8,1fr); gap:2px; margin-bottom:20px;"></div>
+        <h1 style="color:var(--n-blue); letter-spacing:5px;">ASSET INITIALIZATION</h1>
+        <div id="loading-board" style="width:280px; height:280px; display:grid; grid-template:repeat(8,1fr)/repeat(8,1fr); gap:2px; margin-bottom:20px;"></div>
         <div class="rainbow-container">
             <div class="bar"><div id="fill"></div></div>
         </div>
@@ -96,81 +91,132 @@
             <div id="turn" style="color:var(--n-blue); letter-spacing:3px; margin-bottom:10px;">SYSTEM: WHITE</div>
             <div id="board" class="board"></div>
         </div>
-        <button style="position:fixed; bottom:20px; right:20px; width:45px; height:45px; border-radius:50%; border:1px solid var(--n-blue); background:none; color:var(--n-blue); cursor:pointer;" onclick="toggleSettings()">⚙</button>
+        <button id="gear-btn" class="spinning" onclick="toggleSettings()">⚙</button>
     </div>
 
     <div id="settings-panel">
-        <h3 style="color:var(--n-blue)">COMMAND HUB</h3>
-        <button class="tab-btn" onclick="location.reload()">RESTART SIM</button>
-        <button style="width:50px; height:50px; border-radius:50%; border:2px solid var(--n-blue); background:none; color:var(--n-blue); font-size:24px; align-self:center; margin-top:auto; cursor:pointer;" onclick="toggleLegend()">?</button>
+        <h3 style="color:var(--n-blue)">EQUINOX GAMES | CHESS</h3>
+        <button class="tab-btn" onclick="location.reload()">RESTART SIMULATION</button>
+        <button class="tab-btn" style="color:var(--n-green); border-color:var(--n-green)" onclick="toggleSettings()">▶ PLAY SIMULATION</button>
+        <button style="width:55px; height:55px; border-radius:50%; border:2px solid var(--n-blue); background:none; color:var(--n-blue); font-size:24px; align-self:center; margin-top:auto; cursor:pointer;" onclick="toggleLegend()">?</button>
     </div>
 
     <div id="icon-legend">
-        <div style="display:flex; gap:5px; margin-bottom:15px;">
-            <button class="tab-btn" onclick="showTab('asset-tab')">ASSETS</button>
-            <button class="tab-btn" onclick="showTab('icon-tab')">ICONS</button>
+        <div style="display:flex; gap:10px; margin-bottom:15px;">
+            <button class="tab-btn" onclick="showTab('asset-tab')">ASSET BEHAVIOR</button>
+            <button class="tab-btn" onclick="showTab('icon-tab')">MOVE LOGIC</button>
         </div>
+        
         <div id="asset-tab" class="tab-content active">
-            <div class="asset-card"><b>♔/♚ KING</b> Moves 1 square in any direction. Captures by occupying target square. | Importance: <span style="color:var(--n-red)">Critical</span></div>
-            <div class="asset-card"><b>♕/♛ QUEEN</b> Moves any distance straight/diagonal. Captures by displacement. | Importance: <span style="color:var(--n-red)">Critical</span></div>
-            <div class="asset-card"><b>♖/♜ ROOK</b> Moves any distance horizontally/vertically. | Importance: <span style="color:var(--n-orange)">Significant</span></div>
-            <div class="asset-card"><b>♗/♝ BISHOP</b> Moves any distance diagonally. Confined to tile color. | Importance: <span style="color:var(--n-orange)">Significant</span></div>
-            <div class="asset-card"><b>♘/♞ KNIGHT</b> L-shape leap. Only piece able to jump over units. | Importance: <span style="color:var(--n-yellow)">Moderate</span></div>
-            <div class="asset-card"><b>♙/♟ PAWN</b> Moves 1 forward, captures 1 diagonally forward. | Importance: <span style="color:var(--n-green)">Expendable</span></div>
+            <div class="asset-card">
+                <b>♔ KING (Royal)</b>
+                The King is the **absolute core** of the simulation. It moves exactly one square in any direction. Its survival is the only **victory condition**; once trapped in checkmate, the simulation terminates.
+                <div class="example-box">Example: Moving the King from e1 to e2 to avoid a long-range Rook attack.</div>
+
+                | Importance: <span style="color:var(--n-red)">RED-CRITICAL</span>
+            </div>
+            <div class="asset-card">
+                <b>♕ QUEEN (Royal)</b>
+                The Queen is the **most versatile asset**, capable of moving any number of squares straight or diagonally. She combines the firepower of the Rook and Bishop, acting as the primary **offensive powerhouse**.
+                <div class="example-box">Example: Sweeping across the board from a1 to h8 to deliver a finishing blow.</div>
+                | Importance: <span style="color:var(--n-red)">RED-CRITICAL</span>
+            </div>
+            <div class="asset-card">
+                <b>♖ ROOK (Heavy)</b>
+                Rooks move horizontally or vertically. They are high-durability units best used for **linear suppression** and controlling open files. Their ability to **castle** provides critical King safety.
+                <div class="example-box">Example: Occupying the 7th rank to restrict the opponent's King movement.</div>
+
+                | Importance: <span style="color:var(--n-orange)">ORANGE-SIGNIFICANT</span>
+            </div>
+            <div class="asset-card">
+                <b>♗ BISHOP (Heavy)</b>
+                Bishops are limited to diagonal movement on their starting color tiles. They are excellent for **long-range pinning** and sniping high-value targets from a distance.
+                <div class="example-box">Example: Pinning a Knight to the enemy Queen from the opposite corner.</div>
+                | Importance: <span style="color:var(--n-orange)">ORANGE-SIGNIFICANT</span>
+            </div>
+            <div class="asset-card">
+                <b>♘ KNIGHT (Minor)</b>
+                Knights move in an 'L' shape and are the only units that can **leap over other pieces**. They are lethal in **closed positions** where other assets are blocked by pawn structures.
+                <div class="example-box">Example: Jumping over a pawn wall to "Fork" the King and Queen simultaneously.</div>
+
+                | Importance: <span style="color:var(--n-yellow)">YELLOW-MODERATE</span>
+            </div>
+            <div class="asset-card">
+                <b>♙ PAWN (Infantry)</b>
+                Pawns move forward but capture diagonally. While expandable, their **pawn structure** defines the tactical terrain. They can be promoted to any major piece upon reaching the final rank.
+                <div class="example-box">Example: Sacrificing a pawn to open a line for a more powerful Rook attack.</div>
+                | Importance: <span style="color:var(--n-green)">GREEN-EXPANDABLE</span>
+            </div>
         </div>
+
         <div id="icon-tab" class="tab-content">
-            <div class="asset-card"><b style="color:var(--n-blue)">!! BRILLIANT:</b> A winning sacrifice.</div>
-            <div class="asset-card"><b style="color:var(--n-yellow)">★ BEST:</b> Top engine move.</div>
-            <div class="asset-card"><b style="color:var(--n-orange)">? MISTAKE:</b> Lost advantage.</div>
-            <div class="asset-card"><b style="color:var(--n-red)">?? BLUNDER:</b> Major tactical error.</div>
+            <div class="asset-card">
+                <b style="color:var(--n-brilliant)">!! BRILLIANT</b>
+                A move that is **exceptionally difficult to find**, usually involving a calculated sacrifice. It is a move that may seem losing initially but leads to a **mathematical win** in the future.
+                <div class="example-box">Example: Sacrificing your Queen to force a checkmate three moves later.</div>
+            </div>
+            <div class="asset-card">
+                <b style="color:var(--n-great)">! GREAT</b>
+                A move that is **critical to the simulation's success**. It is often the only move that maintains a winning advantage or successfully defends against a terminal threat.
+                <div class="example-box">Example: Finding the only square that prevents your King from being cornered.</div>
+            </div>
+            <div class="asset-card">
+                <b style="color:var(--n-yellow)">★ BEST</b>
+                The move calculated by the engine as the **highest numerical value**. It is the most consistent and optimal path forward in the current state.
+                <div class="example-box">Example: Trading pieces when you are ahead in material to simplify the win.</div>
+            </div>
+            <div class="asset-card">
+                <b style="color:var(--n-blue)">📖 BOOK</b>
+                A move that follows **established chess theory**. These are opening sequences that have been simulated and proven effective over centuries of play.
+                <div class="example-box">Example: Playing the 'e4' pawn opening to control the board centre.</div>
+            </div>
+            <div class="asset-card">
+                <b style="color:var(--n-orange)">? MISTAKE</b>
+                A sub-optimal move that results in a **significant loss of advantage**. While not immediately terminal, it allows the opponent a strategic opening to counter-attack.
+                <div class="example-box">Example: Moving a piece to a square where it can be trapped by a pawn.</div>
+            </div>
+            <div class="asset-card">
+                <b style="color:var(--n-red)">?? BLUNDER</b>
+                A **catastrophic error** that leads to the loss of a major piece or immediate checkmate. A blunder usually shifts the win probability entirely to the opponent.
+                <div class="example-box">Example: Leaving your Queen unprotected in the direct line of a Rook.</div>
+            </div>
         </div>
     </div>
 
     <script>
-        // --- 1. BACKGROUND FLOATING ASSETS ---
         const pCanvas = document.getElementById('particle-canvas');
         const pCtx = pCanvas.getContext('2d');
         let parts = [], floatingAssets = [], debris = [];
-        const symbols = ['♔','♕','♖','♗','♘','♙','■','□','♚','♛','♜','♝','♞','♟'];
+        const symbols = ['♔','♕','♖','♗','♘','♙','■','♚','♛','♜','♝','♞','♟','□'];
 
         function initBG() {
             pCanvas.width = window.innerWidth; pCanvas.height = window.innerHeight;
-            for(let i=0; i<50; i++) parts.push({ x:Math.random()*pCanvas.width, y:Math.random()*pCanvas.height, s:Math.random()*2, v:Math.random()*0.4 });
-            for(let i=0; i<12; i++) floatingAssets.push({
+            for(let i=0; i<45; i++) floatingAssets.push({
                 x: Math.random()*pCanvas.width, y: Math.random()*pCanvas.height,
-                s: Math.random()*30+15, v: Math.random()*0.3+0.1,
-                rot: Math.random()*360, rotV: (Math.random()-0.5)*0.5,
+                s: Math.random()*40+10, v: Math.random()*0.4+0.1,
+                rot: Math.random()*360, rotV: (Math.random()-0.5),
                 sym: symbols[Math.floor(Math.random()*symbols.length)]
             });
+            for(let i=0; i<120; i++) parts.push({ x:Math.random()*pCanvas.width, y:Math.random()*pCanvas.height, s:Math.random()*2+1, v:Math.random()*0.8+0.2 });
         }
 
-        function drawLoop() {
+        function draw() {
             pCtx.clearRect(0,0,pCanvas.width,pCanvas.height);
-            // Floating Pieces & Fragments
-            pCtx.fillStyle = 'rgba(0, 242, 255, 0.08)';
+            pCtx.fillStyle = 'rgba(0, 242, 255, 0.18)';
             floatingAssets.forEach(a => {
                 a.y -= a.v; a.rot += a.rotV;
                 if(a.y < -50) a.y = pCanvas.height + 50;
-                pCtx.save();
-                pCtx.translate(a.x, a.y); pCtx.rotate(a.rot * Math.PI/180);
-                pCtx.font = `${a.s}px serif`; pCtx.fillText(a.sym, 0, 0);
-                pCtx.restore();
+                pCtx.save(); pCtx.translate(a.x, a.y); pCtx.rotate(a.rot * Math.PI/180);
+                pCtx.font = `${a.s}px serif`; pCtx.fillText(a.sym, 0, 0); pCtx.restore();
             });
-            // Dust
-            pCtx.fillStyle = 'rgba(255,255,255,0.15)';
-            parts.forEach(p => { p.y -= p.v; if(p.y<0) p.y=pCanvas.height; pCtx.fillRect(p.x, p.y, p.s, p.s); });
-            // Red Debris
-            debris.forEach((d,i) => {
-                d.x+=d.vx; d.y+=d.vy; d.life-=0.02;
-                if(d.life<=0) debris.splice(i,1);
-                pCtx.fillStyle=`rgba(255,77,77,${d.life})`; pCtx.fillRect(d.x,d.y,d.s,d.s);
-            });
-            requestAnimationFrame(drawLoop);
+            pCtx.fillStyle = 'rgba(255,255,255,0.45)';
+            parts.forEach(p => { p.y -= p.v; if(p.y<0) p.y=pCanvas.height; pCtx.beginPath(); pCtx.arc(p.x, p.y, p.s, 0, Math.PI*2); pCtx.fill(); });
+            debris.forEach((d,i) => { d.x+=d.vx; d.y+=d.vy; d.life-=0.02; if(d.life<=0) debris.splice(i,1); pCtx.fillStyle=`rgba(255,77,77,${d.life})`; pCtx.fillRect(d.x,d.y,d.s,d.s); });
+            requestAnimationFrame(draw);
         }
 
-        // --- 2. GAME ENGINE ---
         let turn = 'white', selectedSq = null;
-        const pieceIcons = { 'r':'♜','n':'♞','b':'♝','q':'♛','k':'♚','p':'♟','R':'♖','N':'♘','B':'♗','Q':'♕','K':'♔','P':'♙' };
+        const pieces = { 'r':'♜','n':'♞','b':'♝','q':'♛','k':'♚','p':'♟','R':'♖','N':'♘','B':'♗','Q':'♕','K':'♔','P':'♙' };
         let board = [['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],['','','','','','','',''],['','','','','','','',''],['','','','','','','',''],['','','','','','','',''],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']];
 
         function renderBoard() {
@@ -179,7 +225,7 @@
                 const sq = document.createElement('div'); sq.className = `sq ${(r+c)%2===0?'w':'b'}`;
                 sq.dataset.r=r; sq.dataset.c=c;
                 if(p) {
-                    const span = document.createElement('span'); span.className='piece'; span.innerText=pieceIcons[p];
+                    const span = document.createElement('span'); span.className='piece'; span.innerText=pieces[p];
                     span.style.color = p===p.toUpperCase()?'#fff':'var(--n-blue)';
                     sq.appendChild(span);
                     const t = p.toLowerCase();
@@ -196,7 +242,7 @@
                     const rect = document.querySelector(`[data-r="${r}"][data-c="${c}"]`).getBoundingClientRect();
                     showDeath(rect.left+35, rect.top+35);
                 }
-                board[r][c]=board[sr][sc]; board[sr][sc]='';
+                board[r][c]=board[sr][sc]; board[sr][sc]=''; // MOVES EVERYWHERE
                 turn = turn==='white'?'black':'white';
                 document.getElementById('turn').innerText=`SYSTEM: ${turn.toUpperCase()}`;
                 selectedSq=null; renderBoard();
@@ -204,24 +250,29 @@
                 const p = board[r][c];
                 if((turn==='white'&&p===p.toUpperCase())||(turn==='black'&&p===p.toLowerCase())){
                     selectedSq=[r,c]; renderBoard();
-                    document.querySelector(`[data-r="${r}"][data-c="${c}"]`).style.background="rgba(0,242,255,0.25)";
+                    document.querySelector(`[data-r="${r}"][data-c="${c}"]`).style.background="rgba(0, 242, 255, 0.4)";
                 }
             }
         }
 
         function showDeath(x,y) {
             const s=document.createElement('div'); s.className='death-icon'; s.innerText='💀'; s.style.left=`${x-15}px`; s.style.top=`${y-15}px`; document.body.appendChild(s);
-            for(let i=0;i<18;i++) debris.push({x,y,vx:(Math.random()-0.5)*12,vy:(Math.random()-0.5)*12,life:1,s:Math.random()*5+2});
+            for(let i=0;i<25;i++) debris.push({x,y,vx:(Math.random()-0.5)*18,vy:(Math.random()-0.5)*18,life:1,s:Math.random()*6+2});
             setTimeout(()=>s.remove(),1000);
         }
 
-        // --- 3. UI & LIFECYCLE ---
-        function toggleSettings() { document.getElementById('settings-panel').classList.toggle('open'); }
+        function toggleSettings() { 
+            const p = document.getElementById('settings-panel');
+            const g = document.getElementById('gear-btn');
+            p.classList.toggle('open'); 
+            if(p.classList.contains('open')) g.classList.remove('spinning');
+            else g.classList.add('spinning');
+        }
         function toggleLegend() { document.getElementById('icon-legend').classList.toggle('active'); }
         function showTab(id) { document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active')); document.getElementById(id).classList.add('active'); }
 
         window.onload = () => {
-            initBG(); drawLoop();
+            initBG(); draw();
             const lb = document.getElementById('loading-board');
             for(let i=0; i<64; i++){ let d=document.createElement('div'); d.style.background=(Math.floor(i/8)+i)%2===0?'#111':'#080808'; d.id=`ls-${i}`; lb.appendChild(d); }
             
@@ -232,15 +283,21 @@
                     document.getElementById('assets').style.display='flex';
                     setTimeout(()=>document.getElementById('assets').style.opacity='1',50);
                     let p=0; let iv=setInterval(()=>{
-                        p+=2.5; document.getElementById('fill').style.width=p+'%'; document.getElementById('perc').innerText=Math.floor(p)+'%';
+                        p+=1.2; document.getElementById('fill').style.width=p+'%'; document.getElementById('perc').innerText=Math.floor(p)+'%';
                         let si=Math.floor((p/100)*64); let t=document.getElementById(`ls-${si}`);
-                        if(t) { t.style.boxShadow="inset 0 0 10px var(--n-blue)"; t.style.border="1px solid var(--n-blue)"; }
+                        if(t) { t.style.background="var(--n-blue)"; t.style.boxShadow="0 0 15px var(--n-blue)"; }
                         if(p>=100){ clearInterval(iv); setTimeout(launch,800); }
-                    },50);
+                    },40);
                 }, 1000);
             }, 5000);
         };
-        function launch() { document.getElementById('assets').style.display='none'; document.getElementById('game').style.display='flex'; setTimeout(()=>document.getElementById('game').style.opacity='1',50); renderBoard(); }
+
+        function launch() { 
+            document.getElementById('assets').style.display='none'; 
+            document.getElementById('game').style.display='flex'; 
+            setTimeout(()=>document.getElementById('game').style.opacity='1',50); 
+            renderBoard(); 
+        }
     </script>
 </body>
 </html>

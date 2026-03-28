@@ -2,7 +2,7 @@
 <html lang="en-AU">
 <head>
     <meta charset="UTF-8">
-    <title>Equinox Games | Solaris HUD</title>
+    <title>Equinox Games | Solaris HUD v9</title>
     <script src="https://cdnjs.cloudflare.com"></script>
     <style>
         :root { 
@@ -15,7 +15,7 @@
         #boot { 
             position: fixed; inset: 0; background: black; z-index: 30000; 
             display: flex; justify-content: center; align-items: center; 
-            transition: opacity 1s ease-in-out; 
+            transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1); 
         }
         
         .equinox-text { 
@@ -35,23 +35,26 @@
             animation: pop-divider 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards 2s; 
         }
 
-        .controller-wrap { 
-            position: relative; width: 60px; height: 60px; 
-            display: flex; align-items: center; justify-content: center;
-            overflow: hidden; /* Provides the baseline clipping effect */
-        }
-        
-        /* CIRCULAR AURA */
-        .aura-ring {
-            position: absolute; width: 50px; height: 50px; border-radius: 50%;
-            border: 2px solid var(--n-blue); opacity: 0;
-            box-shadow: 0 0 15px var(--n-blue), inset 0 0 10px var(--n-blue);
-            animation: aura-appear 1s forwards 2.8s, aura-pulse 2s infinite alternate 3.5s;
+        /* LARGE CIRCULAR AURA - NOT BOX LIMITED */
+        .aura-field {
+            position: absolute;
+            left: 50%; top: 50%;
+            width: 150px; height: 150px;
+            margin-left: 80px; /* Offset to center on the controller icon position */
+            margin-top: -75px;
+            border-radius: 50%;
+            border: 2px solid var(--n-blue);
+            opacity: 0;
+            box-shadow: 0 0 30px var(--n-blue), inset 0 0 20px var(--n-blue);
+            animation: aura-glow 1.2s forwards 2.8s, aura-pulse 2s infinite alternate 3.8s;
+            pointer-events: none;
+            z-index: 29000;
         }
 
+        .controller-wrap { overflow: hidden; display: flex; align-items: center; width: 60px; height: 60px; }
         .controller-icon { 
-            font-size: 36px; z-index: 2; transform: translateX(-150%);
-            animation: baseline-slide 0.8s ease-out forwards 2.4s;
+            font-size: 40px; transform: translateX(-110%); 
+            animation: baseline-slide 0.8s ease-out forwards 2.4s; 
         }
 
         @keyframes solaris-reveal { to { clip-path: inset(0 0 0 0); } }
@@ -62,16 +65,16 @@
         }
         @keyframes pop-divider { to { transform: scaleY(1); } }
         @keyframes baseline-slide { to { transform: translateX(0); } }
-        @keyframes aura-appear { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
+        @keyframes aura-glow { from { opacity: 0; transform: scale(0.2); } to { opacity: 1; transform: scale(1); } }
         @keyframes aura-pulse {
-            0% { border-color: var(--n-blue); box-shadow: 0 0 10px var(--n-blue); transform: scale(1); }
-            100% { border-color: var(--n-green); box-shadow: 0 0 25px var(--n-green); transform: scale(1.15); }
+            0% { border-color: var(--n-blue); box-shadow: 0 0 20px var(--n-blue); }
+            100% { border-color: var(--n-green); box-shadow: 0 0 50px var(--n-green); transform: scale(1.1); }
         }
 
         /* 2. LOADING SCREEN */
-        #assets { position: fixed; inset: 0; background: #050608; z-index: 20000; display: none; opacity: 0; transition: 1s; }
-        #physics-canvas { position: absolute; inset: 0; z-index: 1; }
-        .overlay { position: relative; z-index: 10; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0 50px; pointer-events: none; }
+        #assets { position: fixed; inset: 0; background: #050608; z-index: 20000; display: none; opacity: 0; transition: 1.5s; }
+        #physics-canvas { position: absolute; inset: 0; }
+        .overlay { position: relative; z-index: 10; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0 50px; }
         .t-pop { color: var(--n-blue); font-size: 40px; opacity: 0; transform: translateY(30px); transition: 0.8s; }
         .l-pop { height: 2px; background: var(--n-blue); width: 0; margin: 20px 0; transition: 1.2s; }
         .d-wipe { color: #888; max-width: 650px; font-size: 14px; opacity: 0; transform: translateY(-20px); transition: 1.5s; line-height: 1.8; }
@@ -82,26 +85,22 @@
         #perc { position: relative; z-index: 2; font-size: 11px; font-weight: bold; color: white; mix-blend-mode: difference; }
 
         /* 3. GAME HUD */
-        #game { display: none; width: 100vw; height: 100vh; background: #000; justify-content: center; align-items: center; opacity: 0; transition: 1s; }
-        #game-canvas { position: absolute; inset: 0; z-index: 0; }
-        .board { width: 560px; height: 560px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid #111; position: relative; z-index: 5; background: rgba(0,0,0,0.8); }
-        .sq { width: 70px; height: 70px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.3s; }
+        #game { display: none; width: 100vw; height: 100vh; background: #000; justify-content: center; align-items: center; opacity: 0; transition: 1.5s; }
+        #game-canvas { position: absolute; inset: 0; }
+        .board { width: 560px; height: 560px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid #111; z-index: 5; background: rgba(0,0,0,0.8); }
+        .sq { width: 70px; height: 70px; display: flex; justify-content: center; align-items: center; cursor: pointer; }
         .w { background: rgba(42, 44, 51, 0.8); } .b { background: rgba(26, 28, 34, 0.8); }
-        .piece { font-size: 48px; transition: transform 0.2s; user-select: none; }
-        
-        /* 4. SETTINGS */
-        #settings-panel { position: fixed; left: 50%; bottom: 0; width: 300px; background: #080a0c; border: 1px solid var(--n-blue); transform: translate(-50%, 100%); transition: 0.6s; z-index: 25000; padding: 20px; border-radius: 15px 15px 0 0; }
-        #settings-panel.open { transform: translate(-50%, -5%); }
+        .piece { font-size: 48px; user-select: none; }
     </style>
 </head>
 <body>
 
     <!-- BOOT SCREEN -->
     <div id="boot">
+        <div class="aura-field"></div>
         <div class="equinox-text">EQUINOX GAMES</div>
         <div class="divider"></div>
         <div class="controller-wrap">
-            <div class="aura-ring"></div>
             <div class="controller-icon">🎮</div>
         </div>
     </div>
@@ -112,7 +111,7 @@
         <div class="overlay">
             <h1 id="t" class="t-pop">Chess Practice | Elo</h1>
             <div id="l" class="l-pop"></div>
-            <p id="d" class="d-wipe">Strategic Analysis Initiated. Improving critical thinking and mental agility. Analysis builds community and pattern identification.</p>
+            <p id="d" class="d-wipe">Regular chess practice boosts your Elo rating by improving strategic understanding and tactical abilities. Consistency is key to mastering chess at any skill level.</p>
         </div>
         <div class="load-hud">
             <div class="bar"><div id="fill"></div><div id="perc">0%</div></div>
@@ -122,34 +121,33 @@
     <!-- GAME HUD -->
     <div id="game">
         <canvas id="game-canvas"></canvas>
-        <div style="display:flex; flex-direction:column; align-items:center; z-index:10;">
+        <div style="z-index:10; display:flex; flex-direction:column; align-items:center;">
             <div id="turn" style="color:var(--n-blue); margin-bottom:15px; letter-spacing:3px;">SYSTEM TURN: WHITE</div>
             <div id="board" class="board"></div>
         </div>
-        <button style="position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:none; border:1px solid var(--n-blue); color:var(--n-blue); width:45px; height:45px; border-radius:50%; cursor:pointer; z-index:100;" onclick="toggleSettings()">?</button>
-    </div>
-
-    <div id="settings-panel">
-        <h3 style="color:var(--n-blue); margin:0;">HUB SETTINGS</h3>
-        <button style="width:100%; margin-top:15px; background:none; border:1px solid #333; color:#fff; padding:10px; cursor:pointer;" onclick="location.reload()">RESTART SIMULATION</button>
+        <button style="position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:none; border:1px solid var(--n-blue); color:var(--n-blue); padding:10px; cursor:pointer; border-radius:20px;" onclick="location.reload()">RESTART SIMULATION</button>
     </div>
 
     <script>
         const game = new Chess();
-        
-        // BOOT -> LOAD TRANSITION
+
+        // FORCED TRANSITION SCRIPT
         window.onload = () => {
+            console.log("System Initialized...");
+            // Step 1: Hide Boot after animations
             setTimeout(() => {
                 const boot = document.getElementById('boot');
                 boot.style.opacity = '0';
+                console.log("Fading Boot Screen...");
                 setTimeout(() => {
                     boot.style.display = 'none';
                     startLoading();
-                }, 1000);
-            }, 6500); // Trigger after all boot animations (Solaries + Aura) finish
+                }, 1200);
+            }, 7000); // Wait for solaris + divider + baseline + aura pulse
         };
 
         function startLoading() {
+            console.log("Loading Assets...");
             document.getElementById('assets').style.display = 'block';
             setTimeout(() => {
                 document.getElementById('assets').style.opacity = '1';
@@ -157,7 +155,7 @@
                 document.getElementById('l').style.width = '300px';
                 document.getElementById('d').style.opacity = '1'; document.getElementById('d').style.transform = 'translateY(0)';
             }, 100);
-            
+
             let p = 0;
             let iv = setInterval(() => {
                 p += Math.random() * 3;
@@ -165,10 +163,11 @@
                 document.getElementById('fill').style.width = p + '%';
                 document.getElementById('perc').innerText = Math.floor(p) + '%';
             }, 60);
-            initAssetPhysics();
+            initPhysics();
         }
 
         function initGame() {
+            console.log("Starting Game...");
             document.getElementById('assets').style.opacity = '0';
             setTimeout(() => {
                 document.getElementById('assets').style.display = 'none';
@@ -176,7 +175,7 @@
                 setTimeout(() => document.getElementById('game').style.opacity = '1', 50);
                 drawBoard();
                 initStarfield();
-            }, 1000);
+            }, 1500);
         }
 
         function drawBoard() {
@@ -208,10 +207,10 @@
             document.getElementById('turn').innerText = `SYSTEM TURN: ${game.turn() === 'w' ? 'WHITE' : 'BLACK'}`;
         }
 
-        function initAssetPhysics() {
+        function initPhysics() {
             const cvs = document.getElementById('physics-canvas'); const ctx = cvs.getContext('2d');
             cvs.width = window.innerWidth; cvs.height = window.innerHeight;
-            let parts = Array.from({length: 20}, () => ({ x: Math.random()*cvs.width, y: Math.random()*cvs.height, v: Math.random()*0.5 }));
+            let parts = Array.from({length: 15}, () => ({ x: Math.random()*cvs.width, y: Math.random()*cvs.height, v: Math.random()*0.5 }));
             function loop() {
                 ctx.clearRect(0,0,cvs.width,cvs.height); ctx.fillStyle = 'rgba(255,255,255,0.1)';
                 parts.forEach(p => { ctx.fillText('♖', p.x, p.y); p.y -= p.v; if(p.y<0) p.y=cvs.height; });
@@ -223,7 +222,7 @@
         function initStarfield() {
             const cvs = document.getElementById('game-canvas'); const ctx = cvs.getContext('2d');
             cvs.width = window.innerWidth; cvs.height = window.innerHeight;
-            let stars = Array.from({length: 100}, () => ({ x: Math.random()*cvs.width, y: Math.random()*cvs.height, v: Math.random()*0.3 }));
+            let stars = Array.from({length: 150}, () => ({ x: Math.random()*cvs.width, y: Math.random()*cvs.height, v: Math.random()*0.3 }));
             function loop() {
                 ctx.clearRect(0,0,cvs.width,cvs.height); ctx.fillStyle = '#fff';
                 stars.forEach(s => { ctx.fillRect(s.x, s.y, 2, 2); s.y -= s.v; if(s.y<0) s.y=cvs.height; });
@@ -231,8 +230,6 @@
             }
             loop();
         }
-
-        function toggleSettings() { document.getElementById('settings-panel').classList.toggle('open'); }
     </script>
 </body>
 </html>

@@ -26,7 +26,7 @@
         /* 2. ASSET LOADING SCREEN (FLOATING PIECES) */
         #asset-loading {
             position: fixed; inset: 0; background: radial-gradient(circle at center, #0a0c10 0%, #030406 100%);
-            z-index: 15000; display: none; overflow: hidden;
+            z-index: 15000; display: none; overflow: hidden; opacity: 1;
         }
         #physics-canvas { position: absolute; inset: 0; z-index: 1; }
         
@@ -56,10 +56,10 @@
         
         /* CLOSE BUTTON (X) */
         .close-btn {
-            width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--n-blue);
+            width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--n-blue);
             display: none; justify-content: center; align-items: center; cursor: pointer;
-            margin-top: 40px; font-size: 20px; color: var(--n-blue);
-            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            margin-top: 40px; font-size: 24px; color: var(--n-blue); opacity: 0; transform: scale(0);
+            transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         .close-btn:hover { background: var(--n-blue); color: black; transform: scale(1.2) rotate(90deg); }
 
@@ -108,37 +108,45 @@
         const game = new Chess();
         const pChars = {'r':'♜','n':'♞','b':'♝','q':'♛','k':'♚','p':'♙','R':'♖','N':'♘','B':'♗','Q':'♕','K':'♔','P':'♙'};
         
-        // --- ANIMATION SEQUENCE ---
+        // --- TRANSITION SEQUENCE ---
 
         window.onload = () => {
-            // Stage 1 -> 2
+            // Stage 1 (Equinox Logo) -> Stage 2 (Asset Loading)
             setTimeout(() => {
-                document.getElementById('solaris-boot').style.opacity = '0';
+                const boot = document.getElementById('solaris-boot');
+                boot.style.opacity = '0';
+                
                 setTimeout(() => {
-                    document.getElementById('solaris-boot').style.display = 'none';
+                    boot.style.display = 'none'; // Completely remove from layout
                     startAssetLoading();
                 }, 1000);
-            }, 3000);
+            }, 3000); // Equinox logo stays for 3 seconds
         };
 
         function startAssetLoading() {
-            document.getElementById('asset-loading').style.display = 'block';
+            const screen = document.getElementById('asset-loading');
+            screen.style.display = 'block';
             initPhysics();
+            
             let prog = 0;
             const interval = setInterval(() => {
-                prog += Math.random() * 2;
+                prog += Math.random() * 2.5; // Simulate load speed
+                if (prog > 100) prog = 100;
                 document.getElementById('load-progress').style.width = prog + '%';
+                
                 if (prog >= 100) {
                     clearInterval(interval);
-                    setTimeout(finishLoading, 500);
+                    setTimeout(finishLoading, 800);
                 }
-            }, 50);
+            }, 60);
         }
 
         function finishLoading() {
-            document.getElementById('asset-loading').style.opacity = '0';
+            const screen = document.getElementById('asset-loading');
+            screen.style.transition = "1s";
+            screen.style.opacity = '0';
             setTimeout(() => {
-                document.getElementById('asset-loading').style.display = 'none';
+                screen.style.display = 'none';
                 startCanvaIntro();
             }, 1000);
         }
@@ -146,26 +154,29 @@
         function startCanvaIntro() {
             document.getElementById('story-screen').style.display = 'flex';
             
-            // Title Pop
+            // 1. Title Pop
             const t = document.getElementById('title');
             t.style.transition = "0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
             setTimeout(() => { t.style.opacity = "1"; t.style.transform = "scale(1)"; }, 100);
 
-            // Line Pop
+            // 2. Line Pop (Scale horizontally)
             const l = document.getElementById('line');
             l.style.transition = "1s cubic-bezier(0.22, 1, 0.36, 1)";
             setTimeout(() => { l.style.width = "400px"; }, 600);
 
-            // Desc Wipe
+            // 3. Description Wipe (Fade in)
             const d = document.getElementById('desc');
             d.style.transition = "2s ease-out";
             setTimeout(() => { d.style.opacity = "1"; }, 1200);
 
-            // Final X Zoom
+            // 4. Final X Zoom + Rotate
             const x = document.getElementById('final-x');
             setTimeout(() => {
                 x.style.display = "flex";
-                setTimeout(() => { x.style.transform = "scale(1) rotate(0deg)"; x.style.opacity = "1"; }, 50);
+                setTimeout(() => { 
+                    x.style.opacity = "1"; 
+                    x.style.transform = "scale(1) rotate(0deg)"; 
+                }, 50);
             }, 3500);
         }
 
@@ -179,7 +190,7 @@
             }, 1000);
         }
 
-        // --- PHYSICS ENGINE (Floating Pieces) ---
+        // --- PHYSICS ENGINE (Floating Pieces & Particles) ---
         function initPhysics() {
             const canvas = document.getElementById('physics-canvas');
             const ctx = canvas.getContext('2d');
@@ -187,26 +198,28 @@
             canvas.height = window.innerHeight;
 
             const items = [];
-            const types = ['♜','♞','♝','♛','♚','♟','▦','▧']; // Chess pieces + board fragments
+            const types = ['♜','♞','♝','♛','♚','♟','♙','♖']; // Floating Assets
             
-            for(let i=0; i<25; i++) {
+            // Generate floating pieces
+            for(let i=0; i<30; i++) {
                 items.push({
                     x: Math.random() * canvas.width,
                     y: Math.random() * canvas.height,
-                    vx: (Math.random()-0.5) * 2,
-                    vy: (Math.random()-0.5) * 2,
+                    vx: (Math.random()-0.5) * 1.5,
+                    vy: (Math.random()-0.5) * 1.5,
                     char: types[Math.floor(Math.random()*types.length)],
-                    size: 20 + Math.random() * 40,
+                    size: 30 + Math.random() * 40,
                     rot: Math.random() * Math.PI * 2,
-                    rv: (Math.random()-0.5) * 0.02
+                    rv: (Math.random()-0.5) * 0.03
                 });
             }
 
             function update() {
-                ctx.clearRect(0,0,canvas.width,canvas.height);
-                // Background white particles
-                ctx.fillStyle = "rgba(255,255,255,0.1)";
-                for(let i=0; i<50; i++) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Static White Background Particles
+                ctx.fillStyle = "rgba(255,255,255,0.08)";
+                for(let i=0; i<60; i++) {
                     ctx.beginPath();
                     ctx.arc(Math.random()*canvas.width, Math.random()*canvas.height, 1, 0, Math.PI*2);
                     ctx.fill();
@@ -214,24 +227,24 @@
 
                 items.forEach(p => {
                     p.x += p.vx; p.y += p.vy; p.rot += p.rv;
-                    if(p.x<0 || p.x>canvas.width) p.vx *= -1;
-                    if(p.y<0 || p.y>canvas.height) p.vy *= -1;
+                    
+                    // Bounce off edges
+                    if(p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                    if(p.y < 0 || p.y > canvas.height) p.vy *= -1;
 
                     ctx.save();
                     ctx.translate(p.x, p.y);
                     ctx.rotate(p.rot);
-                    ctx.fillStyle = "rgba(255,255,255,0.15)";
+                    ctx.fillStyle = "rgba(255,255,255,0.12)";
                     ctx.font = p.size + "px serif";
                     ctx.fillText(p.char, -p.size/2, p.size/2);
                     ctx.restore();
                     
-                    // Simple collision check
+                    // Simple collision logic (Swap velocities on hit)
                     items.forEach(p2 => {
                         if(p === p2) return;
-                        let dx = p.x - p2.x;
-                        let dy = p.y - p2.y;
-                        let dist = Math.sqrt(dx*dx + dy*dy);
-                        if(dist < 50) { p.vx *= -1; p.vy *= -1; }
+                        let dist = Math.hypot(p.x - p2.x, p.y - p2.y);
+                        if(dist < 40) { p.vx *= -1; p.vy *= -1; }
                     });
                 });
                 requestAnimationFrame(update);
@@ -239,7 +252,7 @@
             update();
         }
 
-        // --- CORE CHESS ENGINE ---
+        // --- CORE CHESS RENDER ---
         function renderBoard() {
             const b = document.getElementById('chess-board');
             b.innerHTML = '';

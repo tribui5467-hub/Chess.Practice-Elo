@@ -16,8 +16,7 @@
         #boot { position: fixed; inset: 0; background: black; z-index: 30000; display: flex; justify-content: center; align-items: center; transition: 1s; }
         .equinox-text { font-size: 32px; letter-spacing: 12px; font-weight: 200; color: #fff; clip-path: inset(0 100% 0 0); animation: reveal 2.5s forwards; }
         .divider { width: 2px; height: 40px; background: white; margin: 0 25px; transform: scaleY(0); animation: pop-divider 0.6s var(--smooth) forwards 2s; }
-        .controller-box { position: relative; width: 150px; height: 150px; display: flex; align-items: center; justify-content: center; overflow: visible; }
-        .aura-circle { position: absolute; width: 85px; height: 85px; border-radius: 50%; border: 3px solid var(--n-blue); opacity: 0; box-shadow: 0 0 35px var(--n-blue), inset 0 0 15px var(--n-blue); animation: aura-glow 1s forwards 3s, aura-pulse 3s infinite alternate 4s; z-index: 1; }
+.       .aura-circle { position: absolute; width: 85px; height: 85px; border-radius: 50%; border: 3px solid var(--n-blue); opacity: 0; box-shadow: 0 0 35px var(--n-blue), inset 0 0 15px var(--n-blue); animation: aura-glow 1s forwards 3s, aura-pulse 3s infinite alternate 4s; z-index: 1; }
         .controller-icon { font-size: 42px; transform: translateX(-180%); animation: slide-in 0.8s var(--smooth) forwards 2.5s; z-index: 2; }
         @keyframes reveal { to { clip-path: inset(0 0 0 0); } }
         @keyframes pop-divider { to { transform: scaleY(1); } }
@@ -27,7 +26,7 @@
 
         /* --- 2. LOADING SCREEN (ELO MATCHED) --- */
         #assets { position: fixed; inset: 0; background: #000; z-index: 20000; display: none; opacity: 0; transition: 1.5s; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        .elo-title { font-size: 42px; color: var(--n-blue); transform: translateY(30px); opacity: 0; animation: up 1s var(--smooth) forwards 0.5s; letter-spacing: 4px; }
+        .elo-title { font-size: 30px; color: var(--n-blue); transform: translateY(30px); opacity: 0; animation: up 1s var(--smooth) forwards 0.5s; letter-spacing: 4px; }
         .elo-line { width: 0; height: 2px; background: var(--n-blue); margin: 25px 0; box-shadow: 0 0 15px var(--n-blue); animation: pop-line-long 1.2s var(--smooth) forwards 1s; }
         .elo-desc { font-size: 15px; color: #aaa; max-width: 700px; opacity: 0; clip-path: inset(0 0 100% 0); animation: wipe 1.2s var(--smooth) forwards 1.8s; line-height: 1.8; padding: 0 20px; }
         @keyframes up { to { opacity: 1; transform: translateY(0); } }

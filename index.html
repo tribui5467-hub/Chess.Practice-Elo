@@ -275,4 +275,112 @@
         }
     </script>
 </body>
+    <script>
+        // --- 1. CONFIG & SETUP ---
+        const board = document.getElementById('chess-board');
+        const piecesConfig = {
+            black: ['♜', '♞', '♝', '♛', '♚', '♝', '♞', '♜'],
+            white: ['♖', '♘', '♗', '♕', '♔', '♗', '♘', '♖']
+        };
+
+        // --- 2. GENERATE BOARD ---
+        function initBoard() {
+            if (!board) return;
+            board.innerHTML = ''; // Clear board
+            
+            for (let i = 0; i < 64; i++) {
+                const row = Math.floor(i / 8);
+                const col = i % 8;
+                const sq = document.createElement('div');
+                
+                // Alternating square colours
+                sq.className = `sq ${(row + col) % 2 === 0 ? 'w' : 'b'}`;
+                sq.dataset.index = i;
+
+                let pieceChar = '';
+                let team = '';
+
+                // Place Black Pieces
+                if (row === 0) { pieceChar = piecesConfig.black[col]; team = 'black'; }
+                else if (row === 1) { pieceChar = '♟'; team = 'black'; }
+                // Place White Pieces
+                else if (row === 6) { pieceChar = '♙'; team = 'white'; }
+                else if (row === 7) { pieceChar = piecesConfig.white[col]; team = 'white'; }
+
+                if (pieceChar) {
+                    const p = document.createElement('div');
+                    // "unlocked" class is from your CSS to make them bright
+                    p.className = `piece ${team} unlocked`; 
+                    p.draggable = true;
+                    p.innerHTML = pieceChar;
+                    
+                    // Specific team styling via JS if CSS isn't updated
+                    if(team === 'white') p.style.color = "#ffffff";
+                    if(team === 'black') p.style.color = "#777777";
+                    
+                    sq.appendChild(p);
+                }
+                board.appendChild(sq);
+            }
+        }
+
+        // --- 3. MOVEMENT LOGIC ---
+        let draggedPiece = null;
+
+        document.addEventListener('dragstart', (e) => {
+            if (e.target.classList.contains('piece')) {
+                draggedPiece = e.target;
+                e.target.style.opacity = "0.5";
+            }
+        });
+
+        document.addEventListener('dragend', (e) => {
+            if (e.target.classList.contains('piece')) {
+                e.target.style.opacity = "1";
+            }
+        });
+
+        document.addEventListener('dragover', (e) => {
+            e.preventDefault(); // Required to allow drop
+        });
+
+        document.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const targetSquare = e.target.closest('.sq');
+            
+            if (targetSquare && draggedPiece) {
+                // If there's an enemy piece, remove it (Capture)
+                if (targetSquare.firstChild && targetSquare.firstChild !== draggedPiece) {
+                    targetSquare.removeChild(targetSquare.firstChild);
+                }
+                targetSquare.appendChild(draggedPiece);
+            }
+        });
+
+        // --- 4. INITIALIZE ON LOAD ---
+        window.onload = () => {
+            initBoard();
+            
+            // Your existing loading screen logic (simulated)
+            setTimeout(() => {
+                document.getElementById('boot').style.display = 'none';
+                const gameDiv = document.getElementById('game');
+                gameDiv.style.display = 'flex';
+                setTimeout(() => gameDiv.style.opacity = '1', 50);
+            }, 3500);
+        };
+
+        // Gear/Help Menu Toggle
+        const gearBtn = document.getElementById('gear-btn');
+        const helpMenu = document.getElementById('help-menu');
+        
+        if(gearBtn) {
+            gearBtn.onclick = () => {
+                gearBtn.classList.toggle('active');
+                helpMenu.classList.toggle('active');
+            };
+        }
+    </script>
+</body>
 </html>
+

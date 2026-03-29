@@ -10,38 +10,105 @@
             --smooth: cubic-bezier(0.4, 0, 0.2, 1);
         }
         body, html { margin: 0; padding: 0; background: #000; color: white; font-family: 'Segoe UI', Tahoma, sans-serif; overflow: hidden; height: 100vh; width: 100vw; }
+
+        /* --- 1. BOOT SCREEN --- */
+        #boot { position: fixed; inset: 0; background: black; z-index: 30000; display: flex; justify-content: center; align-items: center; transition: 1s; }
+        .equinox-text { font-size: 32px; letter-spacing: 12px; font-weight: 200; color: #fff; clip-path: inset(0 100% 0 0); animation: reveal 2.5s forwards; }
+        .divider { width: 2px; height: 40px; background: white; margin: 0 25px; transform: scaleY(0); animation: pop-divider 0.6s var(--smooth) forwards 2s; }
+        .controller-box { position: relative; width: 150px; height: 150px; display: flex; align-items: center; justify-content: center; overflow: visible; }
+        .aura-circle { position: absolute; width: 85px; height: 85px; border-radius: 50%; border: 3px solid var(--n-blue); opacity: 0; box-shadow: 0 0 35px var(--n-blue), inset 0 0 15px var(--n-blue); animation: aura-glow 1s forwards 3s, aura-pulse 3s infinite alternate 4s; z-index: 1; }
+        .controller-icon { font-size: 42px; transform: translateX(-180%); animation: slide-in 0.8s var(--smooth) forwards 2.5s; z-index: 2; }
+        @keyframes reveal { to { clip-path: inset(0 0 0 0); } }
+        @keyframes pop-divider { to { transform: scaleY(1); } }
+        @keyframes slide-in { to { transform: translateX(0); } }
+        @keyframes aura-glow { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
+        @keyframes aura-pulse { 0% { border-color: var(--n-blue); box-shadow: 0 0 20px var(--n-blue); } 100% { border-color: var(--n-pink); box-shadow: 0 0 45px var(--n-pink); transform: scale(1.15); } }
+
+        /* --- 2. LOADING SCREEN --- */
+        #assets { position: fixed; inset: 0; background: #000; z-index: 20000; display: none; opacity: 0; transition: 1.5s; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .elo-title { font-size: 42px; color: var(--n-blue); transform: translateY(30px); opacity: 0; animation: up 1s var(--smooth) forwards 0.5s; }
+        .elo-line { width: 0; height: 2px; background: var(--n-blue); margin: 25px 0; box-shadow: 0 0 15px var(--n-blue); animation: pop-line-long 1.2s var(--smooth) forwards 1s; }
+        .elo-desc { font-size: 14px; color: #888; max-width: 650px; opacity: 0; clip-path: inset(0 0 100% 0); animation: wipe 1.2s var(--smooth) forwards 1.8s; line-height: 1.8; }
+        @keyframes up { to { opacity: 1; transform: translateY(0); } }
+        @keyframes pop-line-long { to { width: 550px; } }
+        @keyframes wipe { to { opacity: 1; clip-path: inset(0 0 0 0); } }
+        .rainbow-container { width: 420px; height: 35px; border-radius: 17px; padding: 2px; background: linear-gradient(to right, #ff0000, #ff8c00, #ffff00, #00ff00); display: flex; align-items: center; justify-content: center; margin-top: 40px; }
+        .bar-wrap { width: 100%; height: 100%; background: #000; border-radius: 15px; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; }
+        #fill { position: absolute; left: 0; height: 100%; width: 0%; background: #00ffff; box-shadow: 2px 0 10px #00ffff; transition: width 0.4s var(--smooth); }
+        #perc { position: relative; z-index: 2; font-weight: bold; font-size: 14px; color: white; mix-blend-mode: difference; }
+
+        /* --- 3. GAME HUD --- */
+        #game { display: none; width: 100vw; height: 100vh; justify-content: center; align-items: center; opacity: 0; transition: 1.5s; z-index: 5; }
+        .board { width: 560px; height: 560px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid #111; background: #000; z-index: 10; }
+        .sq { width: 70px; height: 70px; display: flex; justify-content: center; align-items: center; cursor: pointer; }
+        .w { background: rgba(45, 45, 55, 0.9); } .b { background: rgba(20, 20, 25, 0.9); }
+        .piece { font-size: 48px; transition: 0.8s var(--smooth); filter: brightness(0.2); pointer-events: none; }
+        .piece.unlocked { filter: brightness(1); pointer-events: auto; }
         
-        /* --- HELP MENU STYLES --- */
+        #gear-btn { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; background: none; border: none; color: var(--n-blue); font-size: 35px; cursor: pointer; z-index: 100; transition: 0.4s var(--smooth); display: flex; align-items: center; justify-content: center; }
+        #gear-btn.active { color: var(--n-green); animation: gear-spin 3s linear infinite; }
+
+        /* --- 4. SIDEBAR & TABS --- */
+        #settings-panel { position: fixed; right: 20px; top: 5vh; bottom: 5vh; width: 25vw; background: rgba(5,6,8,0.98); border: 1px solid var(--n-blue); border-radius: 15px; transform: translateX(120%); transition: 0.7s var(--smooth); z-index: 25000; padding: 25px; display: flex; flex-direction: column; }
+        #settings-panel.open { transform: translateX(0); }
+
         #help-menu { 
             position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(0.9); 
-            width: 750px; background: #050608; border: 2px solid var(--n-blue); border-radius: 15px; 
+            width: 700px; background: #050608; border: 2px solid var(--n-blue); border-radius: 15px; 
             z-index: 31000; padding: 30px; opacity: 0; pointer-events: none; transition: 0.5s var(--smooth);
-            box-shadow: 0 0 50px rgba(0,242,255,0.2);
+            box-shadow: 0 0 50px rgba(0,242,255,0.3);
         }
         #help-menu.active { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
-
-        .help-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #222; padding-bottom: 10px; }
-        .tab-btn { background: none; border: 1px solid #333; color: #888; padding: 10px 20px; cursor: pointer; border-radius: 4px; transition: 0.3s; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .help-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .tab-btn { background: none; border: 1px solid #333; color: #888; padding: 8px 16px; cursor: pointer; border-radius: 4px; transition: 0.3s; font-size: 12px; }
         .tab-btn.active { border-color: var(--n-blue); color: var(--n-blue); background: rgba(0,242,255,0.1); }
         
-        .tab-content { display: none; max-height: 450px; overflow-y: auto; padding-right: 15px; }
+        .tab-content { display: none; max-height: 450px; overflow-y: auto; padding-right: 10px; }
         .tab-content.active { display: block; }
         .tab-content::-webkit-scrollbar { width: 4px; }
         .tab-content::-webkit-scrollbar-thumb { background: var(--n-blue); border-radius: 10px; }
 
-        .group-label { color: var(--n-blue); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; margin: 25px 0 12px 0; border-bottom: 1px solid #222; display: block; padding-bottom: 5px; font-weight: bold; }
-        .asset-card { border-left: 3px solid var(--n-blue); background: rgba(255,255,255,0.03); padding: 15px; margin-bottom: 12px; font-size: 13px; line-height: 1.6; border-radius: 0 8px 8px 0; }
+        .group-label { color: var(--n-blue); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; margin: 25px 0 10px 0; border-bottom: 1px solid #222; display: block; padding-bottom: 5px; }
+        .asset-card { border-left: 3px solid var(--n-blue); background: rgba(255,255,255,0.05); padding: 15px; margin-bottom: 12px; font-size: 13px; line-height: 1.6; border-radius: 0 8px 8px 0; }
         .asset-card b { color: var(--n-yellow); margin-right: 8px; }
         .icon-glyph { font-size: 20px; width: 40px; display: inline-block; text-align: center; vertical-align: middle; }
-
-        /* Existing Styles for Game elements */
-        #game { display: flex; width: 100vw; height: 100vh; justify-content: center; align-items: center; }
-        #gear-btn { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; background: none; border: none; color: var(--n-blue); font-size: 35px; cursor: pointer; z-index: 100; }
     </style>
 </head>
 <body>
 
-    <button id="gear-btn" onclick="toggleHelp()">⚙️</button>
+    <div id="boot">
+        <div class="equinox-text">EQUINOX</div>
+        <div class="divider"></div>
+        <div class="controller-box">
+            <div class="aura-circle"></div>
+            <div class="controller-icon">🎮</div>
+        </div>
+    </div>
+
+    <div id="assets">
+        <div class="elo-title">CHESS SYSTEM</div>
+        <div class="elo-line"></div>
+        <div class="elo-desc">Equinox Chess integrates high-fidelity piece synchronization with neural engine analysis. Initialising 64-square grid, asset buffers, and grandmaster heuristic libraries...</div>
+        <div class="rainbow-container">
+            <div class="bar-wrap">
+                <div id="fill"></div>
+                <div id="perc">0%</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="game">
+        <div class="board" id="board"></div>
+        <button id="gear-btn" onclick="toggleSettings()">⚙️</button>
+    </div>
+
+    <div id="settings-panel">
+        <h2 style="color:var(--n-blue); letter-spacing:3px;">SYSTEM</h2>
+        <div style="margin-top:20px; color:#888; font-size:12px;">ENGINE: STOCKFISH 16.1</div>
+        <div style="margin-top:10px; color:#888; font-size:12px;">STATUS: CONNECTED</div>
+        <button style="margin-top:30px; background:none; border:1px solid var(--n-blue); color:var(--n-blue); padding:10px; cursor:pointer; width:100%;" onclick="toggleHelp()">OPEN HELP MANUAL</button>
+    </div>
 
     <div id="help-menu">
         <div class="help-tabs">
@@ -50,64 +117,111 @@
             <button class="tab-btn" onclick="openTab(event, 'tab-mechanics')">Mechanics</button>
         </div>
 
-        <!-- PIECES TAB -->
         <div id="tab-pieces" class="tab-content active">
-            <div class="asset-card"><b>Pawn:</b> The soul of chess. Moves one square forward, but captures diagonally. On its very first move, it has the option to advance two squares. If it survives the journey to the final rank, it can promote into any other piece, usually a Queen.</div>
-            <div class="asset-card"><b>Knight:</b> A tactical specialist that moves in an 'L' shape (two squares one way, one square at a 90-degree angle). It is the only piece capable of jumping over other units, making it lethal in closed positions.</div>
-            <div class="asset-card"><b>Bishop:</b> An elegant long-range attacker that travels any number of squares diagonally. Because it is confined to the colour it starts on, light-squared and dark-squared bishops must work in tandem to control the board.</div>
-            <div class="asset-card) "><b>Rook:</b> A heavy artillery piece that moves horizontally or vertically. It is most effective when controlling open files or paired with another rook on the seventh rank. It also participates in the special 'Castling' move.</div>
-            <div class="asset-card"><b>Queen:</b> The ultimate weapon. She possesses the combined movement of both the Rook and the Bishop, allowing her to dominate the board in any straight or diagonal direction with unmatched mobility.</div>
-            <div class="asset-card"><b>King:</b> The heart of the game. He moves one square in any direction. While not powerful offensively, his safety is the ultimate priority; if he is trapped and cannot escape an attack, the game is lost.</div>
+            <div class="asset-card"><b>Pawn:</b> Moves one square forward, captures diagonally. Can move two squares on its first turn. Can promote at the far edge.</div>
+            <div class="asset-card"><b>Knight:</b> Moves in an 'L' shape (two squares then one). It is the only piece that can jump over others.</div>
+            <div class="asset-card"><b>Bishop:</b> Slides any distance diagonally. It stays on its starting colour for the entire match.</div>
+            <div class="asset-card"><b>Rook:</b> Moves any distance horizontally or vertically. Key for castling and endgame ladder mates.</div>
+            <div class="asset-card"><b>Queen:</b> The most powerful piece. Combines the moves of the Rook and Bishop with total freedom.</div>
+            <div class="asset-card"><b>King:</b> Moves one square in any direction. The game ends if the King cannot escape a check.</div>
         </div>
 
-        <!-- ICONS TAB -->
         <div id="tab-icons" class="tab-content">
             <span class="group-label">Positive</span>
-            <div class="asset-card"><span class="icon-glyph">⭐</span><b>Star:</b> This represents the 'Best Move'. It is the most precise continuation identified by the engine, maximizing your winning chances or securing a difficult draw.</div>
-            <div class="asset-card"><span class="icon-glyph">✔️</span><b>Tick:</b> A 'Good Move'. This indicates a solid choice that maintains your current advantage and follows sound chess principles, even if it wasn't the engine's top priority.</div>
+            <div class="asset-card"><span class="icon-glyph">⭐</span><b>Star:</b> Best move. The absolute strongest choice identified by the engine analysis.</div>
+            <div class="asset-card"><span class="icon-glyph">✔️</span><b>Tick:</b> Good move. A solid, principle-based move that maintains your position.</div>
             
             <span class="group-label">Negative</span>
-            <div class="asset-card"><span class="icon-glyph">!</span><b>Exclamation:</b> A 'Mistake'. This move noticeably drops the evaluation of your position, usually by missing a tactical opportunity or allowing the opponent to improve their pieces.</div>
-            <div class="asset-card"><span class="icon-glyph">!!</span><b>Double Exclamation:</b> A 'Blunder'. A catastrophic error that loses significant material or allows a forced checkmate. This move typically turns a winning position into a losing one instantly.</div>
-            <div class="asset-card"><span class="icon-glyph">💀</span><b>Death Emoji:</b> Fatal Error. Reserved for moves that lead to immediate checkmate or the total loss of the Queen without compensation. The game is effectively over after this move.</div>
+            <div class="asset-card"><span class="icon-glyph">!</span><b>Exclamation:</b> Inaccuracy. A sub-optimal move that gives up a slight advantage.</div>
+            <div class="asset-card"><span class="icon-glyph">!!</span><b>Mistake:</b> A serious error that drops material or allows tactical counterplay.</div>
+            <div class="asset-card"><span class="icon-glyph">💀</span><b>Death:</b> Blunder. A fatal error that often results in the immediate loss of the game.</div>
             
             <span class="group-label">Exotic</span>
-            <div class="asset-card"><span class="icon-glyph">?</span><b>Question Mark:</b> An 'Inaccuracy'. A move that isn't a total disaster but is sub-optimal. It often ignores a stronger positional plan or allows the opponent slight counterplay.</div>
-            <div class="asset-card"><span class="icon-glyph">??</span><b>Great/Brilliant:</b> Despite the punctuation, this often highlights a 'Brilliant' sacrifice or a move that looks like a blunder but is actually a winning masterstroke.</div>
-            <div class="asset-card"><span class="icon-glyph">📖</span><b>Book:</b> A 'Theoretical Move'. This move is part of established opening theory and has been studied and played by grandmasters for decades.</div>
+            <div class="asset-card"><span class="icon-glyph">?</span><b>Mystery:</b> An unexpected move that requires deeper engine calculation to evaluate.</div>
+            <div class="asset-card"><span class="icon-glyph">??</span><b>Blunder/Great:</b> Often indicates a brilliant sacrifice that appears as a blunder initially.</div>
+            <div class="asset-card"><span class="icon-glyph">📖</span><b>Book:</b> A theoretical opening move found in master-level databases.</div>
         </div>
 
-        <!-- MECHANICS TAB -->
         <div id="tab-mechanics" class="tab-content">
-            <span class="group-label">Fundamental Rules</span>
-            <div class="asset-card"><b>Capturing:</b> To capture, move your piece onto the square occupied by an opponent's piece. The captured piece is removed from the board. Unlike some games, capturing is not mandatory in chess.</div>
-            <div class="asset-card"><b>Castling:</b> A defensive move where the King moves two squares toward a Rook, and the Rook jumps over the King. This can only be done if neither piece has moved and no squares in between are under attack.</div>
+            <span class="group-label">Game Rules</span>
+            <div class="asset-card"><b>Capturing:</b> Moving to a square occupied by an opponent's piece removes it. You cannot capture your own pieces.</div>
             
             <span class="group-label">Endings</span>
-            <div class="asset-card"><b>Checkmate:</b> The ultimate goal. This occurs when the King is in check and there is no legal way to move the King, block the attack, or capture the attacking piece. The game ends in a win for the attacker.</div>
-            <div class="asset-card"><b>Stalemate:</b> A draw that happens when the player whose turn it is has no legal moves, but their King is NOT in check. This is often used as a defensive 'swindle' to save a lost game.</div>
-            <div class="asset-card"><b>Resignation:</b> A formal concession where a player admits defeat before checkmate occurs. This is considered good sportsmanship when a position is mathematically and strategically hopeless.</div>
-            <div class="asset-card"><b>Timeout:</b> In timed games, if a player's clock reaches zero, they lose immediately, provided the opponent has enough material to technically deliver a checkmate.</div>
+            <div class="asset-card"><b>Checkmate:</b> The King is in check and has no legal ways to escape. The game ends in a victory.</div>
+            <div class="asset-card"><b>Stalemate:</b> A draw occurring when a player has no legal moves but their King is NOT in check.</div>
+            <div class="asset-card"><b>Resignation:</b> A player manualy concedes the match if the position is totally hopeless.</div>
+            <div class="asset-card"><b>Timeout:</b> Losing the game automatically because your allocated time on the clock hit zero.</div>
         </div>
     </div>
 
     <script>
-        function toggleHelp() {
-            const menu = document.getElementById('help-menu');
+        // --- BOOT SEQUENCE ---
+        setTimeout(() => {
+            document.getElementById('boot').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('boot').style.display = 'none';
+                document.getElementById('assets').style.display = 'flex';
+                document.getElementById('assets').style.opacity = '1';
+                loadBar();
+            }, 1000);
+        }, 4000);
+
+        function loadBar() {
+            let p = 0;
+            let fill = document.getElementById('fill');
+            let perc = document.getElementById('perc');
+            let iv = setInterval(() => {
+                p += Math.random() * 7;
+                if(p >= 100) { p = 100; clearInterval(iv); startGame(); }
+                fill.style.width = p + "%";
+                perc.innerText = Math.floor(p) + "%";
+            }, 120);
+        }
+
+        function startGame() {
+            document.getElementById('assets').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('assets').style.display = 'none';
+                document.getElementById('game').style.display = 'flex';
+                document.getElementById('game').style.opacity = '1';
+                createBoard();
+            }, 1500);
+        }
+
+        // --- GAME LOGIC ---
+        function createBoard() {
+            const b = document.getElementById('board');
+            const pieces = ['♜','♞','♝','♛','♚','♝','♞','♜','♟','♟','♟','♟','♟','♟','♟','♟'];
+            for(let i=0; i<64; i++) {
+                let s = document.createElement('div');
+                s.className = `sq ${(Math.floor(i/8) + i%8) % 2 == 0 ? 'w' : 'b'}`;
+                let p = document.createElement('div');
+                p.className = 'piece';
+                if(i < 16) p.innerText = pieces[i];
+                if(i > 47) p.innerText = pieces[i-48];
+                s.appendChild(p);
+                b.appendChild(s);
+                setTimeout(() => p.classList.add('unlocked'), 500 + (i*12));
+            }
+        }
+
+        // --- INTERFACE LOGIC ---
+        function toggleSettings() {
+            const panel = document.getElementById('settings-panel');
             const btn = document.getElementById('gear-btn');
-            menu.classList.toggle('active');
+            panel.classList.toggle('open');
             btn.classList.toggle('active');
         }
 
+        function toggleHelp() {
+            document.getElementById('help-menu').classList.toggle('active');
+        }
+
         function openTab(evt, tabName) {
-            const contents = document.getElementsByClassName("tab-content");
-            for (let i = 0; i < contents.length; i++) {
-                contents[i].classList.remove("active");
-            }
-            const buttons = document.getElementsByClassName("tab-btn");
-            for (let i = 0; i < buttons.length; i++) {
-                buttons[i].classList.remove("active");
-            }
+            let contents = document.getElementsByClassName("tab-content");
+            for (let i = 0; i < contents.length; i++) contents[i].classList.remove("active");
+            let buttons = document.getElementsByClassName("tab-btn");
+            for (let i = 0; i < buttons.length; i++) buttons[i].classList.remove("active");
             document.getElementById(tabName).classList.add("active");
             evt.currentTarget.classList.add("active");
         }

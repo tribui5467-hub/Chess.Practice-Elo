@@ -1,4 +1,4 @@
-  <<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en-AU">
 <head>
     <meta charset="UTF-8">
@@ -25,7 +25,7 @@
         @keyframes aura-glow { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
         @keyframes aura-pulse { 0% { border-color: var(--n-blue); box-shadow: 0 0 20px var(--n-blue); } 100% { border-color: var(--n-pink); box-shadow: 0 0 45px var(--n-pink); transform: scale(1.15); } }
 
-        /* --- 2. LOADING SCREEN (ELO MATCHED) --- */
+        /* --- 2. LOADING SCREEN --- */
         #assets { position: fixed; inset: 0; background: #000; z-index: 20000; display: none; opacity: 0; transition: 1.5s; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
         .elo-title { font-size: 42px; color: var(--n-blue); transform: translateY(30px); opacity: 0; animation: up 1s var(--smooth) forwards 0.5s; letter-spacing: 4px; }
         .elo-line { width: 0; height: 2px; background: var(--n-blue); margin: 25px 0; box-shadow: 0 0 15px var(--n-blue); animation: pop-line-long 1.2s var(--smooth) forwards 1s; }
@@ -43,12 +43,13 @@
         .board { width: 560px; height: 560px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid #111; background: #000; z-index: 10; }
         .sq { width: 70px; height: 70px; display: flex; justify-content: center; align-items: center; cursor: pointer; }
         .w { background: rgba(45, 45, 55, 0.9); } .b { background: rgba(20, 20, 25, 0.9); }
-        .piece { font-size: 48px; transition: 0.8s var(--smooth); filter: brightness(0.2); pointer-events: none; }
-        .piece.unlocked { filter: brightness(1); pointer-events: auto; }
         
-        #gear-btn { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; background: none; border: none; color: var(--n-blue); font-size: 35px; cursor: pointer; z-index: 100; transition: 0.4s var(--smooth); display: flex; align-items: center; justify-content: center; }
-        #gear-btn.active { color: var(--n-green); animation: gear-spin 3s linear infinite; }
-        @keyframes gear-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .piece { font-size: 48px; transition: 0.3s var(--smooth); user-select: none; }
+        .piece.white { color: #ffffff; text-shadow: 0 0 8px #fff; }
+        .piece.black { color: #555; text-shadow: 0 0 8px #000; }
+        .selected { background: rgba(0, 242, 255, 0.2) !important; }
+        
+        #gear-btn { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; background: none; border: none; color: var(--n-blue); font-size: 35px; cursor: pointer; z-index: 100; display: flex; align-items: center; justify-content: center; }
 
         /* --- 4. DETAILED HELP MENU --- */
         #help-menu { 
@@ -58,42 +59,35 @@
             box-shadow: 0 0 50px rgba(0,242,255,0.3); overflow: hidden;
         }
         #help-menu.active { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
+
+        /* Settings Header with Play/Dots */
+        .menu-top-bar { text-align: center; margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid #222; }
+        #play-btn { background: var(--n-green); color: white; border: none; padding: 12px 24px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; border-radius: 4px; }
+        #play-btn.ongoing { background: var(--n-red); }
+        .dots-v { margin-left: 15px; cursor: pointer; font-size: 22px; line-height: 1; }
         
+        #dots-menu { display: none; position: absolute; background: #111; border: 1px solid #333; z-index: 32000; width: 160px; left: 50%; transform: translateX(-50%); margin-top: 5px; }
+        #dots-menu div { padding: 12px; cursor: pointer; font-size: 13px; text-align: left; border-bottom: 1px solid #222; }
+        #dots-menu div:hover { background: #222; color: var(--n-blue); }
+
+        /* Original Help Styling */
         .help-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px; }
         .tab-btn { background: none; border: 1px solid #333; color: #888; padding: 8px 16px; cursor: pointer; border-radius: 4px; transition: 0.3s; font-size: 12px; text-transform: uppercase; }
         .tab-btn.active { border-color: var(--n-blue); color: var(--n-blue); background: rgba(0,242,255,0.1); }
         
-        .tab-content { display: none; max-height: 480px; overflow-y: auto; padding-right: 10px; }
+        .tab-content { display: none; max-height: 420px; overflow-y: auto; padding-right: 10px; }
         .tab-content.active { display: block; }
         .tab-content::-webkit-scrollbar { width: 4px; }
         .tab-content::-webkit-scrollbar-thumb { background: var(--n-blue); border-radius: 10px; }
 
         .group-label { color: var(--n-blue); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; margin: 30px 0 15px 0; border-bottom: 1px solid #222; display: block; padding-bottom: 5px; font-weight: bold; }
-        
-        /* Expandable Detail Cards */
-        .asset-card { 
-            border-left: 3px solid var(--n-blue); background: rgba(255,255,255,0.03); 
-            padding: 15px; margin-bottom: 12px; font-size: 13px; line-height: 1.7; 
-            border-radius: 0 8px 8px 0; transition: 0.4s var(--smooth); 
-            cursor: default; overflow: hidden; height: auto;
-        }
-        .asset-card:hover { 
-            background: rgba(255,255,255,0.08); 
-            padding-left: 25px; 
-            transform: scale(1.01);
-            border-left-width: 8px;
-        }
-        .asset-card b { color: var(--n-yellow); margin-right: 8px; display: block; margin-bottom: 5px; font-size: 14px; }
+        .asset-card { border-left: 3px solid var(--n-blue); background: rgba(255,255,255,0.03); padding: 15px; margin-bottom: 12px; font-size: 13px; line-height: 1.7; border-radius: 0 8px 8px 0; transition: 0.4s var(--smooth); cursor: default; }
+        .asset-card:hover { background: rgba(255,255,255,0.08); padding-left: 25px; border-left-width: 8px; }
+        .asset-card b { color: var(--n-yellow); display: block; margin-bottom: 5px; font-size: 14px; }
         .icon-glyph { font-size: 24px; width: 45px; display: inline-block; text-align: center; vertical-align: middle; margin-right: 10px; }
 
-        /* Close Button Styling */
-        .close-menu-btn { 
-            width: 100%; padding: 15px; margin-top: 20px; background: rgba(250, 65, 45, 0.1); 
-            border: 1px solid var(--n-red); color: var(--n-red); cursor: pointer; 
-            border-radius: 8px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px;
-            transition: 0.3s;
-        }
-        .close-menu-btn:hover { background: var(--n-red); color: white; box-shadow: 0 0 20px var(--n-red); }
+        .close-menu-btn { width: 100%; padding: 15px; margin-top: 20px; background: rgba(250, 65, 45, 0.1); border: 1px solid var(--n-red); color: var(--n-red); cursor: pointer; border-radius: 8px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; transition: 0.3s; }
+        .close-menu-btn:hover { background: var(--n-red); color: white; }
     </style>
 </head>
 <body>
@@ -101,7 +95,7 @@
     <canvas id="bg-canvas"></canvas>
 
     <div id="boot">
-        <div class="equinox-text">EQUINOX GAMES | 🎮</div>
+        <div class="equinox-text">EQUINOX</div>
         <div class="divider"></div>
         <div class="controller-box">
             <div class="aura-circle"></div>
@@ -110,27 +104,43 @@
     </div>
 
     <div id="assets">
-        <div class="elo-title">CHESS PRACTICE | ELO</div>
+        <div class="elo-title">ELO MATCHED</div>
         <div class="elo-line"></div>
-        <div class="elo-desc">Regular chess practice boosts your Elo rating by improving strategic understanding, anticipatory skills, and tactical abilities. It promotes critical thinking and mental agility, while game analysis helps identify patterns. Practicing with others builds community and motivation. Consistency is key to mastering chess at any skill level.</div>
+        <div class="elo-desc">Synchronizing Technical Chess Assets...</div>
         <div class="rainbow-container">
-            <div class="bar-wrap">
-                <div id="fill"></div>
-                <div id="perc">0%</div>
-            </div>
+            <div class="bar-wrap"><div id="fill"></div><div id="perc">0%</div></div>
         </div>
     </div>
 
     <div id="game">
         <div class="board" id="board"></div>
-        <button id="gear-btn" onclick="toggleHelp()">⚙️</button>
     </div>
 
+    <button id="gear-btn" onclick="toggleHelp()">⚙️</button>
+
+    <!-- DETAILED HELP MENU -->
     <div id="help-menu">
+        <div class="menu-top-bar">
+            <div style="position: relative; display: inline-block;">
+                <button id="play-btn" onclick="handlePlay()">
+                    <span id="play-text">Play</span>
+                    <span class="dots-v" onclick="toggleDots(event)">⋮</span>
+                </button>
+                <div id="dots-menu">
+                    <div onclick="location.reload()">Reboot</div>
+                    <div onclick="resetBoard()">Reset</div>
+                    <div onclick="toggleHelp()">Archived Help</div>
+                </div>
+            </div>
+            <br>
+            <input type="range" style="width:80%; margin: 20px 0;" title="Volume">
+            <iframe style="border-radius:12px" src="https://open.spotify.com" width="100%" height="80" frameBorder="0" allow="encrypted-media"></iframe>
+        </div>
+
         <div class="help-tabs">
-            <button class="tab-btn active" onclick="openTab(event, 'tab-pieces')">Pieces</button>
-            <button class="tab-btn" onclick="openTab(event, 'tab-icons')">Icons</button>
-            <button class="tab-btn" onclick="openTab(event, 'tab-mechanics')">Mechanics</button>
+            <button class="tab-btn active" onclick="switchTab(0)">Pieces</button>
+            <button class="tab-btn" onclick="switchTab(1)">Icons</button>
+            <button class="tab-btn" onclick="switchTab(2)">Mechanics</button>
         </div>
 
         <!-- PIECES TAB -->
@@ -153,11 +163,6 @@
             <div class="asset-card"><span class="icon-glyph">!</span><b>Inaccuracy (Exclamation)</b> Marks a sub-optimal move that noticeably weakens your standing. It suggests a missed opportunity to apply pressure or a minor positional concession that allows the opponent to improve their pieces more easily than the optimal continuation would have permitted.</div>
             <div class="asset-card"><span class="icon-glyph">!!</span><b>Blunder (Death Emoji)</b> A catastrophic error that tangibly reduces your advantage or directly allows the opponent to achieve a winning position. This usually results from an overlooked tactical sequence or a serious misunderstanding of the immediate requirements of the board position.</div>
             <div class="asset-card"><span class="icon-glyph">💀</span><b>Fatal Blunder (Death)</b> Reserved for moves that lead to an immediate loss of the game or the loss of a major piece without compensation. This classification represents a total collapse of strategy and typically shifts the game evaluation into a forced win for the opponent.</div>
-            
-            <span class="group-label">Exotic Classifications</span>
-            <div class="asset-card"><span class="icon-glyph">?</span><b>Mystery Move (Question)</b> Used to denote moves that complicate the position in ways the engine cannot immediately resolve. It signifies a high-variance choice that creates a chaotic environment where both players have equal chances to succeed or fail based on subsequent precision.</div>
-            <div class="asset-card"><span class="icon-glyph">??</span><b>The Brilliant Move (Double Question)</b> Although visually appearing similar to a blunder, this highlights a high-level sacrifice that appears as an error but leads to a forced winning advantage. It signifies a move that is difficult for humans to calculate but mathematically sound under deep analysis.</div>
-            <div class="asset-card"><span class="icon-glyph">📖</span><b>The Book Move (Manual)</b> Indicates that the move belongs to the established library of opening theory. This confirms the player is following paths analyzed by grandmasters for centuries to reach a balanced and playable middle-game position with known strategic goals.</div>
         </div>
 
         <!-- MECHANICS TAB -->
@@ -169,110 +174,115 @@
             <span class="group-label">Ending Conditions</span>
             <div class="asset-card"><b>Checkmate (Absolute Victory)</b> The definitive conclusion of a chess match. This occurs when a King is under direct threat of capture and possesses no legal moves to relocate, block the line of attack, or eliminate the attacking piece entirely. The game ends immediately in a win for the attacker.</div>
             <div class="asset-card"><b>Stalemate (Technical Draw)</b> A unique situation where the player whose turn it is has no legal moves remaining, yet their King is not currently in check. Because the player cannot move but is not defeated, the game ends in a draw, often occurring as a defensive 'swindle'.</div>
-            <div class="asset-card"><b>Resignation (Concession)</b> A formal acknowledgement of defeat. A player may choose to resign at any moment if they determine the position is strategically hopeless. This is considered professional courtesy when a loss is mathematically certain, immediately awarding the full victory to the opponent.</div>
-            <div class="asset-card"><b>Timeout (Temporal Loss)</b> In timed competitive play, if a player's clock expires before they complete their required moves, they lose the game immediately. This emphasizes the importance of time management as a critical strategic resource, where speed is as vital as tactical precision.</div>
         </div>
 
-        <button class="close-menu-btn" onclick="toggleHelp()">Close Help Manual</button>
+        <button class="close-menu-btn" onclick="toggleHelp()">CLOSE INTERFACE</button>
     </div>
 
     <script>
-        // --- PARTICLE BACKGROUND ---
-        const canvas = document.getElementById('bg-canvas');
-        const ctx = canvas.getContext('2d');
-        let particles = [];
-        const chessChars = ['♜','♞','♝','♛','♚','♟','♖','♘','♗','♕','♔','♙'];
-        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-        window.onresize = resize; resize();
-        class Particle {
-            constructor() { this.reset(); }
-            reset() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.size = Math.random() * 2 + 1;
-                this.speedX = (Math.random() - 0.5) * 0.4;
-                this.speedY = (Math.random() - 0.5) * 0.4;
-                this.type = Math.random() > 0.8 ? (Math.random() > 0.5 ? 'piece' : 'fragment') : 'dot';
-                this.char = chessChars[Math.floor(Math.random() * chessChars.length)];
-                this.rotation = Math.random() * Math.PI * 2;
-                this.rotSpeed = (Math.random() - 0.5) * 0.02;
-                this.opacity = Math.random() * 0.4 + 0.1;
-            }
-            update() {
-                this.x += this.speedX; this.y += this.speedY; this.rotation += this.rotSpeed;
-                if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) this.reset();
-            }
-            draw() {
-                ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.rotation);
-                ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
-                if (this.type === 'dot') { ctx.beginPath(); ctx.arc(0, 0, this.size, 0, Math.PI * 2); ctx.fill(); }
-                else if (this.type === 'piece') { ctx.font = `${Math.random() * 15 + 15}px serif`; ctx.fillText(this.char, 0, 0); }
-                else { ctx.strokeStyle = `rgba(0, 242, 255, ${this.opacity})`; ctx.strokeRect(-10, -10, 20, 20); }
-                ctx.restore();
-            }
-        }
-        for (let i = 0; i < 150; i++) particles.push(new Particle());
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            particles.forEach(p => { p.update(); p.draw(); });
-            requestAnimationFrame(animate);
-        }
-        animate();
-
-        // --- SEQUENCE ---
+        // --- Boot Logic ---
         setTimeout(() => {
             document.getElementById('boot').style.opacity = '0';
             setTimeout(() => {
                 document.getElementById('boot').style.display = 'none';
                 document.getElementById('assets').style.display = 'flex';
                 document.getElementById('assets').style.opacity = '1';
-                loadBar();
+                loadAssets();
             }, 1000);
-        }, 4000);
+        }, 3000);
 
-        function loadBar() {
-            let p = 0; let fill = document.getElementById('fill'); let perc = document.getElementById('perc');
+        function loadAssets() {
+            let p = 0;
             let iv = setInterval(() => {
-                p += Math.random() * 5;
-                if(p >= 100) { p = 100; clearInterval(iv); startGame(); }
-                fill.style.width = p + "%"; perc.innerText = Math.floor(p) + "%";
-            }, 120);
+                p += Math.random() * 15;
+                if(p >= 100) { p = 100; clearInterval(iv); setTimeout(showGame, 500); }
+                document.getElementById('fill').style.width = p + '%';
+                document.getElementById('perc').innerText = Math.floor(p) + '%';
+            }, 200);
         }
 
-        function startGame() {
+        function showGame() {
             document.getElementById('assets').style.opacity = '0';
             setTimeout(() => {
                 document.getElementById('assets').style.display = 'none';
                 document.getElementById('game').style.display = 'flex';
                 document.getElementById('game').style.opacity = '1';
-                createBoard();
-            }, 1500);
+                initBoard();
+            }, 1000);
         }
 
-        function createBoard() {
-            const b = document.getElementById('board');
-            const pArr = ['♜','♞','♝','♛','♚','♝','♞','♜','♟','♟','♟','♟','♟','♟','♟','♟'];
-            for(let i=0; i<64; i++) {
-                let s = document.createElement('div');
-                s.className = `sq ${(Math.floor(i/8) + i%8) % 2 == 0 ? 'w' : 'b'}`;
-                let p = document.createElement('div'); p.className = 'piece';
-                if(i < 16) p.innerText = pArr[i];
-                if(i > 47) p.innerText = pArr[i-48];
-                s.appendChild(p); b.appendChild(s);
-                setTimeout(() => p.classList.add('unlocked'), 500 + (i*10));
+        // --- Chess Logic ---
+        const board = document.getElementById('board');
+        let selected = null;
+        const initial = [
+            '♜','♞','♝','♛','♚','♝','♞','♜','♟','♟','♟','♟','♟','♟','♟','♟',
+            '','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','',
+            '♙','♙','♙','♙','♙','♙','♙','♙','♖','♘','♗','♕','♔','♗','♘','♖'
+        ];
+
+        function initBoard() {
+            board.innerHTML = '';
+            initial.forEach((p, i) => {
+                const sq = document.createElement('div');
+                sq.className = `sq ${(Math.floor(i/8) + i%8) % 2 == 0 ? 'w' : 'b'}`;
+                sq.onclick = () => movePiece(sq);
+                if(p) {
+                    const el = document.createElement('span');
+                    el.className = `piece ${i < 16 ? 'black' : 'white'}`;
+                    el.innerText = p;
+                    sq.appendChild(el);
+                }
+                board.appendChild(sq);
+            });
+        }
+
+        function movePiece(sq) {
+            if(selected) {
+                if(sq !== selected) {
+                    sq.innerHTML = selected.innerHTML;
+                    selected.innerHTML = '';
+                }
+                selected.classList.remove('selected');
+                selected = null;
+            } else if(sq.innerHTML) {
+                selected = sq;
+                sq.classList.add('selected');
             }
         }
 
-        // --- UI LOGIC ---
+        // --- Menu UI Logic ---
         function toggleHelp() { document.getElementById('help-menu').classList.toggle('active'); }
-        function openTab(evt, tabName) {
-            let contents = document.getElementsByClassName("tab-content");
-            for (let i = 0; i < contents.length; i++) contents[i].classList.remove("active");
-            let buttons = document.getElementsByClassName("tab-btn");
-            for (let i = 0; i < buttons.length; i++) buttons[i].classList.remove("active");
-            document.getElementById(tabName).classList.add("active");
-            evt.currentTarget.classList.add("active");
+        
+        function switchTab(idx) {
+            const tabs = document.querySelectorAll('.tab-content');
+            const btns = document.querySelectorAll('.tab-btn');
+            tabs.forEach(t => t.classList.remove('active'));
+            btns.forEach(b => b.classList.remove('active'));
+            tabs[idx].classList.add('active');
+            btns[idx].classList.add('active');
         }
+
+        function handlePlay() {
+            const btn = document.getElementById('play-btn');
+            btn.classList.add('ongoing');
+            document.getElementById('play-text').innerText = "Game Ongoing";
+        }
+
+        function toggleDots(e) {
+            e.stopPropagation();
+            const dm = document.getElementById('dots-menu');
+            dm.style.display = dm.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function resetBoard() {
+            initBoard();
+            const btn = document.getElementById('play-btn');
+            btn.classList.remove('ongoing');
+            document.getElementById('play-text').innerText = "Play";
+            document.getElementById('dots-menu').style.display = 'none';
+        }
+
+        window.onclick = () => document.getElementById('dots-menu').style.display = 'none';
     </script>
 </body>
 </html>

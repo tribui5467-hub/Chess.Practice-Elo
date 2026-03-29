@@ -2,7 +2,7 @@
 <html lang="en-AU">
 <head>
     <meta charset="UTF-8">
-    <title>Equinox Games | Chess Practice</title>
+    <title>Equinox Games | Chess</title>
     <style>
         :root { 
             --n-blue: #00f2ff; --n-green: #81b64c; --n-red: #fa412d; 
@@ -12,121 +12,82 @@
         body, html { margin: 0; padding: 0; background: #000; color: white; font-family: 'Segoe UI', Tahoma, sans-serif; overflow: hidden; height: 100vh; width: 100vw; }
         canvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0.8; }
 
-        /* --- 1. BOOT SCREEN --- */
+        /* --- UI & LOADING --- */
         #boot { position: fixed; inset: 0; background: black; z-index: 30000; display: flex; justify-content: center; align-items: center; transition: 1s; }
         .equinox-text { font-size: 32px; letter-spacing: 12px; font-weight: 200; color: #fff; clip-path: inset(0 100% 0 0); animation: reveal 2.5s forwards; }
-        .divider { width: 2px; height: 40px; background: white; margin: 0 25px; transform: scaleY(0); animation: pop-divider 0.6s var(--smooth) forwards 2s; }
-        .controller-box { position: relative; width: 150px; height: 150px; display: flex; align-items: center; justify-content: center; overflow: visible; }
-        .aura-circle { position: absolute; width: 85px; height: 85px; border-radius: 50%; border: 3px solid var(--n-blue); opacity: 0; box-shadow: 0 0 35px var(--n-blue), inset 0 0 15px var(--n-blue); animation: aura-glow 1s forwards 3s, aura-pulse 3s infinite alternate 4s; z-index: 1; }
-        .controller-icon { font-size: 42px; transform: translateX(-180%); animation: slide-in 0.8s var(--smooth) forwards 2.5s; z-index: 2; }
-        @keyframes reveal { to { clip-path: inset(0 0 0 0); } }
-        @keyframes pop-divider { to { transform: scaleY(1); } }
-        @keyframes slide-in { to { transform: translateX(0); } }
-        @keyframes aura-glow { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
-        @keyframes aura-pulse { 0% { border-color: var(--n-blue); box-shadow: 0 0 20px var(--n-blue); } 100% { border-color: var(--n-pink); box-shadow: 0 0 45px var(--n-pink); transform: scale(1.15); } }
-
-        /* --- 2. LOADING SCREEN --- */
         #assets { position: fixed; inset: 0; background: #000; z-index: 20000; display: none; opacity: 0; transition: 1.5s; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        .elo-title { font-size: 42px; color: var(--n-blue); transform: translateY(30px); opacity: 0; animation: up 1s var(--smooth) forwards 0.5s; letter-spacing: 4px; }
-        .elo-line { width: 0; height: 2px; background: var(--n-blue); margin: 25px 0; box-shadow: 0 0 15px var(--n-blue); animation: pop-line-long 1.2s var(--smooth) forwards 1s; }
-        .elo-desc { font-size: 15px; color: #aaa; max-width: 700px; opacity: 0; clip-path: inset(0 0 100% 0); animation: wipe 1.2s var(--smooth) forwards 1.8s; line-height: 1.8; padding: 0 20px; }
-        @keyframes up { to { opacity: 1; transform: translateY(0); } }
-        @keyframes pop-line-long { to { width: 600px; } }
-        @keyframes wipe { to { opacity: 1; clip-path: inset(0 0 0 0); } }
         .rainbow-container { width: 420px; height: 35px; border-radius: 17px; padding: 2px; background: linear-gradient(to right, #ff0000, #ff8c00, #ffff00, #00ff00); display: flex; align-items: center; justify-content: center; margin-top: 40px; }
         .bar-wrap { width: 100%; height: 100%; background: #000; border-radius: 15px; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; }
         #fill { position: absolute; left: 0; height: 100%; width: 0%; background: #00ffff; box-shadow: 2px 0 10px #00ffff; transition: width 0.4s var(--smooth); }
         #perc { position: relative; z-index: 2; font-weight: bold; font-size: 14px; color: white; mix-blend-mode: difference; }
 
-        /* --- 3. GAME HUD --- */
-        #game { display: none; width: 100vw; height: 100vh; justify-content: center; align-items: center; opacity: 0; transition: 1.5s; z-index: 5; }
-        .board { width: 560px; height: 560px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid #111; background: #000; z-index: 10; }
-        .sq { width: 70px; height: 70px; display: flex; justify-content: center; align-items: center; cursor: pointer; }
-        .w { background: rgba(45, 45, 55, 0.9); } .b { background: rgba(20, 20, 25, 0.9); }
+        /* --- BOARD & COORDINATES --- */
+        #game { display: none; width: 100vw; height: 100vh; justify-content: center; align-items: center; opacity: 0; transition: 1.5s; z-index: 5; flex-direction: column; }
+        .board-container { position: relative; padding: 35px; background: #0a0a0a; border-radius: 8px; box-shadow: 0 0 50px rgba(0,0,0,0.9); border: 1px solid #222; }
+        .board { width: 560px; height: 560px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 5px solid #000; background: #000; position: relative; }
         
-        #gear-btn { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; background: none; border: none; color: var(--n-blue); font-size: 35px; cursor: pointer; z-index: 100; transition: 0.4s var(--smooth); display: flex; align-items: center; justify-content: center; }
-        #gear-btn.active { color: var(--n-green); transform: rotate(180deg); }
+        .coord-h { position: absolute; bottom: 8px; left: 35px; right: 35px; display: flex; justify-content: space-around; font-size: 14px; color: #666; font-weight: bold; }
+        .coord-v { position: absolute; left: 10px; top: 35px; bottom: 35px; display: flex; flex-direction: column; justify-content: space-around; font-size: 14px; color: #666; font-weight: bold; }
 
-        /* --- 4. HELP MENU & ICONS --- */
+        .sq { width: 70px; height: 70px; display: flex; justify-content: center; align-items: center; cursor: pointer; position: relative; transition: 0.2s; }
+        .w { background: #ebecd0; } .b { background: #779556; }
+
+        /* --- EVALUATION ICONS (VIDEO MATCHED) --- */
+        .eval-icon-placed {
+            position: absolute; top: -12px; right: -12px; width: 32px; height: 32px; 
+            border-radius: 50%; z-index: 100; display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 16px; color: white; border: 2px solid #000;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.6); transform: scale(0); animation: pop-in 0.3s var(--smooth) forwards;
+        }
+        @keyframes pop-in { to { transform: scale(1); } }
+        .eval-brilliant { background: linear-gradient(135deg, #1fb39f, #158a7a); box-shadow: 0 0 15px #1fb39f; }
+        .eval-great { background: linear-gradient(135deg, #5c8bb0, #43647d); }
+        .eval-best { background: linear-gradient(135deg, #81b64c, #6a953f); }
+        .eval-miss { background: linear-gradient(135deg, #ff45f0, #c432b8); }
+        .eval-blunder { background: linear-gradient(135deg, #fa412d, #b32d1e); animation: death-pulse 2s infinite; }
+        @keyframes death-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); filter: brightness(1.3); } }
+
+        /* --- HELP MENU (IMAGE MATCHED) --- */
         #help-menu { 
             position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(0.9); 
-            width: 750px; background: #050608; border: 2px solid var(--n-blue); border-radius: 15px; 
+            width: 780px; background: #050608; border: 2px solid var(--n-blue); border-radius: 15px; 
             z-index: 31000; padding: 30px; opacity: 0; pointer-events: none; transition: 0.5s var(--smooth);
-            box-shadow: 0 0 50px rgba(0,242,255,0.3); overflow: hidden;
+            box-shadow: 0 0 60px rgba(0,242,255,0.4);
         }
         #help-menu.active { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
-        
-        .help-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px; }
-        .tab-btn { background: none; border: 1px solid #333; color: #888; padding: 8px 16px; cursor: pointer; border-radius: 4px; transition: 0.3s; font-size: 12px; text-transform: uppercase; }
-        .tab-btn.active { border-color: var(--n-blue); color: var(--n-blue); background: rgba(0,242,255,0.1); }
-        
-        .tab-content { display: none; max-height: 480px; overflow-y: auto; padding-right: 10px; }
+        .help-tabs { display: flex; gap: 8px; margin-bottom: 25px; border-bottom: 1px solid #222; }
+        .tab-btn { background: none; border: none; color: #555; padding: 12px 20px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; }
+        .tab-btn.active { color: var(--n-blue); border-bottom: 2px solid var(--n-blue); }
+        .tab-content { display: none; max-height: 500px; overflow-y: auto; padding-right: 15px; }
         .tab-content.active { display: block; }
-
-        .group-label { color: var(--n-blue); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; margin: 30px 0 15px 0; border-bottom: 1px solid #222; display: block; padding-bottom: 5px; }
-
-        /* MOVE EVALUATION ICONS (CHESS.COM STYLE) */
-        .eval-icon {
-            width: 32px; height: 32px; border-radius: 50%; 
-            display: inline-flex; align-items: center; justify-content: center;
-            font-weight: 800; font-size: 16px; margin-right: 15px; flex-shrink: 0;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5); border: 1.5px solid rgba(255,255,255,0.1);
-        }
-        .icon-brilliant { background: linear-gradient(135deg, #1fb39f, #158a7a); color: #fff; box-shadow: 0 0 15px rgba(31, 179, 159, 0.6); }
-        .icon-great { background: linear-gradient(135deg, #5c8bb0, #43647d); color: #fff; box-shadow: 0 0 12px rgba(92, 139, 176, 0.5); }
-        .icon-best { background: linear-gradient(135deg, #81b64c, #6a953f); color: #fff; }
-        .icon-miss { background: linear-gradient(135deg, #ff45f0, #c432b8); color: #fff; }
-        .icon-blunder { background: linear-gradient(135deg, #fa412d, #b32d1e); color: #fff; animation: death-pulse 2s infinite ease-in-out; }
-        .icon-book { background: linear-gradient(135deg, #d5a47d, #a67c5b); color: #fff; }
-
-        @keyframes death-pulse {
-            0%, 100% { transform: scale(1); filter: brightness(1); }
-            50% { transform: scale(1.15); filter: brightness(1.4) drop-shadow(0 0 12px #ff0000); }
-        }
-
-        .asset-card { 
-            border-left: 3px solid var(--n-blue); background: rgba(255,255,255,0.03); 
-            padding: 15px; margin-bottom: 12px; font-size: 13px; line-height: 1.7; 
-            border-radius: 0 8px 8px 0; display: flex; align-items: center;
-        }
-        .asset-card b { color: var(--n-yellow); display: block; margin-bottom: 3px; }
-        .close-menu-btn { width: 100%; padding: 15px; margin-top: 20px; background: rgba(250, 65, 45, 0.1); border: 1px solid var(--n-red); color: var(--n-red); cursor: pointer; border-radius: 8px; font-weight: bold; text-transform: uppercase; }
+        .group-label { color: var(--n-blue); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; margin: 30px 0 12px 0; border-bottom: 1px solid #1a1a1a; display: block; padding-bottom: 5px; }
+        .asset-card { background: rgba(20,20,20,0.5); border: 1px solid #1a1a1a; padding: 18px; margin-bottom: 12px; font-size: 13.5px; line-height: 1.8; border-radius: 6px; }
+        .asset-card b { color: var(--n-yellow); margin-right: 8px; }
+        #gear-btn { position: fixed; bottom: 25px; right: 25px; background: none; border: none; color: var(--n-blue); font-size: 38px; cursor: pointer; z-index: 100; transition: 0.4s; }
+        
+        @keyframes reveal { to { clip-path: inset(0 0 0 0); } }
     </style>
 </head>
 <body>
-
     <canvas id="bg-canvas"></canvas>
 
-    <!-- 1. BOOT SCREEN -->
     <div id="boot">
         <div class="equinox-text">EQUINOX</div>
-        <div class="divider"></div>
-        <div class="controller-box">
-            <div class="aura-circle"></div>
-            <div class="controller-icon">🎮</div>
-        </div>
     </div>
 
-    <!-- 2. LOADING SCREEN -->
     <div id="assets">
-        <div class="elo-title">ELO RATING SYSTEM</div>
-        <div class="elo-line"></div>
-        <p class="elo-desc">Measuring relative skill levels... Calibrating engine protocols... Synchronising predicted move matrices... Loading Equinox Practice Environment.</p>
-        <div class="rainbow-container">
-            <div class="bar-wrap">
-                <div id="fill"></div>
-                <div id="perc">0%</div>
-            </div>
-        </div>
+        <div class="rainbow-container"><div class="bar-wrap"><div id="fill"></div><div id="perc">0%</div></div></div>
     </div>
 
-    <!-- 3. GAME HUD -->
     <div id="game">
-        <div id="board" class="board"></div>
+        <div class="board-container">
+            <div class="coord-v"><span>8</span><span>7</span><span>6</span><span>5</span><span>4</span><span>3</span><span>2</span><span>1</span></div>
+            <div id="board" class="board"></div>
+            <div class="coord-h"><span>A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span><span>G</span><span>H</span></div>
+        </div>
         <button id="gear-btn" onclick="toggleHelp()">⚙️</button>
     </div>
 
-    <!-- 4. HELP MENU -->
     <div id="help-menu">
         <div class="help-tabs">
             <button class="tab-btn active" onclick="openTab(event, 'tab-pieces')">Pieces</button>
@@ -134,134 +95,118 @@
             <button class="tab-btn" onclick="openTab(event, 'tab-mechanics')">Mechanics</button>
         </div>
 
+        <!-- PIECES TAB (IMAGE MATCHED) -->
         <div id="tab-pieces" class="tab-content active">
-            <span class="group-label">The Army</span>
-            <div class="asset-card"><div><b>Pawn:</b> Moves forward one square, but captures diagonally. Can leap two squares on its first move and promote at the final rank.</div></div>
-            <div class="asset-card"><div><b>Knight:</b> Moves in an 'L' shape and is the only piece capable of jumping over others. Lethal in closed positions.</div></div>
-            <div class="asset-card"><div><b>Bishop:</b> Long-range sniper bound to its starting colour. Controls powerful diagonals across the entire board.</div></div>
-            <div class="asset-card"><div><b>Rook:</b> Dominates horizontal ranks and vertical files. Critical for the endgame and the 'Castling' manoeuvre.</div></div>
-            <div class="asset-card"><div><b>Queen:</b> The ultimate weapon. Combines the moves of Rook and Bishop. Loss of the Queen is often fatal.</div></div>
-            <div class="asset-card"><div><b>King:</b> The heart of the game. Moves one square any way. If he is trapped in checkmate, the game ends instantly.</div></div>
+            <div class="asset-card"><b>The Pawn:</b> The fundamental infantry unit of chess. It possesses a restricted forward movement of one square, yet captures diagonally. Upon its initial move, it may advance two squares. Reaching the terminal rank allows for promotion into a Queen, Rook, Bishop, or Knight, granting the piece immense late-game utility.</div>
+            <div class="asset-card"><b>The Knight:</b> A specialized tactical unit that navigates the board in a unique 'L' pattern—two squares in one cardinal direction followed by one square perpendicular. It maintains the singular ability to leap over intervening pieces, making it an invaluable asset in congested board states where other pieces are obstructed.</div>
+            <div class="asset-card"><b>The Bishop:</b> A sophisticated long-range operative that slides any distance along diagonal trajectories. Each Bishop is permanently confined to the square colour it begins on, requiring them to work in coordinated pairs to control both light and dark regions of the board effectively throughout the middle and end game.</div>
+            <div class="asset-card"><b>The Rook:</b> A formidable heavy piece moving in straight horizontal or vertical lines across any number of unoccupied squares. It plays a critical role in king safety through the castling maneuver and is often the primary force behind powerful ladder checkmates during the final stages of the match.</div>
+            <div class="asset-card"><b>The Queen:</b> The most versatile and powerful asset on the board. She combines the movement capabilities of both the Rook and the Bishop, sliding any distance in any straight or diagonal direction. Her presence dictates the tempo and pressure of the match, serving as both a primary attacker and a central defender.</div>
+            <div class="asset-card"><b>The King:</b> The pivotal figure around which the entire game revolves. While moving only one square in any direction, his preservation is absolute. If the King is placed under attack and cannot find a safe square, the match concludes immediately, rendering his protection the player's ultimate strategic priority.</div>
         </div>
 
+        <!-- ICONS TAB (IMAGE MATCHED) -->
         <div id="tab-icons" class="tab-content">
-            <span class="group-label">Positive</span>
-            <div class="asset-card"><div class="eval-icon icon-brilliant">!!</div><div><b>Brilliant:</b> A rare, high-level sacrifice that significantly improves your position. It is the "stroke of genius" move.</div></div>
-            <div class="asset-card"><div class="eval-icon icon-great">!</div><div><b>Great:</b> A critical move that is often the only winning response in a high-tension sequence.</div></div>
-            <div class="asset-card"><div class="eval-icon icon-best">★</div><div><b>Best:</b> The engine's top choice. It ensures your evaluation stays optimal and follows the strongest line.</div></div>
+            <span class="group-label">Positive Indicators</span>
+            <div class="asset-card">⭐ <b>The Best Move (Star):</b> This designation signifies the absolute strongest continuation identified by the engine analysis. Playing this move optimizes your winning probability and represents the highest level of technical accuracy possible in the current position, often finding the only path to a victory.</div>
+            <div class="asset-card">✅ <b>Good Move (Tick):</b> Indicates a solid, fundamentally sound choice that maintains the current evaluation of the position. While it may not be the engine's primary preference, it adheres to sound chess principles and ensures the player does not concede any unnecessary tactical advantages.</div>
             
-            <span class="group-label">Negative</span>
-            <div class="asset-card"><div class="eval-icon icon-miss">✕</div><div><b>Miss:</b> You overlooked a winning sequence or a major tactical shot that would have won material.</div></div>
-            <div class="asset-card"><div class="eval-icon icon-blunder">💀</div><div><b>Death (Blunder):</b> A catastrophic error that loses the game or significant material. Pulsing with a "Death" effect to warn of failure.</div></div>
+            <span class="group-label">Negative Indicators</span>
+            <div class="asset-card">! <b>Inaccuracy (Exclamation):</b> Marks a sub-optimal move that noticeably weakens your standing. It suggests a missed opportunity to apply pressure or a minor positional concession that allows the opponent to improve their pieces more easily than the optimal continuation would have permitted.</div>
+            <div class="asset-card">!! <b>Blunder (Death Emoji):</b> A catastrophic error that tangibly reduces your advantage or directly allows the opponent to achieve a winning position. This usually results from an overlooked tactical sequence or a serious misunderstanding of the immediate requirements of the board position.</div>
+            <div class="asset-card">💀 <b>Total Blunder (Death):</b> Reserved for moves that lead to an immediate loss of the game or the loss of a major piece without compensation. This classification represents a total collapse of strategy and typically shifts the game evaluation into a forced win for the opponent.</div>
             
-            <span class="group-label">Exotic</span>
-            <div class="asset-card"><div class="eval-icon icon-book">📖</div><div><b>Book:</b> A move identified as established opening theory used by grandmasters for centuries.</div></div>
+            <span class="group-label">Exotic Classifications</span>
+            <div class="asset-card">? <b>Mystery Move (Question):</b> Used to denote moves that complicate the position in ways the engine cannot immediately resolve. It signifies a high variance choice that creates a chaotic environment where both players have equal chances to succeed or fail based on subsequent precision.</div>
+            <div class="asset-card">?? <b>The Brilliant Move (Double Question):</b> Although visually appearing similar to a blunder, this highlights a high-level sacrifice that appears as an error but leads to a forced winning advantage. It signifies a move that is difficult for humans to calculate but mathematically sound under deep analysis.</div>
+            <div class="asset-card">📖 <b>The Book Move (Manual):</b> Indicates that the move belongs to the established library of opening theory. This confirms the player is following paths analyzed by grandmasters for centuries to reach a balanced and playable middle-game position with known strategic goals.</div>
         </div>
 
+        <!-- MECHANICS TAB (IMAGE MATCHED) -->
         <div id="tab-mechanics" class="tab-content">
             <span class="group-label">Core Mechanics</span>
-            <div class="asset-card"><div><b>Capturing:</b> Land on an enemy square to eliminate them. You cannot capture your own pieces or jump over them (except Knights).</div></div>
-            <span class="group-label">Endings</span>
-            <div class="asset-card"><div><b>Checkmate:</b> Definitive victory. The King is in check and has no legal moves left to escape.</div></div>
-            <div class="asset-card"><div><b>Stalemate:</b> A draw occurring when a player has no legal moves but is NOT in check. A clever defensive "save."</div></div>
-            <div class="asset-card"><div><b>Resignation:</b> To forfeit. Acknowledging that the position is strategically lost and ending the match immediately.</div></div>
-            <div class="asset-card"><div><b>Timeout:</b> Reaching zero on the clock results in an instant loss if the opponent has winning material.</div></div>
+            <div class="asset-card"><b>Capturing Methodology:</b> To capture an opponent's unit, you must move your piece onto the square it currently occupies. The displaced piece is permanently removed from the field. You cannot capture your own units or occupy a square already held by your own color, requiring careful navigation of space.</div>
+            <div class="asset-card"><b>En Passant:</b> A specialized pawn capture occurring when an opponent moves their pawn two squares forward from its starting position and lands adjacent to your pawn. You may capture that pawn as if it had only moved one square, provided you do so on the very next turn.</div>
+            
+            <span class="group-label">Ending Conditions</span>
+            <div class="asset-card"><b>Checkmate (Absolute Victory):</b> The definitive conclusion of a chess match. This occurs when a King is under direct threat of capture and possesses no legal moves to relocate, block the line of attack, or eliminate the attacking piece entirely. The game ends immediately in a win for the attacker.</div>
+            <div class="asset-card"><b>Stalemate (Technical Draw):</b> A unique situation where the player whose turn it is has no legal moves remaining, yet their King is not currently in check. Because the player cannot move but is not defeated, the game ends in a draw, often occurring as a defensive 'swindle'.</div>
+            <div class="asset-card"><b>Resignation (Concession):</b> A formal acknowledgement of defeat. A player may choose to resign at any moment if they determine the position is strategically hopeless. This is considered professional courtesy when a loss is mathematically certain, immediately awarding the full victory to the opponent.</div>
+            <div class="asset-card"><b>Timeout (Temporal Loss):</b> In timed competitive play, if a player's clock expires before they complete their required moves, they lose the game immediately. This emphasizes the importance of time management as a critical strategic resource, where speed is as vital as tactical precision.</div>
         </div>
-        <button class="close-menu-btn" onclick="toggleHelp()">Close System Menu</button>
+        <button onclick="toggleHelp()" style="width:100%; padding:15px; margin-top:20px; background:rgba(250,65,45,0.1); border:1px solid var(--n-red); color:var(--n-red); cursor:pointer; text-transform:uppercase; font-weight:bold;">Return to Game Review</button>
     </div>
 
     <script>
-        // WHITE PARTICLE BACKGROUND
+        // BACKGROUND PARTICLES
         const canvas = document.getElementById('bg-canvas');
         const ctx = canvas.getContext('2d');
-        let particles = [];
+        let pArr = [];
         function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.onresize = resize; resize();
+        class P { constructor(){this.r()} r(){this.x=Math.random()*canvas.width;this.y=Math.random()*canvas.height;this.v=Math.random()*0.4+0.1;this.s=Math.random()*2} u(){this.y-=this.v;if(this.y<0)this.r()} d(){ctx.fillStyle='rgba(255,255,255,0.3)';ctx.beginPath();ctx.arc(this.x,this.y,this.s,0,Math.PI*2);ctx.fill()} }
+        for(let i=0;i<100;i++) pArr.push(new P());
+        function anim(){ctx.clearRect(0,0,canvas.width,canvas.height);pArr.forEach(p=>{p.u();p.d()});requestAnimationFrame(anim)} anim();
 
-        class Particle {
-            constructor() { this.reset(); }
-            reset() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.v = Math.random() * 0.5 + 0.2;
-                this.s = Math.random() * 2;
-            }
-            update() {
-                this.y -= this.v;
-                if(this.y < 0) this.reset();
-            }
-            draw() {
-                ctx.fillStyle = 'rgba(255,255,255,0.4)';
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.s, 0, Math.PI*2);
-                ctx.fill();
-            }
-        }
-        for(let i=0; i<100; i++) particles.push(new Particle());
-        function animate() {
-            ctx.clearRect(0,0,canvas.width, canvas.height);
-            particles.forEach(p => { p.update(); p.draw(); });
-            requestAnimationFrame(animate);
-        }
-        animate();
-
-        // SYSTEM BOOT & LOADING
+        // SYSTEM BOOT
         window.onload = () => {
-            const boot = document.getElementById('boot');
-            const assets = document.getElementById('assets');
-            const game = document.getElementById('game');
-            const fill = document.getElementById('fill');
-            const perc = document.getElementById('perc');
-
             setTimeout(() => {
-                boot.style.opacity = '0';
+                document.getElementById('boot').style.opacity='0';
                 setTimeout(() => {
-                    boot.style.display = 'none';
-                    assets.style.display = 'flex';
-                    assets.style.opacity = '1';
-                    let p = 0;
-                    const iv = setInterval(() => {
-                        p += Math.floor(Math.random() * 4) + 1;
-                        if(p >= 100) {
-                            p = 100; clearInterval(iv);
-                            setTimeout(() => {
-                                assets.style.opacity = '0';
-                                setTimeout(() => {
-                                    assets.style.display = 'none';
-                                    game.style.display = 'flex';
-                                    game.style.opacity = '1';
-                                    createBoard();
-                                }, 800);
-                            }, 500);
-                        }
-                        fill.style.width = p + '%';
-                        perc.innerText = p + '%';
-                    }, 40);
-                }, 1000);
-            }, 3500);
+                    document.getElementById('boot').style.display='none';
+                    document.getElementById('assets').style.display='flex';
+                    document.getElementById('assets').style.opacity='1';
+                    let p=0; const iv=setInterval(()=>{p+=2;if(p>=100){clearInterval(iv);showG()}document.getElementById('fill').style.width=p+'%';document.getElementById('perc').innerText=p+'%'},30);
+                },1000);
+            },2500);
         };
-
-        function toggleHelp() {
-            document.getElementById('help-menu').classList.toggle('active');
-            document.getElementById('gear-btn').classList.toggle('active');
+        function showG() {
+            document.getElementById('assets').style.opacity='0';
+            setTimeout(()=>{
+                document.getElementById('assets').style.display='none';
+                document.getElementById('game').style.display='flex';
+                document.getElementById('game').style.opacity='1';
+                createB();
+            },800);
         }
 
-        function openTab(evt, tabName) {
-            const contents = document.getElementsByClassName("tab-content");
-            for (let i = 0; i < contents.length; i++) contents[i].classList.remove("active");
-            const buttons = document.getElementsByClassName("tab-btn");
-            for (let i = 0; i < buttons.length; i++) buttons[i].classList.remove("active");
-            document.getElementById(tabName).classList.add("active");
-            evt.currentTarget.classList.add("active");
-        }
-
-        function createBoard() {
-            const board = document.getElementById('board');
+        function createB() {
+            const b = document.getElementById('board');
             for(let i=0; i<64; i++) {
                 const sq = document.createElement('div');
-                sq.className = `sq ${(Math.floor(i/8) + (i%8)) % 2 === 0 ? 'w' : 'b'}`;
-                board.appendChild(sq);
+                sq.className = `sq ${(Math.floor(i/8)+(i%8))%2===0?'w':'b'}`;
+                sq.onclick = () => evalM(sq);
+                b.appendChild(sq);
             }
+        }
+
+        // MOVE REVIEW LOGIC
+        function evalM(sq) {
+            const old = sq.querySelector('.eval-icon-placed');
+            if(old) old.remove();
+            const r = Math.random();
+            const icon = document.createElement('div');
+            icon.className = 'eval-icon-placed';
+            
+            // Criteria-based appearance
+            if(r < 0.1) { icon.classList.add('eval-brilliant'); icon.innerText = '??'; } // Brilliant (Exotic Definition)
+            else if(r < 0.2) { icon.classList.add('eval-great'); icon.innerText = '!'; } // Inaccuracy
+            else if(r < 0.4) { icon.classList.add('eval-best'); icon.innerText = '⭐'; } // Best
+            else if(r < 0.5) { icon.classList.add('eval-miss'); icon.innerText = '!!'; } // Blunder
+            else if(r < 0.6) { icon.classList.add('eval-blunder'); icon.innerText = '💀'; } // Total Blunder
+            else return; 
+
+            sq.appendChild(icon);
+        }
+
+        function toggleHelp() { document.getElementById('help-menu').classList.toggle('active'); }
+        function openTab(evt, name) {
+            const c = document.getElementsByClassName("tab-content");
+            for (let i=0; i<c.length; i++) c[i].classList.remove("active");
+            const b = document.getElementsByClassName("tab-btn");
+            for (let i=0; i<b.length; i++) b[i].classList.remove("active");
+            document.getElementById(name).classList.add("active");
+            evt.currentTarget.classList.add("active");
         }
     </script>
 </body>

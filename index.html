@@ -12,135 +12,128 @@
         body, html { margin: 0; padding: 0; background: #000; color: white; font-family: 'Segoe UI', Tahoma, sans-serif; overflow: hidden; height: 100vh; width: 100vw; }
         canvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0.6; }
 
-        /* --- 1. BOOT & LOADING --- */
+        /* --- 1. BOOT SCREEN --- */
         #boot { position: fixed; inset: 0; background: black; z-index: 30000; display: flex; justify-content: center; align-items: center; transition: 1s; }
         .equinox-text { font-size: 32px; letter-spacing: 12px; font-weight: 200; color: #fff; clip-path: inset(0 100% 0 0); animation: reveal 2.5s forwards; }
-        #assets { position: fixed; inset: 0; background: #000; z-index: 20000; display: none; opacity: 0; transition: 1.5s; flex-direction: column; align-items: center; justify-content: center; }
+        .divider { width: 2px; height: 40px; background: white; margin: 0 25px; transform: scaleY(0); animation: pop-divider 0.6s var(--smooth) forwards 2s; }
+        .controller-box { position: relative; width: 150px; height: 150px; display: flex; align-items: center; justify-content: center; overflow: visible; }
+        .aura-circle { position: absolute; width: 85px; height: 85px; border-radius: 50%; border: 3px solid var(--n-blue); opacity: 0; box-shadow: 0 0 35px var(--n-blue), inset 0 0 15px var(--n-blue); animation: aura-glow 1s forwards 3s, aura-pulse 3s infinite alternate 4s; z-index: 1; }
+        .controller-icon { font-size: 42px; transform: translateX(-180%); animation: slide-in 0.8s var(--smooth) forwards 2.5s; z-index: 2; }
+        @keyframes reveal { to { clip-path: inset(0 0 0 0); } }
+        @keyframes pop-divider { to { transform: scaleY(1); } }
+        @keyframes slide-in { to { transform: translateX(0); } }
+        @keyframes aura-glow { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
+        @keyframes aura-pulse { 0% { border-color: var(--n-blue); box-shadow: 0 0 20px var(--n-blue); } 100% { border-color: var(--n-pink); box-shadow: 0 0 45px var(--n-pink); transform: scale(1.15); } }
+
+        /* --- 2. LOADING SCREEN (ELO MATCHED) --- */
+        #assets { position: fixed; inset: 0; background: #000; z-index: 20000; display: none; opacity: 0; transition: 1.5s; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .elo-title { font-size: 42px; color: var(--n-blue); transform: translateY(30px); opacity: 0; animation: up 1s var(--smooth) forwards 0.5s; letter-spacing: 4px; }
+        .elo-line { width: 0; height: 2px; background: var(--n-blue); margin: 25px 0; box-shadow: 0 0 15px var(--n-blue); animation: pop-line-long 1.2s var(--smooth) forwards 1s; }
+        .elo-desc { font-size: 15px; color: #aaa; max-width: 700px; opacity: 0; clip-path: inset(0 0 100% 0); animation: wipe 1.2s var(--smooth) forwards 1.8s; line-height: 1.8; padding: 0 20px; }
+        @keyframes up { to { opacity: 1; transform: translateY(0); } }
+        @keyframes pop-line-long { to { width: 600px; } }
+        @keyframes wipe { to { opacity: 1; clip-path: inset(0 0 0 0); } }
         .rainbow-container { width: 420px; height: 35px; border-radius: 17px; padding: 2px; background: linear-gradient(to right, #ff0000, #ff8c00, #ffff00, #00ff00); display: flex; align-items: center; justify-content: center; margin-top: 40px; }
         .bar-wrap { width: 100%; height: 100%; background: #000; border-radius: 15px; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; }
-        #fill { position: absolute; left: 0; height: 100%; width: 0%; background: #00ffff; transition: width 0.4s var(--smooth); }
+        #fill { position: absolute; left: 0; height: 100%; width: 0%; background: #00ffff; box-shadow: 2px 0 10px #00ffff; transition: width 0.4s var(--smooth); }
         #perc { position: relative; z-index: 2; font-weight: bold; font-size: 14px; color: white; mix-blend-mode: difference; }
 
-        /* --- 2. BOARD & NEON HOVERS --- */
-        #game { display: none; width: 100vw; height: 100vh; justify-content: center; align-items: center; opacity: 0; transition: 1.5s; z-index: 5; flex-direction: column; }
-        .board-container { position: relative; padding: 35px; background: #0a0a0a; border-radius: 8px; border: 1px solid #222; }
-        .board { width: 560px; height: 560px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 5px solid #000; background: #000; position: relative; }
-        .sq { width: 70px; height: 70px; display: flex; justify-content: center; align-items: center; cursor: pointer; position: relative; transition: 0.15s; }
-        .w { background: #ebecd0; } .b { background: #779556; }
-        .coord-h { position: absolute; bottom: 8px; left: 35px; right: 35px; display: flex; justify-content: space-around; font-size: 14px; color: #666; font-weight: bold; }
-        .coord-v { position: absolute; left: 10px; top: 35px; bottom: 35px; display: flex; flex-direction: column; justify-content: space-around; font-size: 14px; color: #666; font-weight: bold; }
-
-        /* NEON HIGHLIGHTS */
-        .hover-kq { box-shadow: inset 0 0 20px #ff0000, 0 0 15px #ff0000; border: 1px solid #ff0000; z-index: 2; }
-        .hover-rb { box-shadow: inset 0 0 20px #ff8c00, 0 0 15px #ff8c00; border: 1px solid #ff8c00; z-index: 2; }
-        .hover-n { box-shadow: inset 0 0 20px #ffff00, 0 0 15px #ffff00; border: 1px solid #ffff00; z-index: 2; }
-        .hover-p { box-shadow: inset 0 0 20px #00ff00, 0 0 15px #00ff00; border: 1px solid #00ff00; z-index: 2; }
-        .hover-promo { box-shadow: inset 0 0 25px #00f2ff, 0 0 20px #00f2ff; border: 1px solid #00f2ff; z-index: 2; }
-
-        /* --- 3. SETTINGS MENU --- */
-        #settings-panel { position: fixed; right: 20px; top: 5vh; bottom: 5vh; width: 340px; background: rgba(5,6,8,0.98); border: 1px solid var(--n-blue); border-radius: 15px; transform: translateX(120%); transition: 0.7s var(--smooth); z-index: 25000; padding: 25px; display: flex; flex-direction: column; overflow-y: auto; box-shadow: -10px 0 30px rgba(0,0,0,0.5); }
-        #settings-panel.active { transform: translateX(0); }
-        .set-section { margin-bottom: 25px; border-bottom: 1px solid #222; padding-bottom: 15px; }
-        .set-label { color: var(--n-blue); font-size: 10px; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 15px; display: block; font-weight: bold; }
+        /* --- 3. GAME HUD --- */
+        #game { display: none; width: 100vw; height: 100vh; justify-content: center; align-items: center; opacity: 0; transition: 1.5s; z-index: 5; }
+        .board { width: 560px; height: 560px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid #111; background: #000; z-index: 10; }
+        .sq { width: 70px; height: 70px; display: flex; justify-content: center; align-items: center; cursor: pointer; }
+        .w { background: rgba(45, 45, 55, 0.9); } .b { background: rgba(20, 20, 25, 0.9); }
+        .piece { font-size: 48px; transition: 0.8s var(--smooth); filter: brightness(0.2); pointer-events: none; }
+        .piece.unlocked { filter: brightness(1); pointer-events: auto; }
         
-        /* PLAY BUTTON + DOTS */
-        .play-composite { position: relative; width: 100%; height: 55px; margin-top: auto; display: flex; border: 1px solid var(--n-green); background: rgba(129, 182, 76, 0.1); }
-        .play-main { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--n-green); font-weight: bold; letter-spacing: 4px; cursor: pointer; }
-        .play-dots { width: 55px; border-left: 1px solid var(--n-green); display: flex; align-items: center; justify-content: center; color: var(--n-green); font-size: 24px; cursor: pointer; transition: 0.3s; }
-        .play-dots:hover { background: rgba(255,255,255,0.1); }
-        .dots-dropdown { position: absolute; bottom: 65px; right: 0; width: 180px; background: #111; border: 1px solid #333; display: none; flex-direction: column; z-index: 26000; }
-        .dots-dropdown.active { display: flex; }
-        .dots-dropdown button { background: none; border: none; color: #ccc; padding: 15px; text-align: left; cursor: pointer; font-size: 13px; border-bottom: 1px solid #222; }
-        .dots-dropdown button:hover { background: #222; color: var(--n-blue); }
+        #gear-btn { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; background: none; border: none; color: var(--n-blue); font-size: 35px; cursor: pointer; z-index: 100; transition: 0.4s var(--smooth); display: flex; align-items: center; justify-content: center; }
+        #gear-btn.active { color: var(--n-green); animation: gear-spin 3s linear infinite; }
+        @keyframes gear-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        /* --- 4. HELP MENU (THE COVER) --- */
-        #help-menu { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(0.9); width: 780px; background: #050608; border: 2px solid var(--n-blue); border-radius: 15px; z-index: 31000; padding: 30px; opacity: 0; pointer-events: none; transition: 0.5s var(--smooth); box-shadow: 0 0 60px rgba(0,242,255,0.4); }
+        /* --- 4. DETAILED HELP MENU --- */
+        #help-menu { 
+            position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(0.9); 
+            width: 750px; background: #050608; border: 2px solid var(--n-blue); border-radius: 15px; 
+            z-index: 31000; padding: 30px; opacity: 0; pointer-events: none; transition: 0.5s var(--smooth);
+            box-shadow: 0 0 50px rgba(0,242,255,0.3); overflow: hidden;
+        }
         #help-menu.active { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
-        .help-tabs { display: flex; gap: 8px; margin-bottom: 25px; border-bottom: 1px solid #222; }
-        .tab-btn { background: none; border: none; color: #555; padding: 12px 20px; cursor: pointer; text-transform: uppercase; transition: 0.3s; }
-        .tab-btn.active { color: var(--n-blue); border-bottom: 2px solid var(--n-blue); }
-        .tab-content { display: none; max-height: 500px; overflow-y: auto; padding-right: 15px; font-size: 13.5px; line-height: 1.8; }
+        
+        .help-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .tab-btn { background: none; border: 1px solid #333; color: #888; padding: 8px 16px; cursor: pointer; border-radius: 4px; transition: 0.3s; font-size: 12px; text-transform: uppercase; }
+        .tab-btn.active { border-color: var(--n-blue); color: var(--n-blue); background: rgba(0,242,255,0.1); }
+        
+        .tab-content { display: none; max-height: 480px; overflow-y: auto; padding-right: 10px; }
         .tab-content.active { display: block; }
-        .asset-card { background: rgba(20,20,20,0.5); border: 1px solid #1a1a1a; padding: 15px; margin-bottom: 10px; border-radius: 6px; }
+        .tab-content::-webkit-scrollbar { width: 4px; }
+        .tab-content::-webkit-scrollbar-thumb { background: var(--n-blue); border-radius: 10px; }
 
-        /* --- 5. CHECKMATE --- */
-        #mate-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 50000; display: none; flex-direction: column; align-items: center; justify-content: center; }
-        .mate-text { font-size: 72px; color: var(--n-red); text-shadow: 0 0 30px var(--n-red); letter-spacing: 15px; font-weight: 900; }
+        .group-label { color: var(--n-blue); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; margin: 30px 0 15px 0; border-bottom: 1px solid #222; display: block; padding-bottom: 5px; font-weight: bold; }
+        
+        /* Expandable Detail Cards */
+        .asset-card { 
+            border-left: 3px solid var(--n-blue); background: rgba(255,255,255,0.03); 
+            padding: 15px; margin-bottom: 12px; font-size: 13px; line-height: 1.7; 
+            border-radius: 0 8px 8px 0; transition: 0.4s var(--smooth); 
+            cursor: default; overflow: hidden; height: auto;
+        }
+        .asset-card:hover { 
+            background: rgba(255,255,255,0.08); 
+            padding-left: 25px; 
+            transform: scale(1.01);
+            border-left-width: 8px;
+        }
+        .asset-card b { color: var(--n-yellow); margin-right: 8px; display: block; margin-bottom: 5px; font-size: 14px; }
+        .icon-glyph { font-size: 24px; width: 45px; display: inline-block; text-align: center; vertical-align: middle; margin-right: 10px; }
 
-        #gear-btn { position: fixed; bottom: 25px; right: 25px; background: none; border: none; color: var(--n-blue); font-size: 38px; cursor: pointer; z-index: 100; transition: 0.4s; }
-        #gear-btn.active { color: var(--n-green); transform: rotate(90deg); }
-
-        @keyframes reveal { to { clip-path: inset(0 0 0 0); } }
+        /* Close Button Styling */
+        .close-menu-btn { 
+            width: 100%; padding: 15px; margin-top: 20px; background: rgba(250, 65, 45, 0.1); 
+            border: 1px solid var(--n-red); color: var(--n-red); cursor: pointer; 
+            border-radius: 8px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px;
+            transition: 0.3s;
+        }
+        .close-menu-btn:hover { background: var(--n-red); color: white; box-shadow: 0 0 20px var(--n-red); }
     </style>
 </head>
 <body>
+
     <canvas id="bg-canvas"></canvas>
 
-    <!-- 1. BOOT -->
-    <div id="boot"><div class="equinox-text">EQUINOX</div></div>
+    <div id="boot">
+        <div class="equinox-text">EQUINOX GAMES | 🎮</div>
+        <div class="divider"></div>
+        <div class="controller-box">
+            <div class="aura-circle"></div>
+            <div class="controller-icon">🎮</div>
+        </div>
+    </div>
 
-    <!-- 2. LOADING -->
     <div id="assets">
-        <div class="rainbow-container"><div class="bar-wrap"><div id="fill"></div><div id="perc">0%</div></div></div>
-    </div>
-
-    <!-- 3. GAME BOARD -->
-    <div id="game">
-        <div class="board-container">
-            <div class="coord-v"><span>8</span><span>7</span><span>6</span><span>5</span><span>4</span><span>3</span><span>2</span><span>1</span></div>
-            <div id="board" class="board"></div>
-            <div class="coord-h"><span>A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span><span>G</span><span>H</span></div>
-        </div>
-        <button id="gear-btn" onclick="toggleSettings()">⚙️</button>
-    </div>
-
-    <!-- 4. SETTINGS PANEL -->
-    <div id="settings-panel">
-        <div class="set-section">
-            <span class="set-label">Audio Control</span>
-            <input type="range" style="width:100%" min="0" max="100">
-            <iframe style="border-radius:12px; margin-top:15px;" src="https://open.spotify.com" width="100%" height="80" frameBorder="0" allow="encrypted-media"></iframe>
-        </div>
-
-        <div class="set-section">
-            <span class="set-label">Visual Preferences</span>
-            <button onclick="alert('Icons Config Box Opening...')" style="width:100%; padding:10px; background:#111; color:white; border:1px solid #444; cursor:pointer;">Configure Icons</button>
-        </div>
-
-        <div class="set-section">
-            <span class="set-label">Chessboard Themes</span>
-            <select style="width:100%; background:#111; color:white; padding:10px; border:1px solid #444;">
-                <option>Standard Green</option>
-                <option>Midnight Black</option>
-                <option>Ocean Blue</option>
-                <option>Exotic Shop (Elo Required)...</option>
-            </select>
-        </div>
-
-        <div class="set-section">
-            <span class="set-label">Engine Config</span>
-            <label style="font-size:12px;"><input type="checkbox"> AI Enabled</label>
-        </div>
-
-        <div class="play-composite">
-            <div class="play-main" onclick="alert('Ready?')">PLAY</div>
-            <div class="play-dots" onclick="toggleDots(event)">...</div>
-            <div id="dots-menu" class="dots-dropdown">
-                <button onclick="toggleHelp()">Archived Help</button>
-                <button onclick="triggerMate()">Resign Match</button>
-                <button onclick="location.reload()">Reboot Protocol</button>
+        <div class="elo-title">CHESS PRACTICE | ELO</div>
+        <div class="elo-line"></div>
+        <div class="elo-desc">Regular chess practice boosts your Elo rating by improving strategic understanding, anticipatory skills, and tactical abilities. It promotes critical thinking and mental agility, while game analysis helps identify patterns. Practicing with others builds community and motivation. Consistency is key to mastering chess at any skill level.</div>
+        <div class="rainbow-container">
+            <div class="bar-wrap">
+                <div id="fill"></div>
+                <div id="perc">0%</div>
             </div>
         </div>
     </div>
 
-    <!-- 5. ARCHIVED HELP (COVER) -->
+    <div id="game">
+        <div class="board" id="board"></div>
+        <button id="gear-btn" onclick="toggleHelp()">⚙️</button>
+    </div>
+
     <div id="help-menu">
         <div class="help-tabs">
             <button class="tab-btn active" onclick="openTab(event, 'tab-pieces')">Pieces</button>
             <button class="tab-btn" onclick="openTab(event, 'tab-icons')">Icons</button>
             <button class="tab-btn" onclick="openTab(event, 'tab-mechanics')">Mechanics</button>
         </div>
-         <!-- PIECES TAB -->
+
+        <!-- PIECES TAB -->
         <div id="tab-pieces" class="tab-content active">
             <div class="asset-card"><b>The Pawn</b> The fundamental infantry unit of chess. It possesses a restricted forward movement of one square, yet captures diagonally. Upon its initial move, it may advance two squares. Reaching the terminal rank allows for promotion into a Queen, Rook, Bishop, or Knight, granting the piece immense late-game utility.</div>
             <div class="asset-card"><b>The Knight</b> A specialized tactical unit that navigates the board in a unique 'L' pattern—two squares in one cardinal direction followed by one square perpendicular. It maintains the singular ability to leap over intervening pieces, making it an invaluable asset in congested board states where other pieces are obstructed.</div>
@@ -180,87 +173,106 @@
             <div class="asset-card"><b>Timeout (Temporal Loss)</b> In timed competitive play, if a player's clock expires before they complete their required moves, they lose the game immediately. This emphasizes the importance of time management as a critical strategic resource, where speed is as vital as tactical precision.</div>
         </div>
 
-        <button onclick="toggleHelp()" style="width:100%; padding:15px; margin-top:20px; background:rgba(0,242,255,0.1); border:1px solid var(--n-blue); color:var(--n-blue); cursor:pointer;">Return to Simulator</button>
-    </div>
-
-    <!-- 6. CHECKMATE OVERLAY -->
-    <div id="mate-overlay">
-        <div class="mate-text">CHECKMATE</div>
-        <p style="color:#666; margin-top: 20px; letter-spacing: 5px;">ABSOLUTE VICTORY DETECTED</p>
-        <button onclick="location.reload()" style="margin-top:40px; background:none; border:1px solid white; color:white; padding:12px 40px; cursor:pointer; letter-spacing:2px;">NEW MATCH</button>
+        <button class="close-menu-btn" onclick="toggleHelp()">Close Help Manual</button>
     </div>
 
     <script>
-        // PARTICLES
+        // --- PARTICLE BACKGROUND ---
         const canvas = document.getElementById('bg-canvas');
         const ctx = canvas.getContext('2d');
-        let pArr = [];
-        function res() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-        window.onresize = res; res();
-        class P { constructor(){this.r()} r(){this.x=Math.random()*canvas.width;this.y=Math.random()*canvas.height;this.v=Math.random()*0.3+0.1;this.s=Math.random()*1.5} u(){this.y-=this.v;if(this.y<0)this.r()} d(){ctx.fillStyle='rgba(255,255,255,0.2)';ctx.beginPath();ctx.arc(this.x,this.y,this.s,0,Math.PI*2);ctx.fill()} }
-        for(let i=0;i<80;i++) pArr.push(new P());
-        function anim(){ctx.clearRect(0,0,canvas.width,canvas.height);pArr.forEach(p=>{p.u();p.d()});requestAnimationFrame(anim)} anim();
+        let particles = [];
+        const chessChars = ['♜','♞','♝','♛','♚','♟','♖','♘','♗','♕','♔','♙'];
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.onresize = resize; resize();
+        class Particle {
+            constructor() { this.reset(); }
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 1;
+                this.speedX = (Math.random() - 0.5) * 0.4;
+                this.speedY = (Math.random() - 0.5) * 0.4;
+                this.type = Math.random() > 0.8 ? (Math.random() > 0.5 ? 'piece' : 'fragment') : 'dot';
+                this.char = chessChars[Math.floor(Math.random() * chessChars.length)];
+                this.rotation = Math.random() * Math.PI * 2;
+                this.rotSpeed = (Math.random() - 0.5) * 0.02;
+                this.opacity = Math.random() * 0.4 + 0.1;
+            }
+            update() {
+                this.x += this.speedX; this.y += this.speedY; this.rotation += this.rotSpeed;
+                if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) this.reset();
+            }
+            draw() {
+                ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.rotation);
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                if (this.type === 'dot') { ctx.beginPath(); ctx.arc(0, 0, this.size, 0, Math.PI * 2); ctx.fill(); }
+                else if (this.type === 'piece') { ctx.font = `${Math.random() * 15 + 15}px serif`; ctx.fillText(this.char, 0, 0); }
+                else { ctx.strokeStyle = `rgba(0, 242, 255, ${this.opacity})`; ctx.strokeRect(-10, -10, 20, 20); }
+                ctx.restore();
+            }
+        }
+        for (let i = 0; i < 150; i++) particles.push(new Particle());
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animate);
+        }
+        animate();
 
-        // LOADING
-        window.onload = () => {
+        // --- SEQUENCE ---
+        setTimeout(() => {
+            document.getElementById('boot').style.opacity = '0';
             setTimeout(() => {
-                document.getElementById('boot').style.opacity='0';
-                setTimeout(() => {
-                    document.getElementById('boot').style.display='none';
-                    document.getElementById('assets').style.display='flex';
-                    document.getElementById('assets').style.opacity='1';
-                    let p=0; const iv=setInterval(()=>{p+=2;if(p>=100){clearInterval(iv);showG()}document.getElementById('fill').style.width=p+'%';document.getElementById('perc').innerText=p+'%'},30);
-                },800);
-            },2000);
-        };
+                document.getElementById('boot').style.display = 'none';
+                document.getElementById('assets').style.display = 'flex';
+                document.getElementById('assets').style.opacity = '1';
+                loadBar();
+            }, 1000);
+        }, 4000);
 
-        function showG() {
-            document.getElementById('assets').style.opacity='0';
-            setTimeout(()=>{
-                document.getElementById('assets').style.display='none';
-                document.getElementById('game').style.display='flex';
-                document.getElementById('game').style.opacity='1';
-                createB();
-            },800);
+        function loadBar() {
+            let p = 0; let fill = document.getElementById('fill'); let perc = document.getElementById('perc');
+            let iv = setInterval(() => {
+                p += Math.random() * 5;
+                if(p >= 100) { p = 100; clearInterval(iv); startGame(); }
+                fill.style.width = p + "%"; perc.innerText = Math.floor(p) + "%";
+            }, 120);
         }
 
-        // BOARD & NEON LOGIC
-        function createB() {
+        function startGame() {
+            document.getElementById('assets').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('assets').style.display = 'none';
+                document.getElementById('game').style.display = 'flex';
+                document.getElementById('game').style.opacity = '1';
+                createBoard();
+            }, 1500);
+        }
+
+        function createBoard() {
             const b = document.getElementById('board');
-            const types = ['kq','kq','rb','rb','n','p','promo']; // Testing types
+            const pArr = ['♜','♞','♝','♛','♚','♝','♞','♜','♟','♟','♟','♟','♟','♟','♟','♟'];
             for(let i=0; i<64; i++) {
-                const sq = document.createElement('div');
-                sq.className = `sq ${(Math.floor(i/8)+(i%8))%2===0?'w':'b'}`;
-                
-                // Randomly assign pieces for hover demo
-                const type = types[Math.floor(Math.random()*types.length)];
-                sq.onmouseenter = () => {
-                    if(type === 'kq') sq.classList.add('hover-kq');
-                    if(type === 'rb') sq.classList.add('hover-rb');
-                    if(type === 'n') sq.classList.add('hover-n');
-                    if(type === 'p') sq.classList.add('hover-p');
-                    if(type === 'promo') sq.classList.add('hover-promo');
-                };
-                sq.onmouseleave = () => sq.className = sq.className.split(' ').filter(c => !c.startsWith('hover-')).join(' ');
-                
-                b.appendChild(sq);
+                let s = document.createElement('div');
+                s.className = `sq ${(Math.floor(i/8) + i%8) % 2 == 0 ? 'w' : 'b'}`;
+                let p = document.createElement('div'); p.className = 'piece';
+                if(i < 16) p.innerText = pArr[i];
+                if(i > 47) p.innerText = pArr[i-48];
+                s.appendChild(p); b.appendChild(s);
+                setTimeout(() => p.classList.add('unlocked'), 500 + (i*10));
             }
         }
 
-        // TOGGLES
-        function toggleSettings() { document.getElementById('settings-panel').classList.toggle('active'); document.getElementById('gear-btn').classList.toggle('active'); }
-        function toggleDots(e) { e.stopPropagation(); document.getElementById('dots-menu').classList.toggle('active'); }
+        // --- UI LOGIC ---
         function toggleHelp() { document.getElementById('help-menu').classList.toggle('active'); }
-        function triggerMate() { document.getElementById('mate-overlay').style.display = 'flex'; }
-        function openTab(evt, name) {
-            const c = document.getElementsByClassName("tab-content");
-            for (let i=0; i<c.length; i++) c[i].classList.remove("active");
-            const b = document.getElementsByClassName("tab-btn");
-            for (let i=0; i<b.length; i++) b[i].classList.remove("active");
-            document.getElementById(name).classList.add("active");
+        function openTab(evt, tabName) {
+            let contents = document.getElementsByClassName("tab-content");
+            for (let i = 0; i < contents.length; i++) contents[i].classList.remove("active");
+            let buttons = document.getElementsByClassName("tab-btn");
+            for (let i = 0; i < buttons.length; i++) buttons[i].classList.remove("active");
+            document.getElementById(tabName).classList.add("active");
             evt.currentTarget.classList.add("active");
         }
-        window.onclick = () => document.getElementById('dots-menu').classList.remove('active');
     </script>
 </body>
 </html>

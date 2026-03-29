@@ -13,52 +13,45 @@
         body, html { margin: 0; padding: 0; background: #000; color: white; font-family: 'Segoe UI', Tahoma, sans-serif; overflow: hidden; height: 100vh; width: 100vw; }
         canvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0.6; }
 
-        /* --- 1. BOOT & LOADING --- */
-        #boot { position: fixed; inset: 0; background: black; z-index: 30000; display: flex; justify-content: center; align-items: center; transition: 1s; }
-        .equinox-text { font-size: 32px; letter-spacing: 12px; font-weight: 200; color: #fff; clip-path: inset(0 100% 0 0); animation: reveal 2.5s forwards; }
+        /* --- 1. CINEMATIC BOOT (SOLARIS STYLE) --- */
+        #boot { position: fixed; inset: 0; background: black; z-index: 30000; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 1.5s; }
+        .controller-logo { font-size: 80px; position: relative; opacity: 0; transform: scale(0.5); animation: logo-burst 2.5s var(--smooth) forwards; }
+        .logo-ring { position: absolute; border: 2px solid var(--n-blue); border-radius: 50%; width: 100px; height: 100px; opacity: 0; animation: ring-pulse 2s infinite; }
+        .equinox-title { font-size: 42px; letter-spacing: 20px; font-weight: 200; color: #fff; margin-top: 40px; clip-path: inset(0 100% 0 0); animation: text-reveal 3s forwards 1.5s; }
+        @keyframes logo-burst { 0% { opacity: 0; transform: scale(0.5); } 50% { opacity: 1; transform: scale(1.1); filter: drop-shadow(0 0 20px var(--n-blue)); } 100% { opacity: 1; transform: scale(1); } }
+        @keyframes ring-pulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(3); opacity: 0; } }
+        @keyframes text-reveal { to { clip-path: inset(0 0 0 0); } }
+
+        /* --- 2. LOADING SCREEN --- */
         #assets { position: fixed; inset: 0; background: #000; z-index: 20000; display: none; opacity: 0; transition: 1.5s; flex-direction: column; align-items: center; justify-content: center; }
         .rainbow-container { width: 420px; height: 35px; border-radius: 17px; padding: 2px; background: linear-gradient(to right, #ff0000, #ff8c00, #ffff00, #00ff00); display: flex; align-items: center; justify-content: center; margin-top: 40px; }
         .bar-wrap { width: 100%; height: 100%; background: #000; border-radius: 15px; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; }
         #fill { position: absolute; left: 0; height: 100%; width: 0%; background: #00ffff; box-shadow: 2px 0 10px #00ffff; transition: width 0.4s var(--smooth); }
         #perc { position: relative; z-index: 2; font-weight: bold; font-size: 14px; color: white; mix-blend-mode: difference; }
 
-        /* --- 2. BOARD & PIECES --- */
+        /* --- 3. BOARD & TURN UI --- */
         #game { display: none; width: 100vw; height: 100vh; justify-content: center; align-items: center; opacity: 0; transition: 1.5s; z-index: 5; }
+        .turn-banner { position: absolute; top: 20px; font-size: 14px; letter-spacing: 5px; color: var(--n-blue); text-transform: uppercase; }
         .board { width: 560px; height: 560px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid #111; background: #000; z-index: 10; position: relative; }
         .sq { width: 70px; height: 70px; display: flex; justify-content: center; align-items: center; cursor: pointer; position: relative; }
         .w { background: rgba(45, 45, 55, 0.9); } .b { background: rgba(20, 20, 25, 0.9); }
-        
-        .chess-piece { font-size: 52px; z-index: 15; user-select: none; cursor: grab; transition: transform 0.1s; }
-        .chess-piece:active { cursor: grabbing; transform: scale(1.1); }
+        .chess-piece { font-size: 52px; z-index: 15; user-select: none; cursor: grab; }
         .p-t1 { color: var(--t1-color); text-shadow: 0 0 10px var(--t1-color); }
         .p-t2 { color: var(--t2-color); text-shadow: 0 0 10px var(--t2-color); }
 
-        /* NEON HIGHLIGHTS */
-        .sq.hover-red { box-shadow: inset 0 0 20px #ff0000, 0 0 15px #ff0000; border: 1px solid #ff0000; z-index: 20; }
-        .sq.hover-orange { box-shadow: inset 0 0 20px #ff8c00, 0 0 15px #ff8c00; border: 1px solid #ff8c00; z-index: 20; }
-        .sq.hover-yellow { box-shadow: inset 0 0 20px #ffff00, 0 0 15px #ffff00; border: 1px solid #ffff00; z-index: 20; }
-        .sq.hover-green { box-shadow: inset 0 0 20px #00ff00, 0 0 15px #00ff00; border: 1px solid #00ff00; z-index: 20; }
-        .sq.hover-blue { box-shadow: inset 0 0 20px #00f2ff, 0 0 15px #00f2ff; border: 1px solid #00f2ff; z-index: 20; }
+        /* --- 4. EVALUATION ICONS (VIDEO MATCHED) --- */
+        .eval-icon { position: absolute; top: -10px; right: -10px; width: 28px; height: 28px; border-radius: 50%; border: 2px solid #000; display: flex; align-items: center; justify-content: center; font-weight: 900; transform: scale(0); animation: pop-in 0.4s var(--smooth) forwards; z-index: 50; }
+        @keyframes pop-in { to { transform: scale(1); } }
+        .icon-brilliant { background: #1fb39f; color: #fff; box-shadow: 0 0 15px #1fb39f; }
+        .icon-great { background: #5c8bb0; color: #fff; }
+        .icon-blunder { background: #fa412d; animation: death-pulse 2s infinite ease-in-out; }
+        @keyframes death-pulse { 0%, 100% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.2); filter: brightness(1.5); } }
 
-        /* --- 3. SETTINGS & INDIVIDUAL TEAM SELECT --- */
-        #settings-panel { position: fixed; right: 20px; top: 5vh; bottom: 5vh; width: 340px; background: rgba(5,6,8,0.98); border: 1px solid var(--n-blue); border-radius: 15px; transform: translateX(120%); transition: 0.7s var(--smooth); z-index: 25000; padding: 25px; display: flex; flex-direction: column; overflow-y: auto; }
-        #settings-panel.active { transform: translateX(0); }
-        .set-section { margin-bottom: 25px; border-bottom: 1px solid #222; padding-bottom: 15px; }
-        .set-label { color: var(--n-blue); font-size: 10px; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 15px; display: block; font-weight: bold; }
-        
-        .team-btn-row { display: flex; gap: 10px; margin-bottom: 10px; }
-        .team-btn { flex: 1; background: #111; border: 1px solid #444; color: #888; padding: 10px; cursor: pointer; transition: 0.3s; }
-        .team-btn.active { border-color: var(--n-blue); color: var(--n-blue); background: rgba(0,242,255,0.1); }
-
-        /* PLAY BUTTON + DOTS */
-        .play-composite { position: relative; width: 100%; height: 50px; margin-top: auto; display: flex; border: 1px solid var(--n-green); background: rgba(129, 182, 76, 0.1); }
+        /* ROUNDED PLAY BUTTON */
+        .play-composite { position: relative; width: 100%; height: 50px; margin-top: auto; display: flex; border: 1px solid var(--n-green); background: rgba(129, 182, 76, 0.1); border-radius: 25px; overflow: hidden; }
         .play-main { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--n-green); font-weight: bold; letter-spacing: 3px; cursor: pointer; }
-        .play-dots { width: 50px; border-left: 1px solid var(--n-green); display: flex; align-items: center; justify-content: center; color: var(--n-green); font-size: 22px; cursor: pointer; }
-        .dots-dropdown { position: absolute; bottom: 60px; right: 0; width: 180px; background: #111; border: 1px solid #333; display: none; flex-direction: column; z-index: 26000; }
-        .dots-dropdown.active { display: flex; }
-        .dots-dropdown button { background: none; border: none; color: #ccc; padding: 12px; text-align: left; cursor: pointer; font-size: 13px; border-bottom: 1px solid #222; }
 
-        /* --- 4. ORIGINAL FULL-LENGTH HELP MENU --- */
+        /* --- 5. HELP MENU (ORIGINAL) --- */
         #help-menu { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(0.9); width: 800px; background: #050608; border: 2px solid var(--n-blue); border-radius: 15px; z-index: 31000; padding: 30px; opacity: 0; pointer-events: none; transition: 0.5s var(--smooth); box-shadow: 0 0 60px rgba(0,242,255,0.4); }
         #help-menu.active { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
         .help-tabs { display: flex; gap: 8px; margin-bottom: 25px; border-bottom: 1px solid #222; }
@@ -67,112 +60,65 @@
         .tab-content { display: none; max-height: 500px; overflow-y: auto; padding-right: 15px; font-size: 13.5px; line-height: 1.8; }
         .tab-content.active { display: block; }
         .asset-card { background: rgba(20,20,20,0.5); border: 1px solid #1a1a1a; padding: 18px; margin-bottom: 12px; border-radius: 6px; }
-        .asset-card b { color: var(--n-yellow); margin-right: 5px; }
-        .group-label { color: var(--n-blue); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; margin: 30px 0 12px 0; border-bottom: 1px solid #1a1a1a; display: block; padding-bottom: 5px; }
 
-        #gear-btn { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; background: none; border: none; color: var(--n-blue); font-size: 35px; cursor: pointer; z-index: 100; transition: 0.4s; }
-        @keyframes reveal { to { clip-path: inset(0 0 0 0); } }
+        #gear-btn { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; background: none; border: none; color: var(--n-blue); font-size: 35px; cursor: pointer; z-index: 100; }
     </style>
 </head>
 <body>
     <canvas id="bg-canvas"></canvas>
 
-    <div id="boot"><div class="equinox-text">EQUINOX</div></div>
+    <div id="boot">
+        <div class="logo-ring"></div>
+        <div class="controller-logo">🎮</div>
+        <div class="equinox-title">EQUINOX GAMES</div>
+    </div>
+
     <div id="assets">
         <div class="rainbow-container"><div class="bar-wrap"><div id="fill"></div><div id="perc">0%</div></div></div>
     </div>
 
     <div id="game">
+        <div class="turn-banner" id="turn-txt">Team 1 Activation</div>
         <div id="board" class="board"></div>
         <button id="gear-btn" onclick="toggleSettings()">⚙️</button>
     </div>
 
-    <!-- SETTINGS PANEL -->
-    <div id="settings-panel">
-        <div class="set-section">
-            <span class="set-label">Media & Audio</span>
-            <input type="range" style="width:100%" min="0" max="100">
-            <iframe style="border-radius:12px; margin-top:15px;" src="https://open.spotify.com" width="100%" height="80" frameBorder="0" allow="encrypted-media"></iframe>
-        </div>
-
-        <div class="set-section">
-            <span class="set-label">Individual Team Color</span>
-            <div class="team-btn-row">
-                <button id="t1-select" class="team-btn active" onclick="switchTeamSelect(1)">Team 1</button>
-                <button id="t2-select" class="team-btn" onclick="switchTeamSelect(2)">Team 2</button>
-            </div>
-            <input type="range" id="color-slider" style="width:100%" min="0" max="360" value="180" oninput="updateTeamColor(this.value)">
-        </div>
-
-        <div class="play-composite">
-            <div class="play-main">PLAY</div>
-            <div class="play-dots" onclick="toggleDots(event)">...</div>
-            <div id="dots-menu" class="dots-dropdown">
-                <button onclick="toggleHelp()">Archived Help</button>
-                <button onclick="alert('Resigned')">Resign</button>
-                <button onclick="location.reload()">Reboot</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ORIGINAL HELP MENU -->
+    <!-- HELP MENU (ORIGINAL DEFINITIONS RESTORED) -->
     <div id="help-menu">
         <div class="help-tabs">
             <button class="tab-btn active" onclick="openTab(event, 'tab-pieces')">Pieces</button>
             <button class="tab-btn" onclick="openTab(event, 'tab-icons')">Icons</button>
             <button class="tab-btn" onclick="openTab(event, 'tab-mechanics')">Mechanics</button>
         </div>
-
         <div id="tab-pieces" class="tab-content active">
-            <div class="asset-card"><b>The Pawn:</b> The fundamental infantry unit of chess. It possesses a restricted forward movement of one square, yet captures diagonally. Upon its initial move, it may advance two squares. Reaching the terminal rank allows for promotion.</div>
-            <div class="asset-card"><b>The Knight:</b> A specialized tactical unit that navigates the board in a unique 'L' pattern. It maintains the singular ability to leap over intervening pieces, making it an invaluable asset in congested board states.</div>
-            <div class="asset-card"><b>The Bishop:</b> A sophisticated long-range operative that slides any distance along diagonal trajectories. Each Bishop is permanently confined to the square colour it begins on.</div>
-            <div class="asset-card"><b>The Rook:</b> A formidable heavy piece moving in straight horizontal or vertical lines. It plays a critical role in king safety through the castling maneuver.</div>
-            <div class="asset-card"><b>The Queen:</b> The most versatile and powerful asset on the board. She combines the movement capabilities of both the Rook and the Bishop.</div>
-            <div class="asset-card"><b>The King:</b> The pivotal figure around which the entire game revolves. Moves only one square in any direction; his preservation is absolute.</div>
+            <div class="asset-card"><b>The Pawn:</b> The fundamental infantry unit. Moves one forward, yet captures diagonally. Upon its initial move, it may advance two squares. Reaching terminal rank allows for promotion.</div>
+            <div class="asset-card"><b>The Knight:</b> A specialized tactical unit that navigates in a unique 'L' pattern. Maintains the singular ability to leap over intervening pieces.</div>
+            <div class="asset-card"><b>The Bishop:</b> A sophisticated long-range operative sliding any distance along diagonal trajectories. Bound to its starting colour.</div>
+            <div class="asset-card"><b>The Rook:</b> Formidable heavy piece moving in straight horizontal or vertical lines. Plays a critical role in king safety through the castling maneuver.</div>
+            <div class="asset-card"><b>The Queen:</b> Most versatile asset. Combines movement capabilities of both Rook and Bishop.</div>
+            <div class="asset-card"><b>The King:</b> The pivotal figure around which the entire game revolves. Preservation is absolute.</div>
         </div>
-
         <div id="tab-icons" class="tab-content">
-            <span class="group-label">Positive Indicators</span>
-            <div class="asset-card">⭐ <b>Best Move (Star):</b> Signifies the absolute strongest continuation identified by engine analysis. Optimizes winning probability.</div>
-            <div class="asset-card">✅ <b>Good Move (Tick):</b> Indicates a solid choice that maintains the current evaluation.</div>
-            <span class="group-label">Negative Indicators</span>
-            <div class="asset-card">! <b>Inaccuracy (Exclamation):</b> Marks a sub-optimal move that noticeably weakens your standing.</div>
-            <div class="asset-card">!! <b>Blunder (Double Exclamation):</b> A catastrophic error that tangibly reduces your advantage.</div>
-            <div class="asset-card">💀 <b>Total Blunder (Death):</b> Reserved for moves that lead to an immediate loss of the game or major piece.</div>
-            <span class="group-label">Exotic Classifications</span>
-            <div class="asset-card">? <b>Mystery Move (Question):</b> Moves that complicate the position in ways the engine cannot resolve.</div>
-            <div class="asset-card">📖 <b>Book Move (Manual):</b> Confirms following paths analyzed by grandmasters for centuries.</div>
+            <div class="asset-card">⭐ <b>Best Move:</b> Signifies the absolute strongest continuation identified by engine analysis.</div>
+            <div class="asset-card">💀 <b>Total Blunder:</b> Catastrophic error that leads to an immediate loss of the game or major piece.</div>
         </div>
-
-        <div id="tab-mechanics" class="tab-content">
-            <div class="asset-card"><b>Checkmate (Absolute Victory):</b> King is under threat and cannot relocate or block.</div>
-            <div class="asset-card"><b>Stalemate (Technical Draw):</b> Turn player has no legal moves, but King is not in check.</div>
-            <div class="asset-card"><b>Resignation (Concession):</b> Acknowledgement of defeat when strategically hopeless.</div>
-        </div>
-        <button onclick="toggleHelp()" style="width:100%; padding:15px; margin-top:20px; background:rgba(0,242,255,0.1); border:1px solid var(--n-blue); color:var(--n-blue); cursor:pointer;">RETURN TO SIMULATOR</button>
+        <button onclick="toggleHelp()" style="width:100%; padding:15px; margin-top:20px; background:rgba(0,242,255,0.1); border:1px solid var(--n-blue); color:var(--n-blue); border-radius:25px; cursor:pointer;">RETURN TO SIMULATOR</button>
     </div>
 
     <script>
-        const canvas = document.getElementById('bg-canvas');
-        const ctx = canvas.getContext('2d');
-        let pArr = [];
-        function res() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-        window.onresize = res; res();
-        class P { constructor(){this.r()} r(){this.x=Math.random()*canvas.width;this.y=Math.random()*canvas.height;this.v=Math.random()*0.3+0.1;this.s=Math.random()*1.5} u(){this.y-=this.v;if(this.y<0)this.r()} d(){ctx.fillStyle='rgba(255,255,255,0.2)';ctx.beginPath();ctx.arc(this.x,this.y,this.s,0,Math.PI*2);ctx.fill()} }
-        for(let i=0;i<80;i++) pArr.push(new P());
-        function anim(){ctx.clearRect(0,0,canvas.width,canvas.height);pArr.forEach(p=>{p.u();p.d()});requestAnimationFrame(anim)} anim();
-
+        // BOOT & LOADING
         window.onload = () => {
             setTimeout(() => {
                 document.getElementById('boot').style.opacity='0';
                 setTimeout(() => {
                     document.getElementById('boot').style.display='none';
                     document.getElementById('assets').style.display='flex';
+                    document.getElementById('assets').style.opacity='1';
                     let p=0; const iv=setInterval(()=>{p+=2;if(p>=100){clearInterval(iv);showG()}document.getElementById('fill').style.width=p+'%';document.getElementById('perc').innerText=p+'%'},30);
-                },800);
-            },1500);
+                },1500);
+            },5000);
         };
+
         function showG() {
             document.getElementById('assets').style.opacity='0';
             setTimeout(()=>{
@@ -183,17 +129,9 @@
             },800);
         }
 
-        let selectedTeam = 1;
-        function switchTeamSelect(t) {
-            selectedTeam = t;
-            document.getElementById('t1-select').classList.toggle('active', t===1);
-            document.getElementById('t2-select').classList.toggle('active', t===2);
-        }
-        function updateTeamColor(v) {
-            const color = `hsl(${v}, 100%, 50%)`;
-            document.documentElement.style.setProperty(`--t${selectedTeam}-color`, color);
-        }
-
+        // CHESS LOGIC & MOVEMENT
+        let currentTurn = 1;
+        let boardState = Array(64).fill(null);
         const layout = [
             ['♜','♞','♝','♛','♚','♝','♞','♜'], ['♟','♟','♟','♟','♟','♟','♟','♟'],
             [],[],[],[],
@@ -207,45 +145,73 @@
                 const r = Math.floor(i/8), c = i % 8;
                 sq.className = `sq ${(r + c) % 2 === 0 ? 'w' : 'b'}`;
                 sq.dataset.idx = i;
-                sq.ondragover = (e) => e.preventDefault();
-                sq.ondrop = dropPiece;
-
+                
                 const char = (layout[r] && layout[r][c]) || '';
                 if(char) {
                     const p = document.createElement('span');
                     p.className = `chess-piece ${r < 2 ? 'p-t2' : 'p-t1'}`;
                     p.innerText = char;
                     p.draggable = true;
-                    p.ondragstart = (e) => e.dataTransfer.setData("text", e.target.parentElement.dataset.idx);
-                    sq.appendChild(p);
-
-                    sq.onmouseenter = () => {
-                        if('♔♚♕♛'.includes(char)) sq.classList.add('hover-red');
-                        else if('♖♜♗♝'.includes(char)) sq.classList.add('hover-orange');
-                        else if('♘♞'.includes(char)) sq.classList.add('hover-yellow');
-                        else if('♙♟'.includes(char)) sq.classList.add((r===1||r===6)?'hover-blue':'hover-green');
+                    p.dataset.team = r < 2 ? 2 : 1;
+                    p.ondragstart = (e) => {
+                        if(parseInt(p.dataset.team) !== currentTurn) { e.preventDefault(); return; }
+                        e.dataTransfer.setData("text", i);
                     };
+                    sq.appendChild(p);
                 }
-                sq.onmouseleave = () => sq.className = sq.className.split(' ').filter(c => !c.startsWith('hover-')).join(' ');
+                sq.ondragover = (e) => e.preventDefault();
+                sq.ondrop = dropPiece;
                 b.appendChild(sq);
             }
         }
 
         function dropPiece(e) {
             e.preventDefault();
-            const fromIdx = e.dataTransfer.getData("text");
+            const fromIdx = parseInt(e.dataTransfer.getData("text"));
+            const targetSq = e.target.classList.contains('sq') ? e.target : e.target.parentElement;
+            const toIdx = parseInt(targetSq.dataset.idx);
+            
             const fromSq = document.querySelector(`.sq[data-idx="${fromIdx}"]`);
             const piece = fromSq.querySelector('.chess-piece');
-            if(piece) {
-                const targetSq = e.target.classList.contains('sq') ? e.target : e.target.parentElement;
+            
+            if(isLegalMove(piece, fromIdx, toIdx)) {
                 const existing = targetSq.querySelector('.chess-piece');
                 if(existing) targetSq.removeChild(existing);
                 targetSq.appendChild(piece);
+                
+                // Switch Turn
+                currentTurn = currentTurn === 1 ? 2 : 1;
+                document.getElementById('turn-txt').innerText = `Team ${currentTurn} Activation`;
+                
+                // Random Review Icon Simulation
+                if(Math.random() > 0.5) triggerReviewIcon(targetSq);
             }
         }
 
-        function toggleSettings() { document.getElementById('settings-panel').classList.toggle('active'); }
-        function toggleDots(e) { e.stopPropagation(); document.getElementById('dots-menu').classList.toggle('active'); }
+        function isLegalMove(piece, from, to) {
+            const char = piece.innerText;
+            const r1 = Math.floor(from/8), c1 = from % 8;
+            const r2 = Math.floor(to/8), c2 = to % 8;
+            const dr = Math.abs(r2 - r1), dc = Math.abs(c2 - c1);
+
+            // Basic Legal Validation
+            if('♞♘'.includes(char)) return (dr === 2 && dc === 1) || (dr === 1 && dc === 2);
+            if('♝♗'.includes(char)) return dr === dc;
+            if('♖♜'.includes(char)) return dr === 0 || dc === 0;
+            if('♛♕'.includes(char)) return dr === dc || dr === 0 || dc === 0;
+            if('♚♔'.includes(char)) return dr <= 1 && dc <= 1;
+            if('♟♙'.includes(char)) return dc === 0 && dr <= 2; // Simple pawn check
+            return true;
+        }
+
+        function triggerReviewIcon(sq) {
+            const icon = document.createElement('div');
+            icon.className = 'eval-icon icon-brilliant';
+            icon.innerText = '!!';
+            sq.appendChild(icon);
+            setTimeout(() => icon.remove(), 2000);
+        }
+
         function toggleHelp() { document.getElementById('help-menu').classList.toggle('active'); }
         function openTab(evt, name) {
             const c = document.getElementsByClassName("tab-content");

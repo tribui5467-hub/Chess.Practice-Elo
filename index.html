@@ -250,6 +250,38 @@
     const glyphs = { 'r':'♜','n':'♞','b':'♝','q':'♛','k':'♚','p':'♟','R':'♖','N':'♘','B':'♗','Q':'♕','K':'♔','P':'♙' };
     setTimeout(() => { document.getElementById('boot').style.display='none'; }, 3000);
     initBoard();
+// --- AI Difficulty Box Logic ---
+function updateDiffColor(val) {
+    const box = document.getElementById('ai-options');
+    // Remove all previous diff classes
+    box.className = ''; 
+    // Add the specific color class
+    box.classList.add(`diff-${val}`);
+}
+
+// --- Help Menu "Roll Out" Animation ---
+function openHelp() {
+    const overlay = document.getElementById('help-overlay');
+    overlay.style.display = 'flex';
+    setTimeout(() => {
+        overlay.classList.add('active');
+        // Staggered Expansion
+        document.querySelectorAll('.asset-card').forEach((card, i) => {
+            setTimeout(() => card.classList.add('show'), i * 150);
+        });
+    }, 50);
+}
+
+// --- Icon Auto-Removal (Put inside your move function) ---
+// When you create your .engine-icon, add this:
+// setTimeout(() => { icon.style.opacity = '0'; setTimeout(()=>icon.remove(), 300); }, 700);
+
+// --- Opponent Toggle ---
+// Hook this to your main opponent select dropdown
+document.getElementById('opponent-type-select').addEventListener('change', function() {
+    document.getElementById('ai-options').style.display = (this.value === 'equinox-ai') ? 'block' : 'none';
+});
+
 </script>
-</body>
+  </body>
 </html>

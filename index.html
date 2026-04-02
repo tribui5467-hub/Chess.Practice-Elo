@@ -270,6 +270,38 @@
     const glyphs = { 'r':'♜','n':'♞','b':'♝','q':'♛','k':'♚','p':'♟','R':'♖','N':'♘','B':'♗','Q':'♕','K':'♔','P':'♙' };
     setTimeout(() => { document.getElementById('boot').style.display='none'; }, 3000);
     initBoard();
+    // Creates the floating white background particles
+function initBG() {
+    for (let i = 0; i < 40; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle white-particle';
+        p.style.left = Math.random() * 100 + 'vw';
+        p.style.width = p.style.height = Math.random() * 4 + 'px';
+        p.style.animation = `bgFloat ${8 + Math.random() * 12}s linear infinite`;
+        p.style.animationDelay = Math.random() * 10 + 's';
+        document.body.appendChild(p);
+    }
+}
+
+// Function to explode red particles on capture
+function spawnBurst(x, y, cls) {
+    for (let i = 0; i < 15; i++) {
+        const p = document.createElement('div');
+        p.className = `particle ${cls}`;
+        p.style.left = x + 'px'; p.style.top = y + 'px';
+        p.style.width = p.style.height = Math.random() * 6 + 2 + 'px';
+        document.body.appendChild(p);
+        const angle = Math.random() * Math.PI * 2, vel = Math.random() * 120 + 40;
+        p.animate([
+            { transform: 'translate(0,0) scale(1)', opacity: 1 },
+            { transform: `translate(${Math.cos(angle)*vel}px, ${Math.sin(angle)*vel}px) scale(0)`, opacity: 0 }
+        ], { duration: 800, easing: 'ease-out' }).onfinish = () => p.remove();
+    }
+}
+
+// Start background on load
+initBG();
+
 </script>
   </body>
 </html>

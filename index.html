@@ -247,7 +247,7 @@
 
         function createBoard() {
             const b = document.getElementById('board');
-            const pArr = ['♜','♞','♝','♛','♚','♝','♞','♜','♟','♟','♟','♟','♟','♟','♟','♟'];
+            const pArr = ['♙','♙','♙','♙','♙','♙','♙','♙'], ['♖','♘','♗','♕','♔','♗','♘','♖'];
             for(let i=0; i<64; i++) {
                 let s = document.createElement('div');
                 s.className = `sq ${(Math.floor(i/8) + i%8) % 2 == 0 ? 'w' : 'b'}`;

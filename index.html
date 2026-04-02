@@ -76,7 +76,7 @@
 </head>
 <body>
 
-    <div id="boot"><div class="equinox-text">EQUINOX SYSTEM</div></div>
+    <div id="boot"><div class="equinox-text">Eqinox Games</div></div>
     <div id="turn-info">WHITE'S TURN</div>
 
     <div id="settings-panel">
@@ -229,7 +229,7 @@
                 movePieceSmooth(selectedSq, i);
                 currentTurn = currentTurn === 'W' ? 'B' : 'W';
                 document.getElementById('play-btn').classList.add('ongoing');
-                document.getElementById('play-btn').innerText = "GAME ONGOING";
+                document.getElementById('play-btn').innerText = "Game Ongoing";
             }
             selectedSq = null;
             document.querySelectorAll('.sq').forEach(s => s.classList.remove('selected'));

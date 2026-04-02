@@ -5,6 +5,15 @@
     <title>Equinox Games | Chess Practice</title>
     <style>
         :root { 
+            .particle { position: absolute; pointer-events: none; border-radius: 50%; z-index: 1000; }
+            .death-particle { background: var(--n-red); box-shadow: 0 0 10px var(--n-red); }
+.white-particle { background: #fff; box-shadow: 0 0 5px #fff; opacity: 0.4; pointer-events: none; }
+@keyframes bgFloat {
+    0% { transform: translateY(110vh) scale(0); opacity: 0; }
+    50% { opacity: 0.5; }
+    100% { transform: translateY(-10vh) scale(1.2); opacity: 0; }
+}
+
             --n-blue: #00f2ff; --n-green: #39FF14; --n-red: #fa412d; 
             --n-orange: #f4943c; --n-yellow: #f1c40f; 
             --smooth: cubic-bezier(0.4, 0, 0.2, 1);

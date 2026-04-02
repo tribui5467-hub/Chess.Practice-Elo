@@ -219,70 +219,80 @@
         }
         animate();
 
-        // --- SEQUENCE ---
+              // --- SEQUENCE ---
         setTimeout(() => {
-            document.getElementById('boot').style.opacity = '0';
-            setTimeout(() => {
-                document.getElementById('boot').style.display = 'none';
-                document.getElementById('assets').style.display = 'flex';
-                document.getElementById('assets').style.opacity = '1';
-                loadBar();
-            }, 1000);
+            const boot = document.getElementById('boot');
+            if (boot) {
+                boot.style.opacity = '0';
+                setTimeout(() => {
+                    boot.style.display = 'none';
+                    const assets = document.getElementById('assets');
+                    assets.style.display = 'flex';
+                    setTimeout(() => assets.style.opacity = '1', 50);
+                    loadBar();
+                }, 1000);
+            }
         }, 4000);
 
         function loadBar() {
-            let p = 0; let fill = document.getElementById('fill'); let perc = document.getElementById('perc');
+            let p = 0; 
+            let fill = document.getElementById('fill'); 
+            let perc = document.getElementById('perc');
             let iv = setInterval(() => {
                 p += Math.random() * 5;
-                if(p >= 100) { p = 100; clearInterval(iv); startGame(); }
-                fill.style.width = p + "%"; perc.innerText = Math.floor(p) + "%";
+                if(p >= 100) { 
+                    p = 100; 
+                    clearInterval(iv); 
+                    startGame(); 
+                }
+                if (fill) fill.style.width = p + "%"; 
+                if (perc) perc.innerText = Math.floor(p) + "%";
             }, 120);
         }
 
         function startGame() {
-            document.getElementById('assets').style.opacity = '0';
+            const assets = document.getElementById('assets');
+            assets.style.opacity = '0';
             setTimeout(() => {
-                document.getElementById('assets').style.display = 'none';
-                document.getElementById('game').style.display = 'flex';
-                document.getElementById('game').style.opacity = '1';
+                assets.style.display = 'none';
+                const game = document.getElementById('game');
+                game.style.display = 'flex';
+                setTimeout(() => game.style.opacity = '1', 50);
                 createBoard();
             }, 1500);
         }
 
-      /* --- Replace your current createBoard function with this exact block --- */
-function createBoard() {
-    const b = document.getElementById('board');
-    // Standard starting positions (0-15: Black, 48-63: White)
-    const blackRank = ['♜','♞','♝','♛','♚','♝','♞','♜'];
-    const whiteRank = ['♖','♘','♗','♕','♔','♗','♘','♖'];
-    
-    for(let i=0; i<64; i++) {
-        let s = document.createElement('div');
-        s.className = `sq ${(Math.floor(i/8) + i%8) % 2 == 0 ? 'w' : 'b'}`;
-        s.dataset.index = i; // Store index for move logic
-        
-        let p = document.createElement('div'); 
-        p.className = 'piece';
-        
-        // --- Piece Assignment Logic ---
-        if(i < 8) p.innerText = blackRank[i];           // Black Back Rank
-        else if(i >= 8 && i < 16) p.innerText = '♟';    // Black Pawns
-        else if(i >= 48 && i < 56) p.innerText = '♙';   // White Pawns
-        else if(i >= 56) p.innerText = whiteRank[i-56]; // White Back Rank
-        
-        s.appendChild(p); 
-        b.appendChild(s);
-        
-        // The "Wave" unlock animation from your video
-        setTimeout(() => p.classList.add('unlocked'), 500 + (i*10));
-    }
-}
-
+        function createBoard() {
+            const b = document.getElementById('board');
+            if (!b) return;
+            b.innerHTML = ''; // Clear board before building
+            const blackRank = ['♜','♞','♝','♛','♚','♝','♞','♜'];
+            const whiteRank = ['♖','♘','♗','♕','♔','♗','♘','♖'];
+            
+            for(let i=0; i<64; i++) {
+                let s = document.createElement('div');
+                s.className = `sq ${(Math.floor(i/8) + i%8) % 2 == 0 ? 'w' : 'b'}`;
+                s.dataset.index = i;
+                
+                let p = document.createElement('div'); 
+                p.className = 'piece';
+                
+                if(i < 8) p.innerText = blackRank[i];
+                else if(i >= 8 && i < 16) p.innerText = '♟';
+                else if(i >= 48 && i < 56) p.innerText = '♙';
+                else if(i >= 56) p.innerText = whiteRank[i-56];
+                
+                s.appendChild(p); 
+                b.appendChild(s);
+                setTimeout(() => p.classList.add('unlocked'), 500 + (i*10));
             }
         }
 
         // --- UI LOGIC ---
-        function toggleHelp() { document.getElementById('help-menu').classList.toggle('active'); }
+        function toggleHelp() { 
+            document.getElementById('help-menu').classList.toggle('active'); 
+        }
+
         function openTab(evt, tabName) {
             let contents = document.getElementsByClassName("tab-content");
             for (let i = 0; i < contents.length; i++) contents[i].classList.remove("active");
@@ -290,7 +300,7 @@ function createBoard() {
             for (let i = 0; i < buttons.length; i++) buttons[i].classList.remove("active");
             document.getElementById(tabName).classList.add("active");
             evt.currentTarget.classList.add("active");
-        }
-    </script>
+            
+</script>
 </body>
 </html>

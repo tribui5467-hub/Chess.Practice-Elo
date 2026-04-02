@@ -249,17 +249,35 @@
             }, 1500);
         }
 
-        function createBoard() {
-            const b = document.getElementById('board');
-            const pArr = ['♜','♞','♝','♛','♚','♝','♞','♜','♟','♟','♟','♟','♟','♟','♟','♟'];
-            for(let i=0; i<64; i++) {
-                let s = document.createElement('div');
-                s.className = `sq ${(Math.floor(i/8) + i%8) % 2 == 0 ? 'w' : 'b'}`;
-                let p = document.createElement('div'); p.className = 'piece';
-                if(i < 16) p.innerText = pArr[i];
-                if(i > 47) p.innerText = pArr[i-48];
-                s.appendChild(p); b.appendChild(s);
-                setTimeout(() => p.classList.add('unlocked'), 500 + (i*10));
+      /* --- Replace your current createBoard function with this exact block --- */
+function createBoard() {
+    const b = document.getElementById('board');
+    // Standard starting positions (0-15: Black, 48-63: White)
+    const blackRank = ['♜','♞','♝','♛','♚','♝','♞','♜'];
+    const whiteRank = ['♖','♘','♗','♕','♔','♗','♘','♖'];
+    
+    for(let i=0; i<64; i++) {
+        let s = document.createElement('div');
+        s.className = `sq ${(Math.floor(i/8) + i%8) % 2 == 0 ? 'w' : 'b'}`;
+        s.dataset.index = i; // Store index for move logic
+        
+        let p = document.createElement('div'); 
+        p.className = 'piece';
+        
+        // --- Piece Assignment Logic ---
+        if(i < 8) p.innerText = blackRank[i];           // Black Back Rank
+        else if(i >= 8 && i < 16) p.innerText = '♟';    // Black Pawns
+        else if(i >= 48 && i < 56) p.innerText = '♙';   // White Pawns
+        else if(i >= 56) p.innerText = whiteRank[i-56]; // White Back Rank
+        
+        s.appendChild(p); 
+        b.appendChild(s);
+        
+        // The "Wave" unlock animation from your video
+        setTimeout(() => p.classList.add('unlocked'), 500 + (i*10));
+    }
+}
+
             }
         }
 

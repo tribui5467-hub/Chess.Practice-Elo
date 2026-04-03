@@ -2,185 +2,112 @@
 <html lang="en-AU">
 <head>
     <meta charset="UTF-8">
-    <title>Equinox Games | Chess Practice</title>
+    <title>Equinox Games | Chess Pro</title>
+    <script src="https://cdnjs.cloudflare.com"></script>
     <style>
         :root { 
             --n-blue: #00f2ff; --n-green: #81b64c; --n-red: #fa412d; 
-            --n-orange: #f4943c; --n-yellow: #f1c40f; --n-pink: #ff00ff;
+            --n-orange: #f4943c; --n-yellow: #f1c40f;
+            --t1-color: #00f2ff; --t2-color: #ff00ff;
             --smooth: cubic-bezier(0.4, 0, 0.2, 1);
-            --bounce: cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         body, html { margin: 0; padding: 0; background: #000; color: white; font-family: 'Segoe UI', Tahoma, sans-serif; overflow: hidden; height: 100vh; width: 100vw; }
-        canvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0.6; }
+        #bg-3d { position: fixed; inset: 0; z-index: 1; }
 
-        /* --- 1. BOOT SCREEN --- */
-        #boot { position: fixed; inset: 0; background: black; z-index: 30000; display: flex; justify-content: center; align-items: center; transition: 1s; }
-        .equinox-text { font-size: 32px; letter-spacing: 12px; font-weight: 200; color: #fff; clip-path: inset(0 100% 0 0); animation: reveal 2.5s forwards; }
-        .divider { width: 2px; height: 40px; background: white; margin: 0 25px; transform: scaleY(0); animation: pop-divider 0.6s var(--smooth) forwards 2s; }
-        .controller-box { position: relative; width: 150px; height: 150px; display: flex; align-items: center; justify-content: center; overflow: visible; }
-        .aura-circle { position: absolute; width: 85px; height: 85px; border-radius: 50%; border: 3px solid var(--n-blue); opacity: 0; box-shadow: 0 0 35px var(--n-blue), inset 0 0 15px var(--n-blue); animation: aura-glow 1s forwards 3s, aura-pulse 3s infinite alternate 4s; z-index: 1; }
-        .controller-icon { font-size: 42px; transform: translateX(-180%); animation: slide-in 0.8s var(--smooth) forwards 2.5s; z-index: 2; }
-        @keyframes reveal { to { clip-path: inset(0 0 0 0); } }
-        @keyframes pop-divider { to { transform: scaleY(1); } }
-        @keyframes slide-in { to { transform: translateX(0); } }
-        @keyframes aura-glow { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
-        @keyframes aura-pulse { 0% { border-color: var(--n-blue); box-shadow: 0 0 20px var(--n-blue); } 100% { border-color: var(--n-pink); box-shadow: 0 0 45px var(--n-pink); transform: scale(1.15); } }
+        /* --- SYSTEM INITIALIZE --- */
+        #audio-trigger { position: fixed; inset: 0; z-index: 40000; background: rgba(0,0,0,0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
+        .trigger-btn { padding: 25px 60px; border: 2px solid var(--n-blue); color: var(--n-blue); border-radius: 50px; font-weight: bold; letter-spacing: 8px; box-shadow: 0 0 30px var(--n-blue); transition: 0.3s; }
+        .trigger-btn:hover { background: var(--n-blue); color: black; }
 
-        /* --- 2. LOADING SCREEN --- */
-        #assets { position: fixed; inset: 0; background: #000; z-index: 20000; display: none; opacity: 0; transition: 1.5s; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        .elo-title { font-size: 42px; color: var(--n-blue); transform: translateY(30px); opacity: 0; animation: up 1s var(--smooth) forwards 0.5s; letter-spacing: 4px; }
-        .elo-line { width: 0; height: 2px; background: var(--n-blue); margin: 25px 0; box-shadow: 0 0 15px var(--n-blue); animation: pop-line-long 1.2s var(--smooth) forwards 1s; }
-        .elo-desc { font-size: 15px; color: #aaa; max-width: 700px; opacity: 0; clip-path: inset(0 0 100% 0); animation: wipe 1.2s var(--smooth) forwards 1.8s; line-height: 1.8; padding: 0 20px; }
-        @keyframes up { to { opacity: 1; transform: translateY(0); } }
-        @keyframes pop-line-long { to { width: 600px; } }
-        @keyframes wipe { to { opacity: 1; clip-path: inset(0 0 0 0); } }
-        .rainbow-container { width: 420px; height: 35px; border-radius: 17px; padding: 2px; background: linear-gradient(to right, #ff0000, #ff8c00, #ffff00, #00ff00); display: flex; align-items: center; justify-content: center; margin-top: 40px; }
-        .bar-wrap { width: 100%; height: 100%; background: #000; border-radius: 15px; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; }
-        #fill { position: absolute; left: 0; height: 100%; width: 0%; background: #00ffff; box-shadow: 2px 0 10px #00ffff; transition: width 0.4s var(--smooth); }
-        #perc { position: relative; z-index: 2; font-weight: bold; font-size: 14px; color: white; mix-blend-mode: difference; }
+        /* --- PROFILE --- */
+        #profile-bar { position: fixed; top: 15px; right: 15px; background: rgba(5,6,8,0.95); border: 1px solid var(--n-blue); padding: 12px 25px; border-radius: 30px; z-index: 1000; display: flex; align-items: center; gap: 20px; font-size: 14px; }
+        .elo-tag { color: var(--n-yellow); font-weight: bold; font-family: monospace; }
 
-        /* --- 3. GAME HUD & COOL HIGHLIGHTS --- */
-        #game { display: none; width: 100vw; height: 100vh; justify-content: center; align-items: center; opacity: 0; transition: 1.5s; z-index: 5; }
-        .board { width: 560px; height: 560px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid #111; background: #000; z-index: 10; position: relative; transition: filter 0.6s var(--smooth); }
-        
-        .sq { width: 70px; height: 70px; display: flex; justify-content: center; align-items: center; cursor: pointer; position: relative; transition: box-shadow 0.2s var(--smooth); z-index: 1; }
-        .w { background: rgba(45, 45, 55, 0.9); } .b { background: rgba(20, 20, 25, 0.9); }
-        
-        .piece { font-size: 48px; transition: transform 0.3s var(--smooth), opacity 0.8s; filter: brightness(0); opacity: 0; transform: scale(0.5); pointer-events: none; user-select: none; z-index: 2; }
-        .piece.unlocked { filter: brightness(1); opacity: 1; transform: scale(1); pointer-events: none; }
-        .piece.selected { transform: scale(1.15) translateY(-5px); filter: drop-shadow(0 5px 15px black); }
+        /* --- GAME ENGINE --- */
+        #game { display: none; width: 100vw; height: 100vh; justify-content: center; align-items: center; z-index: 5; position: relative; flex-direction: column; }
+        .board { width: 560px; height: 560px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid #111; background: #000; position: relative; box-shadow: 0 0 50px rgba(0,0,0,0.9); }
+        .sq { width: 70px; height: 70px; display: flex; justify-content: center; align-items: center; cursor: pointer; position: relative; }
+        .w { background: rgba(235, 236, 208, 0.05); } .b { background: rgba(119, 149, 86, 0.05); }
+        .chess-piece { font-size: 52px; z-index: 15; user-select: none; cursor: grab; }
+        .p-t1 { color: var(--t1-color); text-shadow: 0 0 10px var(--t1-color); }
+        .p-t2 { color: var(--t2-color); text-shadow: 0 0 10px var(--t2-color); }
 
-        /* SQUARED NEON HIGHLIGHTS */
-        .sq.hover-red { box-shadow: inset 0 0 0 2px var(--n-red), inset 0 0 10px rgba(250, 65, 45, 0.3), 0 0 25px var(--n-red); z-index: 10; }
-        .sq.hover-orange { box-shadow: inset 0 0 0 2px var(--n-orange), inset 0 0 10px rgba(244, 148, 60, 0.3), 0 0 25px var(--n-orange); z-index: 10; }
-        .sq.hover-yellow { box-shadow: inset 0 0 0 2px var(--n-yellow), inset 0 0 10px rgba(241, 196, 15, 0.3), 0 0 25px var(--n-yellow); z-index: 10; }
-        .sq.hover-green { box-shadow: inset 0 0 0 2px var(--n-green), inset 0 0 10px rgba(129, 182, 76, 0.3), 0 0 25px var(--n-green); z-index: 10; }
-        .sq.hover-blue { box-shadow: inset 0 0 0 2px var(--n-blue), inset 0 0 10px rgba(0, 242, 255, 0.3), 0 0 25px var(--n-blue); z-index: 10; }
+        /* --- SETTINGS PANEL --- */
+        #settings-panel { position: fixed; right: 20px; top: 5vh; width: 340px; background: rgba(5,6,8,0.98); border: 1px solid var(--n-blue); padding: 25px; transform: translateX(120%); transition: 0.5s var(--smooth); z-index: 5000; border-radius: 15px; }
+        #settings-panel.active { transform: translateX(0); }
+        .set-btn { width: 100%; padding: 12px; margin-bottom: 10px; background: #111; border: 1px solid #333; color: white; cursor: pointer; border-radius: 8px; font-weight: bold; transition: 0.2s; }
+        .set-btn.active { border-color: var(--n-blue); color: var(--n-blue); background: rgba(0,242,255,0.05); }
 
-        .valid-marker { position: absolute; width: 22px; height: 22px; border-radius: 50%; background: rgba(0, 242, 255, 0.6); box-shadow: 0 0 15px var(--n-blue); pointer-events: none; z-index: 3; animation: breathe 2s ease-in-out infinite; }
-        .sq.capture-move .valid-marker { background: transparent; width: 64px; height: 64px; border-radius: 50%; border: 4px solid var(--n-red); box-shadow: 0 0 20px var(--n-red), inset 0 0 10px var(--n-red); animation: breathe-capture 1.5s ease-in-out infinite; }
-        
-        @keyframes breathe { 0%, 100% { transform: scale(0.9); opacity: 0.6; } 50% { transform: scale(1.1); opacity: 1; } }
-        @keyframes breathe-capture { 0%, 100% { transform: scale(0.95); opacity: 0.7; border-color: var(--n-red); } 50% { transform: scale(1.05); opacity: 1; border-color: #ff5555; } }
-
-        /* --- SETTINGS MENU --- */
-        #settings-container { position: fixed; bottom: 20px; right: 20px; display: flex; align-items: center; gap: 15px; z-index: 1000; }
-        #play-btn-main { background: rgba(0,0,0,0.8); border: 1px solid var(--n-blue); color: var(--n-blue); padding: 8px 25px; border-radius: 20px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        #play-btn-main:hover { background: var(--n-blue); color: black; box-shadow: 0 0 15px var(--n-blue); }
-        
-        .dots-wrapper { display: flex; gap: 4px; padding: 10px; cursor: pointer; position: relative; }
-        .dots-wrapper span { width: 5px; height: 5px; background: var(--n-blue); border-radius: 50%; transition: 0.3s; }
-        .dots-wrapper:hover span { transform: scale(1.3); background: white; }
-
-        .dropup-menu { position: absolute; bottom: 50px; right: 0; background: #080808; border: 1px solid #333; border-radius: 10px; width: 200px; display: none; flex-direction: column; overflow: hidden; box-shadow: 0 0 30px rgba(0,0,0,0.8); }
-        .dropup-menu.active { display: flex; animation: slideUp 0.3s var(--smooth); }
-        .menu-item { padding: 15px 20px; font-size: 13px; color: #ccc; cursor: pointer; transition: 0.2s; }
-        .menu-item:hover { background: #111; color: var(--n-blue); }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* --- RESIGN SCREEN --- */
-        #resign-screen { position: fixed; inset: 0; background: black; z-index: 40000; display: none; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: 1.5s; }
-        .resign-cinematic-text { font-size: 60px; letter-spacing: 20px; color: var(--n-red); text-shadow: 0 0 40px var(--n-red); margin-bottom: 50px; font-weight: 200; }
-        .play-again-btn { padding: 15px 40px; background: transparent; border: 1px solid white; color: white; border-radius: 40px; cursor: pointer; font-size: 16px; letter-spacing: 3px; transition: all 0.6s var(--bounce); }
-        .play-again-btn:hover { transform: scale(1.25); background: white; color: black; box-shadow: 0 0 50px white; border-color: white; }
-
-        /* --- 4. HELP MENU --- */
-        #help-menu { 
-            position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(0.9); 
-            width: 780px; background: #050608; border: 2px solid var(--n-blue); border-radius: 15px; 
-            z-index: 31000; padding: 30px; opacity: 0; pointer-events: none; transition: 0.5s var(--smooth);
-            box-shadow: 0 0 50px rgba(0,242,255,0.3); overflow: hidden;
-        }
+        /* --- ORIGINAL HELP MENU (IMAGE MATCHED) --- */
+        #help-menu { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(0.9); width: 850px; background: #050608; border: 2px solid var(--n-blue); border-radius: 15px; z-index: 10000; padding: 35px; opacity: 0; pointer-events: none; transition: 0.5s var(--smooth); box-shadow: 0 0 80px rgba(0,242,255,0.3); }
         #help-menu.active { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
-        #game.blurred { filter: blur(15px); }
-
-        .x-close-circle {
-            position: absolute; top: 20px; right: 20px; width: 40px; height: 40px;
-            border: 2px solid black; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: 0.3s;
-        }
-        .x-close-circle::before, .x-close-circle::after { content: ''; position: absolute; width: 18px; height: 2px; background: black; }
-        .x-close-circle::before { transform: rotate(45deg); } .x-close-circle::after { transform: rotate(-45deg); }
-        .x-close-circle:hover { background: var(--n-red); border-color: var(--n-red); }
-        .x-close-circle:hover::before, .x-close-circle:hover::after { background: white; }
-
-        .help-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px; }
-        .tab-btn { background: none; border: 1px solid #333; color: #888; padding: 8px 16px; cursor: pointer; border-radius: 4px; transition: 0.3s; font-size: 12px; text-transform: uppercase; }
-        .tab-btn.active { border-color: var(--n-blue); color: var(--n-blue); background: rgba(0,242,255,0.1); }
-        .tab-content { display: none; max-height: 500px; overflow-y: auto; padding-right: 15px; transition: filter 0.4s; }
+        .help-tabs { display: flex; gap: 10px; border-bottom: 1px solid #222; margin-bottom: 25px; }
+        .tab-btn { background: none; border: none; color: #555; padding: 15px 25px; cursor: pointer; text-transform: uppercase; font-size: 12px; letter-spacing: 2px; }
+        .tab-btn.active { color: var(--n-blue); border-bottom: 2px solid var(--n-blue); }
+        .tab-content { display: none; max-height: 500px; overflow-y: auto; padding-right: 20px; }
         .tab-content.active { display: block; }
+        .asset-card { background: rgba(25,25,30,0.6); border: 1px solid #1a1a1a; padding: 20px; margin-bottom: 15px; border-radius: 8px; font-size: 13.5px; line-height: 1.8; border-left: 3px solid var(--n-blue); }
+        .group-label { color: var(--n-blue); font-size: 11px; letter-spacing: 3px; text-transform: uppercase; margin: 30px 0 15px 0; border-bottom: 1px solid #222; display: block; padding-bottom: 5px; }
+        .icon-glyph { font-size: 22px; margin-right: 15px; display: inline-block; vertical-align: middle; width: 35px; text-align: center; }
 
-        .asset-card { border-left: 3px solid var(--n-blue); background: rgba(255,255,255,0.03); padding: 15px; margin-bottom: 12px; font-size: 13px; line-height: 1.7; border-radius: 0 8px 8px 0; transition: 0.4s var(--smooth); cursor: pointer; transform-origin: center; }
-        .asset-card:hover { transform: scale(1.02); background: rgba(255,255,255,0.06); border-left-color: var(--n-pink); }
-        
-        /* EXPANDED DEFINITION STYLE */
-        .asset-card.expanded {
-            position: fixed; inset: 20%; height: fit-content; z-index: 100;
-            background: #050608; border: 2px solid var(--n-blue); border-radius: 20px;
-            padding: 40px; transform: scale(1.1); font-size: 18px;
-            box-shadow: 0 0 100px black;
-        }
+        /* --- UI CONTROLS --- */
+        .controls { margin-top: 25px; display: flex; gap: 20px; align-items: center; }
+        .play-btn { width: 240px; padding: 18px; border-radius: 30px; border: 1px solid var(--n-green); color: var(--n-green); background: rgba(129, 182, 76, 0.1); cursor: pointer; font-weight: bold; letter-spacing: 2px; }
+        .play-btn.active { border-color: var(--n-red); color: var(--n-red); background: rgba(250, 65, 45, 0.1); }
 
-        .group-label { color: var(--n-blue); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; margin: 25px 0 12px 0; border-bottom: 1px solid #222; display: block; padding-bottom: 5px; font-weight: bold; }
-        .asset-card b { color: var(--n-yellow); margin-right: 8px; }
-        .icon-glyph { font-size: 20px; width: 35px; display: inline-block; text-align: center; vertical-align: middle; margin-right: 10px; }
-        .close-menu-btn { width: 100%; padding: 15px; margin-top: 20px; background: rgba(250, 65, 45, 0.1); border: 1px solid var(--n-red); color: var(--n-red); cursor: pointer; border-radius: 8px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; }
-        .close-menu-btn:hover { background: var(--n-red); color: white; box-shadow: 0 0 15px var(--n-red); }
+        #victory-screen { position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 20000; display: none; flex-direction: column; align-items: center; justify-content: center; }
+        .neon-text { font-size: 85px; color: #fff; text-shadow: 0 0 25px var(--n-blue), 0 0 50px var(--n-blue); letter-spacing: 20px; font-weight: 900; }
     </style>
 </head>
 <body>
+    <div id="bg-3d"></div>
 
-    <canvas id="bg-canvas"></canvas>
-
-    <div id="boot">
-        <div class="equinox-text">EQUINOX GAMES</div>
-        <div class="divider"></div>
-        <div class="controller-box">
-            <div class="aura-circle"></div>
-            <div class="controller-icon">🎮</div>
-        </div>
+    <!-- AUDIO/SYSTEM OVERLAY -->
+    <div id="audio-trigger" onclick="bootProtocol()">
+        <div class="trigger-btn">BOOT PROTOCOL</div>
+        <p style="margin-top:25px; color:#444; letter-spacing:4px; font-size:12px;">CLICK TO AUTHORIZE ENGINE & MEDIA</p>
     </div>
 
-    <div id="assets">
-        <div class="elo-title">Chess Practice | Elo</div>
-        <div class="elo-line"></div>
-        <div class="elo-desc">Regular chess practice boosts your Elo rating by improving strategic understanding, anticipatory skills, and tactical abilities. It promotes critical thinking and mental agility, while game analysis helps identify patterns. Practicing with others builds community and motivation. Consistency is key to mastering chess at any skill level.</div>
-        <div class="rainbow-container">
-            <div class="bar-wrap">
-                <div id="fill"></div>
-                <div id="perc">0%</div>
-            </div>
-        </div>
+    <!-- PROFILE HUD -->
+    <div id="profile-bar">
+        <span>EQUINOX_PROTOCOL_v4.0</span>
+        <span class="elo-tag">ELO: <span id="elo-val">1200</span></span>
     </div>
 
+    <!-- GAME ENGINE -->
     <div id="game">
-        <div class="board" id="board"></div>
-        
-        <div id="settings-container">
-            <button id="play-btn-main">PLAY</button>
-            <div class="dots-wrapper" onclick="toggleSettings(event)">
-                <span></span><span></span><span></span>
-                <div id="dropup" class="dropup-menu">
-                    <div class="menu-item" onclick="resignGame()">Resign</div>
-                    <div class="menu-item" onclick="openHelpMenu()">Archived Help Menu</div>
-                </div>
-            </div>
+        <div id="board" class="board"></div>
+        <div class="controls">
+            <button class="play-btn" id="play-main" onclick="toggleEngine()">START SIMULATION</button>
+            <div style="cursor:pointer; font-size:35px; color:var(--n-blue)" onclick="toggleSettings()">⋮</div>
         </div>
     </div>
 
-    <div id="resign-screen">
-        <div class="resign-cinematic-text">CONCEDED</div>
-        <button class="play-again-btn" onclick="location.reload()">PLAY AGAIN</button>
+    <!-- SETTINGS PANEL -->
+    <div id="settings-panel">
+        <span style="color:var(--n-blue); font-size:10px; letter-spacing:3px; display:block; margin-bottom:15px;">MEDIA INTERFACE</span>
+        <input type="range" style="width:100%; accent-color:var(--n-blue); margin-bottom:10px;" min="0" max="100" value="50">
+        <iframe style="border-radius:12px; margin-bottom:25px;" src="https://open.spotify.com" width="100%" height="80" frameBorder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>
+        
+        <span style="color:var(--n-blue); font-size:10px; letter-spacing:3px; display:block; margin-bottom:15px;">TEAM CALIBRATION</span>
+        <div style="display:flex; gap:10px; margin-bottom:12px;">
+            <button id="t1-btn" onclick="selTeam(1)" class="set-btn active">Team 1</button>
+            <button id="t2-btn" onclick="selTeam(2)" class="set-btn">Team 2</button>
+        </div>
+        <input type="range" style="width:100%; accent-color:var(--n-blue)" min="0" max="360" oninput="updCol(this.value)">
+        
+        <button class="set-btn" style="color:var(--n-blue); margin-top:30px" onclick="toggleHelp()">Archived Help Menu</button>
+        <button class="set-btn" style="color:var(--n-red)" onclick="triggerWin()">Resign Match</button>
     </div>
 
+    <!-- THE ORIGINAL HELP MENU (IMAGE MATCHED DEFINITIONS) -->
     <div id="help-menu">
-        <div class="x-close-circle" onclick="openHelpMenu()"></div>
         <div class="help-tabs">
             <button class="tab-btn active" onclick="openTab(event, 'tab-pieces')">Pieces</button>
             <button class="tab-btn" onclick="openTab(event, 'tab-icons')">Icons</button>
             <button class="tab-btn" onclick="openTab(event, 'tab-mechanics')">Mechanics</button>
         </div>
-        
+
         <div id="tab-pieces" class="tab-content active">
             <div class="asset-card"><b>The Pawn</b> The fundamental infantry unit of chess. It possesses a restricted forward movement of one square, yet captures diagonally. Upon its initial move, it may advance two squares. Reaching the terminal rank allows for promotion into a Queen, Rook, Bishop, or Knight, granting the piece immense late-game utility.</div>
             <div class="asset-card"><b>The Knight</b> A specialized tactical unit that navigates the board in a unique 'L' pattern—two squares in one cardinal direction followed by one square perpendicular. It maintains the singular ability to leap over intervening pieces, making it an invaluable asset in congested board states where other pieces are obstructed.</div>
@@ -191,115 +118,147 @@
         </div>
 
         <div id="tab-icons" class="tab-content">
-            <div class="group-label">Positive Indicators</div>
-            <div class="asset-card"><span class="icon-glyph">⭐</span><b>The Best Move (Star)</b> This designation signifies the absolute strongest continuation identified by the engine analysis. Playing this move optimizes your winning probability and represents the highest level of technical accuracy possible in the current position, often finding the only path to a victory.</div>
-            <div class="asset-card"><span class="icon-glyph">✔️</span><b>Good Move (Tick)</b> Indicates a solid, fundamentally sound choice that maintains the current evaluation of the position. While it may not be the engine's primary preference, it adheres to sound chess principles and ensures the player does not concede any unnecessary tactical advantages.</div>
-            <div class="group-label">Negative Indicators</div>
-            <div class="asset-card"><span class="icon-glyph">!</span><b>Inaccuracy (Exclamation)</b> Marks a sub-optimal move that noticeably weakens your standing. It suggests a missed opportunity to apply pressure or a minor positional concession that allows the opponent to improve their pieces more easily than the optimal continuation would have permitted.</div>
-            <div class="asset-card"><span class="icon-glyph">!!</span><b>Blunder (Death Emoji)</b> A catastrophic error that tangibly reduces your advantage or directly allows the opponent to achieve a winning position. This usually results from an overlooked tactical sequence or a serious misunderstanding of the immediate requirements of the board position.</div>
-            <div class="asset-card"><span class="icon-glyph">💀</span><b>Fatal Blunder (Death)</b> Reserved for moves that lead to an immediate loss of the game or the loss of a major piece without compensation. This classification represents a total collapse of strategy and typically shifts the game evaluation into a forced win for the opponent.</div>
-            <div class="group-label">Exotic Classifications</div>
-            <div class="asset-card"><span class="icon-glyph">?</span><b>Mystery Move (Question)</b> Used to denote moves that complicate the position in ways the engine cannot immediately resolve. It signifies a high-variance choice that creates a chaotic environment where both players have equal chances to succeed or fail based on subsequent precision.</div>
-            <div class="asset-card"><span class="icon-glyph">??</span><b>The Brilliant Move (Double Question)</b> Although visually appearing similar to a blunder, this highlights a high-level sacrifice that appears as an error but leads to a forced winning advantage. It signifies a move that is difficult for humans to calculate but mathematically sound under deep analysis.</div>
-            <div class="asset-card"><span class="icon-glyph">📖</span><b>The Book Move (Manual)</b> Indicates that the move belongs to the established library of opening theory. This confirms the player is following paths analyzed by grandmasters for centuries to reach a balanced and playable middle-game position with known strategic goals.</div>
+            <span class="group-label">Positive Indicators</span>
+            <div class="asset-card"><span class="icon-glyph">⭐</span><b>The Best Move (Star)</b> Signifies the strongest continuation identified by engine analysis. Playing this move optimizes winning probability and represents the highest level of technical accuracy.</div>
+            <div class="asset-card"><span class="icon-glyph">✔️</span><b>Good Move (Tick)</b> Indicates a solid, sound choice that maintains evaluation. It adheres to sound chess principles.</div>
+            
+            <span class="group-label">Negative Indicators</span>
+            <div class="asset-card"><span class="icon-glyph">!</span><b>Inaccuracy (Exclamation)</b> Marks a sub-optimal move that weakens your standing. Suggests a missed opportunity to apply pressure.</div>
+            <div class="asset-card"><span class="icon-glyph">!!</span><b>Blunder (Death Emoji)</b> A catastrophic error that tangibly reduces advantage or directly allows a winning position for the opponent.</div>
+            <div class="asset-card"><span class="icon-glyph">💀</span><b>Fatal Blunder (Death)</b> Reserved for moves that lead to an immediate loss of the game or a major piece without compensation.</div>
+            
+            <span class="group-label">Exotic Classifications</span>
+            <div class="asset-card"><span class="icon-glyph">?</span><b>Mystery Move (Question)</b> Denote moves that complicate the position in ways the engine cannot immediately resolve. High variance choice.</div>
+            <div class="asset-card"><span class="icon-glyph">??</span><b>The Brilliant Move (Double Question)</b> A high-level sacrifice that appears as an error but leads to a forced winning advantage.</div>
+            <div class="asset-card"><span class="icon-glyph">📖</span><b>The Book Move (Manual)</b> Confirms the player is following paths analyzed by grandmasters for centuries.</div>
         </div>
 
         <div id="tab-mechanics" class="tab-content">
-            <div class="group-label">Core Mechanics</div>
-            <div class="asset-card"><b>Capturing Methodology</b> To capture an opponent's unit, you must move your piece onto the square it currently occupies. The displaced piece is permanently removed from the field. You cannot capture your own units or occupy a square already held by your own color, requiring careful navigation of space.</div>
-            <div class="asset-card"><b>En Passant</b> A specialized pawn capture occurring when an opponent moves their pawn two squares forward from its starting position and lands adjacent to your pawn. You may capture that pawn as if it had only moved one square, provided you do so on the very next turn.</div>
-            <div class="group-label">Ending Conditions</div>
-            <div class="asset-card"><b>Checkmate (Absolute Victory)</b> The definitive conclusion of a chess match. This occurs when a King is under direct threat of capture and possesses no legal moves to relocate, block the line of attack, or eliminate the attacking piece entirely. The game ends immediately in a win for the attacker.</div>
-            <div class="asset-card"><b>Stalemate (Technical Draw)</b> A unique situation where the player whose turn it is has no legal moves remaining, yet their King is not currently in check. Because the player cannot move but is not defeated, the game ends in a draw, often occurring as a defensive 'swindle'.</div>
-            <div class="asset-card"><b>Resignation (Concession)</b> A formal acknowledgement of defeat. A player may choose to resign at any moment if they determine the position is strategically hopeless. This is considered professional courtesy when a loss is mathematically certain, immediately awarding the full victory to the opponent.</div>
-            <div class="asset-card"><b>Timeout (Temporal Loss)</b> In timed competitive play, if a player's clock expires before they complete their required moves, they lose the game immediately. This emphasizes the importance of time management as a critical strategic resource, where speed is as vital as tactical precision.</div>
+            <span class="group-label">Core Mechanics</span>
+            <div class="asset-card"><b>Capturing Methodology</b> Move your piece onto the square an opponent's unit currently occupies. The displaced piece is permanently removed from the field.</div>
+            <div class="asset-card"><b>En Passant</b> A specialized pawn capture occurring when an opponent moves their pawn two squares forward from start and lands adjacent to yours.</div>
+
+            <span class="group-label">Ending Conditions</span>
+            <div class="asset-card"><b>Checkmate (Absolute Victory)</b> King is under threat and possesses no legal moves to relocate, block, or eliminate the attacker.</div>
+            <div class="asset-card"><b>Stalemate (Technical Draw)</b> Player has no legal moves remaining, yet King is not in check. Ends in a draw.</div>
+            <div class="asset-card"><b>Resignation (Concession)</b> Formal acknowledgement of defeat when position is strategically hopeless. Immediate victory for opponent.</div>
         </div>
-        <button class="close-menu-btn" onclick="openHelpMenu()">Return to Match</button>
+        <button onclick="toggleHelp()" style="width:100%; padding:20px; margin-top:25px; background:rgba(0,242,255,0.1); border:1px solid var(--n-blue); color:var(--n-blue); border-radius:30px; cursor:pointer; font-weight:bold; letter-spacing:2px;">CLOSE ARCHIVE ACCESS</button>
+    </div>
+
+    <!-- VICTORY SCREEN -->
+    <div id="victory-screen">
+        <div class="neon-text">MATCH RESOLVED</div>
+        <p style="color:var(--n-yellow); margin-top:25px; letter-spacing:5px;">SYSTEM UPDATE: ELO +25</p>
+        <button onclick="location.reload()" style="margin-top:50px; padding:18px 50px; background:none; border:2px solid #fff; color:#fff; cursor:pointer; font-weight:bold; border-radius:50px; letter-spacing:2px;">NEW SIMULATION</button>
     </div>
 
     <script>
-        const gameState = { board: [], selected: null, hovered: null, isCtrlPressed: false, turn: 'w' };
-        const pieceMap = { 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚', 'p': '♟', 'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔', 'P': '♙' };
+        // --- 3D ENVIRONMENT (COLLIDING FRAGMENTS) ---
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('bg-3d').appendChild(renderer.domElement);
 
-        function initGame() {
-            gameState.board = [['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']];
-            renderBoard();
+        const fragments = [];
+        for(let i=0; i<80; i++) {
+            const geo = new THREE.BoxGeometry(Math.random()*0.5, Math.random()*0.5, 0.05);
+            const mat = new THREE.MeshBasicMaterial({ color: Math.random()>0.5?0x00f2ff:0x222222, transparent:true, opacity:0.3 });
+            const m = new THREE.Mesh(geo, mat);
+            m.position.set((Math.random()-0.5)*18, (Math.random()-0.5)*18, (Math.random()-0.5)*8);
+            scene.add(m);
+            fragments.push({m, v: (Math.random()-0.5)*0.015});
+        }
+        camera.position.z = 8;
+        function animate() {
+            requestAnimationFrame(animate);
+            fragments.forEach(f => { f.m.rotation.x += 0.01; f.m.position.y += f.v; if(f.m.position.y > 12) f.m.position.y = -12; });
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // --- SYSTEM BOOT ---
+        function bootProtocol() {
+            document.getElementById('audio-trigger').style.display = 'none';
+            document.getElementById('game').style.display = 'flex';
+            createBoard();
         }
 
-        function renderBoard() {
-            const b = document.getElementById('board'); b.innerHTML = '';
-            for(let r=0; r<8; r++) {
-                for(let c=0; c<8; c++) {
-                    const sq = document.createElement('div');
-                    sq.className = `sq ${(r+c)%2===0 ? 'w' : 'b'}`;
-                    sq.dataset.r = r; sq.dataset.c = c;
-                    sq.onmouseenter = () => { gameState.hovered = {r, c}; updateHighlights(); };
-                    sq.onmouseleave = () => { gameState.hovered = null; updateHighlights(); };
-                    sq.onclick = () => handleClick(r, c);
-                    const pieceCode = gameState.board[r][c];
-                    if (pieceCode) {
-                        const p = document.createElement('div');
-                        p.className = 'piece unlocked'; p.innerText = pieceMap[pieceCode];
-                        sq.appendChild(p);
-                    }
-                    b.appendChild(sq);
+        // --- GAME ENGINE ---
+        let teamSel = 1, turn = 1, elo = 1200;
+        const layout = [
+            ['♜','♞','♝','♛','♚','♝','♞','♜'], ['♟','♟','♟','♟','♟','♟','♟','♟'],
+            [],[],[],[],
+            ['♙','♙','♙','♙','♙','♙','♙','♙'], ['♖','♘','♗','♕','♔','♗','♘','♖']
+        ];
+
+        function createBoard() {
+            const b = document.getElementById('board');
+            b.innerHTML = '';
+            for(let i=0; i<64; i++) {
+                const sq = document.createElement('div');
+                const r = Math.floor(i/8), c = i % 8;
+                sq.className = `sq ${(r+c)%2===0?'w':'b'}`;
+                sq.dataset.idx = i;
+                const char = layout[r] ? layout[r][c] : '';
+                if(char) {
+                    const p = document.createElement('span');
+                    p.className = `chess-piece ${r<2?'p-t2':'p-t1'}`;
+                    p.innerText = char; p.draggable = true; p.dataset.team = r<2?2:1;
+                    p.ondragstart = (e) => { if(parseInt(p.dataset.team) !== turn) return e.preventDefault(); e.dataTransfer.setData("text", i); };
+                    sq.appendChild(p);
                 }
+                sq.ondragover = (e) => e.preventDefault();
+                sq.ondrop = drop;
+                b.appendChild(sq);
             }
         }
 
-        function handleClick(r, c) {
-            if (gameState.selected) {
-                const moves = getValidMoves(gameState.selected.r, gameState.selected.c);
-                if (moves.find(m => m.r === r && m.c === c)) {
-                    gameState.board[r][c] = gameState.board[gameState.selected.r][gameState.selected.c];
-                    gameState.board[gameState.selected.r][gameState.selected.c] = null;
-                    gameState.selected = null; gameState.turn = gameState.turn === 'w' ? 'b' : 'w';
-                    renderBoard(); return;
-                }
-            }
-            if (gameState.board[r][c]) {
-                gameState.selected = (gameState.selected && gameState.selected.r === r && gameState.selected.c === c) ? null : {r, c};
-            } else { gameState.selected = null; }
-            updateHighlights();
-        }
-
-        function updateHighlights() {
-            document.querySelectorAll('.sq').forEach(sq => {
-                sq.className = sq.className.replace(/hover-\w+/, '').trim();
-                sq.classList.remove('capture-move');
-                const marker = sq.querySelector('.valid-marker'); if(marker) marker.remove();
-            });
-            const target = gameState.hovered || gameState.selected;
-            if (target) {
-                const piece = gameState.board[target.r][target.c];
-                const sqDiv = getSqDiv(target.r, target.c);
-                if (piece && sqDiv) {
-                    const type = piece.toLowerCase();
-                    let colorClass = '';
-                    if (type === 'k' || type === 'q') colorClass = 'hover-red';
-                    else if (type === 'r' || type === 'b') colorClass = 'hover-orange';
-                    else if (type === 'n') colorClass = 'hover-yellow';
-                    else if (type === 'p') {
-                        colorClass = 'hover-green';
-                        if ((piece === 'P' && target.r <= 3) || (piece === 'p' && target.r >= 4)) colorClass = 'hover-blue';
-                    }
-                    sqDiv.classList.add(colorClass);
-                }
-                const movesSource = gameState.selected || (gameState.isCtrlPressed ? gameState.hovered : null);
-                if ((gameState.isCtrlPressed || gameState.selected) && movesSource) {
-                   getValidMoves(movesSource.r, movesSource.c).forEach(m => {
-                       const mDiv = getSqDiv(m.r, m.c);
-                       const marker = document.createElement('div'); marker.className = 'valid-marker';
-                       mDiv.appendChild(marker);
-                       if(gameState.board[m.r][m.c]) mDiv.classList.add('capture-move');
-                   });
-                }
-            }
-            document.querySelectorAll('.piece').forEach(p => p.classList.remove('selected'));
-            if (gameState.selected) {
-                const pDiv = getSqDiv(gameState.selected.r, gameState.selected.c).querySelector('.piece');
-                if(pDiv) pDiv.classList.add('selected');
+        function drop(e) {
+            e.preventDefault();
+            const from = e.dataTransfer.getData("text");
+            const target = e.target.closest('.sq');
+            const p = document.querySelector(`.sq[data-idx="${from}"] .chess-piece`);
+            if(p && target) {
+                const ex = target.querySelector('.chess-piece');
+                if(ex) { if(ex.dataset.team == turn) return; target.removeChild(ex); burst(target); }
+                target.appendChild(p); 
+                turn = turn === 1 ? 2 : 1;
             }
         }
 
-        function
+        function burst(sq) {
+            for(let i=0; i<15; i++) {
+                const d = document.createElement('div');
+                d.style.cssText = `position:absolute;width:4px;height:4px;background:#fff;border-radius:50%;left:50%;top:50%;z-index:200;`;
+                sq.appendChild(d);
+                d.animate([{transform:'translate(0,0)',opacity:1},{transform:`translate(${(Math.random()-0.5)*80}px, ${(Math.random()-0.5)*80}px)`,opacity:0}],700).onfinish=()=>d.remove();
+            }
+        }
+
+        // --- UI TOGGLES ---
+        function toggleEngine() { 
+            const b = document.getElementById('play-main'); 
+            b.classList.toggle('active'); 
+            b.innerText = b.classList.contains('active') ? "ENGINE ACTIVE" : "START SIMULATION"; 
+        }
+        function toggleSettings() { document.getElementById('settings-panel').classList.toggle('active'); }
+        function toggleHelp() { document.getElementById('help-menu').classList.toggle('active'); }
+        function selTeam(n) { 
+            teamSel = n; 
+            document.getElementById('t1-btn').classList.toggle('active', n===1);
+            document.getElementById('t2-btn').classList.toggle('active', n===2);
+        }
+        function updCol(v) { document.documentElement.style.setProperty(`--t${teamSel}-color`, `hsl(${v}, 100%, 50%)`); }
+        function triggerWin() { document.getElementById('victory-screen').style.display='flex'; }
+        function openTab(e, n) {
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(t => t.classList.remove('active'));
+            document.getElementById(n).classList.add('active');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+        }
+    </script>
+</body>
+</html>

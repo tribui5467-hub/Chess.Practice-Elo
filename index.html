@@ -57,7 +57,7 @@
 
         .piece { 
             font-size: 50px; user-select: none; z-index: 10; pointer-events: none;
-            transition: transform 0.48s var(--smooth);
+            transition: transform 0.48s var(--smooth); /* Smooth slide */
             position: relative;
         }
         .white-p { color: #fff; text-shadow: 0 0 10px #fff; }
@@ -70,7 +70,7 @@
         .engine-icon { position: absolute; top: -10px; right: -10px; font-size: 30px; z-index: 100; animation: iconPop 0.5s var(--smooth) forwards; pointer-events: none; }
         @keyframes iconPop { 0% { transform: scale(0) rotate(-45deg); opacity: 0; } 100% { transform: scale(1) rotate(0deg); opacity: 1; } }
 
-        /* Help Menu */
+        /* Help Menu - exact original style */
         #help-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); z-index: 55000; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.5s var(--smooth); }
         #help-overlay.active { opacity: 1; display: flex; }
         #help-container { width: 850px; height: 650px; background: #050505; border: 2px solid var(--n-green); border-radius: 20px; display: flex; flex-direction: column; overflow: hidden; transform: scale(0.9); transition: transform 0.5s var(--smooth); }
@@ -88,18 +88,6 @@
         #expansion-box { width: 85%; max-width: 950px; background: #050505; border: 3px solid var(--n-blue); border-radius: 30px; padding: 60px; position: relative; box-shadow: 0 0 80px var(--n-blue); transform: scale(0.8); transition: transform 0.4s var(--smooth); }
         .close-expanded { position: absolute; top: 25px; right: 25px; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border: 2px solid var(--n-red); color: var(--n-red); border-radius: 50%; font-size: 24px; cursor: pointer; transition: 0.3s; background: none; }
         .close-expanded:hover { background: var(--n-red); color: white; }
-
-        /* End Game Overlay */
-        #end-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(20px);
-            z-index: 80000; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 30px;
-        }
-        #end-title { font-size: 68px; font-weight: bold; letter-spacing: 6px; }
-        #end-subtitle { font-size: 28px; color: #ccc; }
-        #end-btn {
-            background: var(--n-green); color: #000; padding: 16px 50px; font-size: 22px; font-weight: 900;
-            border: none; border-radius: 12px; cursor: pointer; margin-top: 20px;
-        }
 
         #turn-info { position: fixed; top: 40px; left: 50%; transform: translateX(-50%); letter-spacing: 5px; color: var(--n-blue); font-weight: bold; border: 2px solid var(--n-blue); padding: 10px 35px; border-radius: 30px; z-index: 100; }
     </style>
@@ -136,7 +124,7 @@
         <div style="cursor:pointer; color:#666; text-align:center; padding:15px; border:1px solid #333; border-radius:10px; margin-top:20px;" onclick="openHelp()">ARCHIVED HELP</div>
     </div>
 
-    <!-- Help Menu -->
+    <!-- Help Menu (FULL ORIGINAL) -->
     <div id="help-overlay">
         <div id="help-container">
             <div class="help-header">
@@ -151,19 +139,12 @@
         </div>
     </div>
 
-    <!-- Expansion -->
+    <!-- Expansion Overlay -->
     <div id="expansion-overlay">
         <div id="expansion-box">
             <button class="close-expanded" onclick="closeExpansion()">✕</button>
             <div id="expansion-text" style="font-size: 22px; line-height: 1.8; color: #eee;"></div>
         </div>
-    </div>
-
-    <!-- End Game Overlay -->
-    <div id="end-overlay">
-        <div id="end-title"></div>
-        <div id="end-subtitle"></div>
-        <button id="end-btn" onclick="restartGame()">PLAY AGAIN</button>
     </div>
 
     <div id="game"><div class="board" id="board"></div></div>
@@ -176,19 +157,17 @@
     let ctrlLocked = false;
     let isAIActive = false;
     let currentDifficulty = 2;
-    let gameOver = false;
 
     const glyphs = { 'r':'♜','n':'♞','b':'♝','q':'♛','k':'♚','p':'♟','R':'♖','N':'♘','B':'♗','Q':'♕','K':'♔','P':'♙' };
     const hlMap = { 'k':'hl-king','q':'hl-queen','r':'hl-rook','b':'hl-bishop','n':'hl-knight','p':'hl-pawn' };
 
-    const helpData = { /* your full original helpData - paste the exact text from previous messages */ 
-        pieces: `...`, // (use the full text you already have)
-        icons: `...`,
-        mechanics: `...`
+    const helpData = {
+        pieces: `<div class="asset-card" onclick="expandDef(this)"><b>The Pawn</b> The fundamental infantry unit of chess. It possesses a restricted forward movement of one square, yet captures diagonally. Upon its initial move, it may advance two squares. Reaching the terminal rank allows for promotion into a Queen, Rook, Bishop, or Knight, granting the piece immense late-game utility.</div><div class="asset-card" onclick="expandDef(this)"><b>The Knight</b> A specialized tactical unit that navigates the board in a unique 'L' pattern—two squares in one cardinal direction followed by one square perpendicular. It maintains the singular ability to leap over intervening pieces, making it an invaluable asset in congested board states where other pieces are obstructed.</div><div class="asset-card" onclick="expandDef(this)"><b>The Bishop</b> A sophisticated long-range operative that slides any distance along diagonal trajectories. Each Bishop is permanently confined to the square colour it begins on, requiring them to work in coordinated pairs to control both light and dark regions of the board effectively throughout the middle and end game.</div><div class="asset-card" onclick="expandDef(this)"><b>The Rook</b> A formidable heavy piece moving in straight horizontal or vertical lines across any number of unoccupied squares. It plays a critical role in king safety through the castling maneuver and is often the primary force behind powerful ladder checkmates during the final stages of the match.</div><div class="asset-card" onclick="expandDef(this)"><b>The Queen</b> The most versatile and powerful asset on the board. She combines the movement capabilities of both the Rook and the Bishop, sliding any distance in any straight or diagonal direction. Her presence dictates the tempo and pressure of the match, serving as both a primary attacker and a central defender.</div><div class="asset-card" onclick="expandDef(this)"><b>The King</b> The pivotal figure around which the entire game revolves. While moving only one square in any direction, his preservation is absolute. If the King is placed under attack and cannot find a safe square, the match concludes immediately, rendering his protection the player's ultimate strategic priority.</div>`,
+        icons: `<span class="group-label">Positive Indicators</span><div class="asset-card" onclick="expandDef(this)"><b>The Best Move (Star)</b> This designation signifies the absolute strongest continuation identified by the engine analysis. Playing this move optimizes your winning probability and represents the highest level of technical accuracy possible in the current position, often finding the only path to a victory.</div><div class="asset-card" onclick="expandDef(this)"><b>Good Move (Tick)</b> Indicates a solid, fundamentally sound choice that maintains the current evaluation of the position. While it may not be the engine's primary preference, it adheres to sound chess principles and ensures the player does not concede any unnecessary tactical advantages.</div><span class="group-label">Negative Indicators</span><div class="asset-card" onclick="expandDef(this)"><b>Inaccuracy (Exclamation)</b> Marks a sub-optimal move that noticeably weakens your standing. It suggests a missed opportunity to apply pressure or a minor positional concession that allows the opponent to improve their pieces more easily than the optimal continuation would have permitted.</div><div class="asset-card" onclick="expandDef(this)"><b>Blunder (Death Emoji)</b> A catastrophic error that tangibly reduces your advantage or directly allows the opponent to achieve a winning position. This usually results from an overlooked tactical sequence or a serious misunderstanding of the immediate requirements of the board position.</div><div class="asset-card" onclick="expandDef(this)"><b>Fatal Blunder (Death)</b> Reserved for moves that lead to an immediate loss of the game or the loss of a major piece without compensation. This classification represents a total collapse of strategy and typically shifts the game evaluation into a forced win for the opponent.</div>`,
+        mechanics: `<span class="group-label">Core Mechanics</span><div class="asset-card" onclick="expandDef(this)"><b>Capturing Methodology</b> To capture an opponent's unit, you must move your piece onto the square it currently occupies. The displaced piece is permanently removed from the field. You cannot capture your own units or occupy a square already held by your own color, requiring careful navigation of space.</div><div class="asset-card" onclick="expandDef(this)"><b>En Passant</b> A specialized pawn capture occurring when an opponent moves their pawn two squares forward from its starting position and lands adjacent to your pawn. You may capture that pawn as if it had only moved one square, provided you do so on the very next turn.</div><span class="group-label">Ending Conditions</span><div class="asset-card" onclick="expandDef(this)"><b>Checkmate (Absolute Victory)</b> The definitive conclusion of a chess match. This occurs when a King is under direct threat of capture and possesses no legal moves to relocate, block the line of attack, or eliminate the attacking piece entirely. The game ends immediately in a win for the attacker.</div><div class="asset-card" onclick="expandDef(this)"><b>Stalemate (Technical Draw)</b> A unique situation where the player whose turn it is has no legal moves remaining, yet their King is not currently in check. Because the player cannot move but is not defeated, the game ends in a draw, often occurring as a defensive 'swindle'.</div><div class="asset-card" onclick="expandDef(this)"><b>Resignation (Concession)</b> A formal acknowledgement of defeat. A player may choose to resign at any moment if they determine the position is strategically hopeless. This is considered professional courtesy when a loss is mathematically certain, immediately awarding the full victory to the opponent.</div><div class="asset-card" onclick="expandDef(this)"><b>Timeout (Temporal Loss)</b> In timed competitive play, if a player's clock expires before they complete their required moves, they lose the game immediately. This emphasizes the importance of time management as a critical strategic resource, where speed is as vital as tactical precision.</div>`
     };
 
     function init() {
-        gameOver = false;
         const map = "rnbqkbnrpppppppp................................PPPPPPPPRNBQKBNR";
         for(let i=0; i<64; i++) boardState[i] = map[i] === '.' ? null : map[i];
         render();
@@ -212,9 +191,8 @@
         document.getElementById('turn-info').innerText = currentTurn === 'W' ? "WHITE'S TURN" : "BLACK'S TURN";
     }
 
-    // SMOOTH SLIDING
+    // SMOOTH SLIDING ANIMATION
     function movePieceWithAnimation(from, to) {
-        if (gameOver) return;
         const fromSq = document.querySelector(`[data-idx="${from}"]`);
         const toSq = document.querySelector(`[data-idx="${to}"]`);
         const pieceEl = fromSq ? fromSq.querySelector('.piece') : null;
@@ -224,7 +202,6 @@
             boardState[from] = null;
             render();
             spawnVFX(to);
-            checkGameEnd();
             return;
         }
 
@@ -235,7 +212,9 @@
 
         pieceEl.style.transition = 'none';
         pieceEl.style.transform = `translate(${dx}px, ${dy}px)`;
+
         void pieceEl.offsetWidth;
+
         pieceEl.style.transition = 'transform 0.48s var(--smooth)';
         pieceEl.style.transform = 'translate(0, 0)';
 
@@ -244,8 +223,7 @@
             boardState[from] = null;
             render();
             spawnVFX(to);
-            checkGameEnd();
-            if (isAIActive && currentTurn === 'B' && !gameOver) setTimeout(aiLogic, 700);
+            if (isAIActive && currentTurn === 'B') setTimeout(aiLogic, 700);
         }, 490);
     }
 
@@ -308,7 +286,7 @@
     }
 
     function handleSquare(i) {
-        if (gameOver || (currentTurn === 'B' && isAIActive)) return;
+        if (currentTurn === 'B' && isAIActive) return;
         const p = boardState[i], isW = p ? p === p.toUpperCase() : null;
         if (selectedSq === null) {
             if (p && ((currentTurn === 'W' && isW) || (currentTurn === 'B' && !isW))) {
@@ -328,15 +306,13 @@
     }
 
     function aiLogic() {
-        if (gameOver) return;
         let moves = [];
         for(let f=0; f<64; f++) {
             if(boardState[f] && boardState[f] === boardState[f].toLowerCase()) {
                 for(let t=0; t<64; t++) if(isValid(f, t)) moves.push({f, t, capture: !!boardState[t]});
             }
         }
-        if (moves.length === 0) { checkGameEnd(); return; }
-
+        if (moves.length === 0) return;
         let chosen = moves[Math.floor(Math.random()*moves.length)];
         if (currentDifficulty >= 3) {
             const captures = moves.filter(m => m.capture);
@@ -346,56 +322,6 @@
         currentTurn = 'W';
     }
 
-    // END GAME CHECK
-    function checkGameEnd() {
-        const kingPos = findKing(currentTurn);
-        if (kingPos === -1) return;
-
-        const inCheck = isSquareAttacked(kingPos, currentTurn === 'W' ? 'B' : 'W');
-        const hasLegalMoves = hasAnyLegalMoves(currentTurn);
-
-        if (!hasLegalMoves) {
-            gameOver = true;
-            if (inCheck) {
-                showEndScreen(currentTurn === 'W' ? "BLACK WINS" : "WHITE WINS", "Checkmate");
-            } else {
-                showEndScreen("DRAW", "Stalemate");
-            }
-        }
-    }
-
-    function findKing(color) {
-        const king = color === 'W' ? 'K' : 'k';
-        for(let i=0; i<64; i++) if(boardState[i] === king) return i;
-        return -1;
-    }
-
-    function isSquareAttacked(pos, byColor) {
-        for(let f=0; f<64; f++) {
-            if(boardState[f] && ((boardState[f] === boardState[f].toUpperCase()) === (byColor === 'W'))) {
-                if(isValid(f, pos)) return true;
-            }
-        }
-        return false;
-    }
-
-    function hasAnyLegalMoves(color) {
-        for(let f=0; f<64; f++) {
-            if(boardState[f] && ((boardState[f] === boardState[f].toUpperCase()) === (color === 'W'))) {
-                for(let t=0; t<64; t++) {
-                    if(isValid(f, t)) return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    function showEndScreen(title, subtitle) {
-        document.getElementById('end-title').innerText = title;
-        document.getElementById('end-subtitle').innerText = subtitle;
-        document.getElementById('end-overlay').style.display = 'flex';
-    }
-
     function updateDots(idx) {
         document.querySelectorAll('.ctrl-dot').forEach(d => d.classList.remove('ctrl-dot'));
         for (let i = 0; i < 64; i++) {
@@ -403,7 +329,7 @@
         }
     }
 
-    // UI Functions (same as before)
+    // UI
     function toggleSettings() { document.getElementById('settings-panel').classList.toggle('open'); }
     function toggleAI() {
         isAIActive = document.getElementById('ai-toggle').value === 'ai';
@@ -416,21 +342,63 @@
             setTimeout(() => box.style.display = 'none', 400);
         }
     }
-    function setDifficulty(lvl) { currentDifficulty = lvl; /* border highlight logic */ }
+    function setDifficulty(lvl) {
+        currentDifficulty = lvl;
+        document.querySelectorAll('.diff-option').forEach(el => el.style.border = parseInt(el.dataset.diff) === lvl ? '2px solid var(--n-blue)' : 'none');
+    }
     function showResignMenu() {
-        if (confirm("Resign the game?")) showEndScreen(currentTurn === 'W' ? "BLACK WINS" : "WHITE WINS", "Resignation");
+        if (confirm("Resign the game?")) document.getElementById('resign-overlay').classList.add('active');
     }
     function restartGame() {
-        document.getElementById('end-overlay').style.display = 'none';
+        document.getElementById('resign-overlay').classList.remove('active');
         init();
         currentTurn = 'W';
     }
-    function openHelp() { /* same as before */ }
-    function closeHelp() { /* same */ }
-    function showTab(t, b) { /* same */ }
-    function expandDef(card) { /* same */ }
-    function closeExpansion() { /* same */ }
 
+    function openHelp() {
+        const overlay = document.getElementById('help-overlay');
+        overlay.style.display = 'flex';
+        setTimeout(() => overlay.classList.add('active'), 10);
+        showTab('pieces', document.querySelector('.tab-btn'));
+    }
+    function closeHelp() {
+        const overlay = document.getElementById('help-overlay');
+        overlay.classList.remove('active');
+        setTimeout(() => overlay.style.display = 'none', 500);
+    }
+    function showTab(t, b) {
+        document.querySelectorAll('.tab-btn').forEach(x => x.style.borderColor = '#333');
+        b.style.borderColor = 'var(--n-green)';
+        document.getElementById('help-text').innerHTML = helpData[t];
+    }
+    function expandDef(card) {
+        document.getElementById('expansion-text').innerHTML = card.innerHTML;
+        document.getElementById('expansion-overlay').style.display = 'flex';
+        setTimeout(() => document.getElementById('expansion-overlay').classList.add('active'), 10);
+    }
+    function closeExpansion() {
+        const overlay = document.getElementById('expansion-overlay');
+        overlay.classList.remove('active');
+        setTimeout(() => overlay.style.display = 'none', 400);
+    }
+
+    // Hover highlights (original)
+    document.addEventListener('mouseover', (e) => {
+        const sq = e.target.closest('.sq'); if (!sq) return;
+        const p = boardState[sq.dataset.idx]; if (!p) return;
+        let hl = hlMap[p.toLowerCase()];
+        if (p.toLowerCase() === 'p') {
+            const row = Math.floor(sq.dataset.idx / 8), dist = (p === 'P') ? row : (7 - row);
+            if (dist >= 1 && dist <= 5) hl = 'hl-pawn-blue';
+        }
+        sq.classList.add(hl);
+    });
+    document.addEventListener('mouseout', (e) => {
+        const sq = e.target.closest('.sq');
+        if (sq) sq.className = sq.className.split(' ').filter(c => !c.startsWith('hl-')).join(' ');
+    });
+
+    // Ctrl toggle
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Control') {
             ctrlLocked = !ctrlLocked;

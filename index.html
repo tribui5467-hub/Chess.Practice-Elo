@@ -42,38 +42,71 @@
         #game { display: none; width: 100vw; height: 100vh; justify-content: center; align-items: center; opacity: 0; transition: 1.5s; z-index: 5; }
         .board { width: 560px; height: 560px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid #111; background: #000; z-index: 10; position: relative; }
         
-        .sq { width: 70px; height: 70px; display: flex; justify-content: center; align-items: center; cursor: pointer; position: relative; transition: box-shadow 0.2s, background-color 0.2s; }
+        .sq { width: 70px; height: 70px; display: flex; justify-content: center; align-items: center; cursor: pointer; position: relative; transition: box-shadow 0.1s ease-out; z-index: 1; }
         .w { background: rgba(45, 45, 55, 0.9); } .b { background: rgba(20, 20, 25, 0.9); }
         
         /* Piece Styling */
         .piece { font-size: 48px; transition: transform 0.3s var(--smooth), opacity 0.8s; filter: brightness(0); opacity: 0; transform: scale(0.5); pointer-events: none; user-select: none; z-index: 2; }
-        .piece.unlocked { filter: brightness(1); opacity: 1; transform: scale(1); pointer-events: none; /* Events handled by square */ }
+        .piece.unlocked { filter: brightness(1); opacity: 1; transform: scale(1); pointer-events: none; }
         .piece.selected { transform: scale(1.15) translateY(-5px); filter: drop-shadow(0 5px 10px black); }
 
-        /* COLOR CODED HOVER STATES */
-        /* Intensity relies on box-shadow inset for inner glow and standard for outer glow */
-        .sq.hover-red { box-shadow: inset 0 0 20px var(--n-red), 0 0 15px var(--n-red); z-index: 5; }
-        .sq.hover-orange { box-shadow: inset 0 0 20px var(--n-orange), 0 0 15px var(--n-orange); z-index: 5; }
-        .sq.hover-yellow { box-shadow: inset 0 0 20px var(--n-yellow), 0 0 15px var(--n-yellow); z-index: 5; }
-        .sq.hover-green { box-shadow: inset 0 0 20px var(--n-green), 0 0 15px var(--n-green); z-index: 5; }
-        .sq.hover-blue { box-shadow: inset 0 0 20px var(--n-blue), 0 0 15px var(--n-blue); z-index: 5; }
+        /* COLOR CODED HOVER STATES (SQUARED) */
+        /* 
+           Formula for "Squared Neon":
+           1. Inset 0px spread (Flat Tint)
+           2. Inset 2px spread (Hard Inner Border)
+           3. Outset 20px blur (The "Fading" Glow you wanted)
+        */
+        .sq.hover-red { 
+            box-shadow: inset 0 0 0 2px var(--n-red), inset 0 0 10px rgba(250, 65, 45, 0.3), 0 0 25px var(--n-red); 
+            z-index: 10; 
+        }
+        .sq.hover-orange { 
+            box-shadow: inset 0 0 0 2px var(--n-orange), inset 0 0 10px rgba(244, 148, 60, 0.3), 0 0 25px var(--n-orange); 
+            z-index: 10; 
+        }
+        .sq.hover-yellow { 
+            box-shadow: inset 0 0 0 2px var(--n-yellow), inset 0 0 10px rgba(241, 196, 15, 0.3), 0 0 25px var(--n-yellow); 
+            z-index: 10; 
+        }
+        .sq.hover-green { 
+            box-shadow: inset 0 0 0 2px var(--n-green), inset 0 0 10px rgba(129, 182, 76, 0.3), 0 0 25px var(--n-green); 
+            z-index: 10; 
+        }
+        .sq.hover-blue { 
+            box-shadow: inset 0 0 0 2px var(--n-blue), inset 0 0 10px rgba(0, 242, 255, 0.3), 0 0 25px var(--n-blue); 
+            z-index: 10; 
+        }
 
-        /* VALID MOVE MARKERS (Activated by CTRL) */
+        /* VALID MOVE MARKERS (Stabilized) */
         .valid-marker {
-            position: absolute; width: 20px; height: 20px; border-radius: 50%;
-            background: rgba(0, 242, 255, 0.4); box-shadow: 0 0 10px var(--n-blue);
-            pointer-events: none; z-index: 3; animation: pulse-marker 1.5s infinite;
+            position: absolute; width: 22px; height: 22px; border-radius: 50%;
+            background: rgba(0, 242, 255, 0.6); box-shadow: 0 0 15px var(--n-blue);
+            pointer-events: none; z-index: 3; 
+            animation: breathe 2s ease-in-out infinite; /* Replaces 'pulse' which faded to 0 */
         }
         .sq.capture-move .valid-marker {
-            background: rgba(250, 65, 45, 0.4); box-shadow: 0 0 10px var(--n-red);
-            width: 60px; height: 60px; border-radius: 50%; border: 4px solid var(--n-red); background: transparent;
+            background: transparent;
+            width: 64px; height: 64px; border-radius: 50%; 
+            border: 4px solid var(--n-red); 
+            box-shadow: 0 0 20px var(--n-red), inset 0 0 10px var(--n-red);
+            animation: breathe-capture 1.5s ease-in-out infinite;
         }
-        @keyframes pulse-marker { 0% { transform: scale(0.8); opacity: 0.5; } 100% { transform: scale(1.2); opacity: 0; } }
+        
+        /* Adjusted Animations (No disappearing) */
+        @keyframes breathe { 
+            0%, 100% { transform: scale(0.9); opacity: 0.6; } 
+            50% { transform: scale(1.1); opacity: 1; } 
+        }
+        @keyframes breathe-capture { 
+            0%, 100% { transform: scale(0.95); opacity: 0.7; border-color: var(--n-red); } 
+            50% { transform: scale(1.05); opacity: 1; border-color: #ff5555; } 
+        }
 
         #gear-btn { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; background: none; border: none; color: var(--n-blue); font-size: 35px; cursor: pointer; z-index: 100; transition: 0.4s var(--smooth); display: flex; align-items: center; justify-content: center; }
         #gear-btn.active { color: var(--n-green); transform: rotate(90deg); }
 
-        /* --- 4. DETAILED HELP MENU --- */
+        /* --- 4. HELP MENU --- */
         #help-menu { 
             position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(0.9); 
             width: 780px; background: #050608; border: 2px solid var(--n-blue); border-radius: 15px; 
@@ -143,23 +176,23 @@
             <div class="asset-card"><b>The King</b> The pivotal figure around which the entire game revolves. While moving only one square in any direction, his preservation is absolute. If the King is placed under attack and cannot find a safe square, the match concludes immediately, rendering his protection the player's ultimate strategic priority.</div>
         </div>
         <div id="tab-icons" class="tab-content">
-            <span class="group-label">Positive Indicators</span>
+            <div class="group-label">Positive Indicators</div>
             <div class="asset-card"><span class="icon-glyph">⭐</span><b>The Best Move (Star)</b> This designation signifies the absolute strongest continuation identified by the engine analysis. Playing this move optimizes your winning probability and represents the highest level of technical accuracy possible in the current position, often finding the only path to a victory.</div>
             <div class="asset-card"><span class="icon-glyph">✔️</span><b>Good Move (Tick)</b> Indicates a solid, fundamentally sound choice that maintains the current evaluation of the position. While it may not be the engine's primary preference, it adheres to sound chess principles and ensures the player does not concede any unnecessary tactical advantages.</div>
-            <span class="group-label">Negative Indicators</span>
+            <div class="group-label">Negative Indicators</div>
             <div class="asset-card"><span class="icon-glyph">!</span><b>Inaccuracy (Exclamation)</b> Marks a sub-optimal move that noticeably weakens your standing. It suggests a missed opportunity to apply pressure or a minor positional concession that allows the opponent to improve their pieces more easily than the optimal continuation would have permitted.</div>
             <div class="asset-card"><span class="icon-glyph">!!</span><b>Blunder (Death Emoji)</b> A catastrophic error that tangibly reduces your advantage or directly allows the opponent to achieve a winning position. This usually results from an overlooked tactical sequence or a serious misunderstanding of the immediate requirements of the board position.</div>
             <div class="asset-card"><span class="icon-glyph">💀</span><b>Fatal Blunder (Death)</b> Reserved for moves that lead to an immediate loss of the game or the loss of a major piece without compensation. This classification represents a total collapse of strategy and typically shifts the game evaluation into a forced win for the opponent.</div>
-            <span class="group-label">Exotic Classifications</span>
+            <div class="group-label">Exotic Classifications</div>
             <div class="asset-card"><span class="icon-glyph">?</span><b>Mystery Move (Question)</b> Used to denote moves that complicate the position in ways the engine cannot immediately resolve. It signifies a high-variance choice that creates a chaotic environment where both players have equal chances to succeed or fail based on subsequent precision.</div>
             <div class="asset-card"><span class="icon-glyph">??</span><b>The Brilliant Move (Double Question)</b> Although visually appearing similar to a blunder, this highlights a high-level sacrifice that appears as an error but leads to a forced winning advantage. It signifies a move that is difficult for humans to calculate but mathematically sound under deep analysis.</div>
             <div class="asset-card"><span class="icon-glyph">📖</span><b>The Book Move (Manual)</b> Indicates that the move belongs to the established library of opening theory. This confirms the player is following paths analyzed by grandmasters for centuries to reach a balanced and playable middle-game position with known strategic goals.</div>
         </div>
         <div id="tab-mechanics" class="tab-content">
-            <span class="group-label">Core Mechanics</span>
+            <div class="group-label">Core Mechanics</div>
             <div class="asset-card"><b>Capturing Methodology</b> To capture an opponent's unit, you must move your piece onto the square it currently occupies. The displaced piece is permanently removed from the field. You cannot capture your own units or occupy a square already held by your own color, requiring careful navigation of space.</div>
             <div class="asset-card"><b>En Passant</b> A specialized pawn capture occurring when an opponent moves their pawn two squares forward from its starting position and lands adjacent to your pawn. You may capture that pawn as if it had only moved one square, provided you do so on the very next turn.</div>
-            <span class="group-label">Ending Conditions</span>
+            <div class="group-label">Ending Conditions</div>
             <div class="asset-card"><b>Checkmate (Absolute Victory)</b> The definitive conclusion of a chess match. This occurs when a King is under direct threat of capture and possesses no legal moves to relocate, block the line of attack, or eliminate the attacking piece entirely. The game ends immediately in a win for the attacker.</div>
             <div class="asset-card"><b>Stalemate (Technical Draw)</b> A unique situation where the player whose turn it is has no legal moves remaining, yet their King is not currently in check. Because the player cannot move but is not defeated, the game ends in a draw, often occurring as a defensive 'swindle'.</div>
             <div class="asset-card"><b>Resignation (Concession)</b> A formal acknowledgement of defeat. A player may choose to resign at any moment if they determine the position is strategically hopeless. This is considered professional courtesy when a loss is mathematically certain, immediately awarding the full victory to the opponent.</div>
@@ -231,7 +264,7 @@
                     const pieceCode = gameState.board[r][c];
                     if (pieceCode) {
                         const p = document.createElement('div');
-                        p.className = 'piece unlocked'; // Already unlocked for gameplay
+                        p.className = 'piece unlocked'; 
                         p.innerText = pieceMap[pieceCode];
                         sq.appendChild(p);
                     }
@@ -260,9 +293,6 @@
 
             // 2. Select Logic
             if (piece) {
-                // Optional: Enforce turn order
-                // if (getPieceColor(piece) !== gameState.turn) return; 
-                
                 if (gameState.selected && gameState.selected.r === r && gameState.selected.c === c) {
                     gameState.selected = null; // Deselect
                 } else {
@@ -284,8 +314,7 @@
                 if(marker) marker.remove();
             });
 
-            // A. PIECE HOVER COLOR LOGIC (Mouseover)
-            // OR Selected Piece Logic
+            // A. PIECE HOVER COLOR LOGIC (Mouseover) OR Selected
             const target = gameState.hovered || gameState.selected;
             
             if (target) {
@@ -296,17 +325,13 @@
                     const type = piece.toLowerCase();
                     let colorClass = '';
                     
-                    // King/Queen -> Red
                     if (type === 'k' || type === 'q') colorClass = 'hover-red';
-                    // Rook/Bishop -> Orange
                     else if (type === 'r' || type === 'b') colorClass = 'hover-orange';
-                    // Knight -> Yellow
                     else if (type === 'n') colorClass = 'hover-yellow';
-                    // Pawn -> Green or Blue (Promotion)
                     else if (type === 'p') {
                         colorClass = 'hover-green';
                         const isWhite = piece === 'P';
-                        // White promotes at row 0, starts row 6. Steps: 1->Blue, 2->Blue, 3->Blue.
+                        // White promotes at row 0, starts row 6. 
                         if (isWhite && target.r <= 3) colorClass = 'hover-blue';
                         if (!isWhite && target.r >= 4) colorClass = 'hover-blue';
                     }
@@ -314,10 +339,8 @@
                 }
 
                 // B. CTRL KEY -> SHOW VALID MOVES
-                // We show moves for the SELECTED piece if exists, otherwise the HOVERED piece
                 const movesSource = gameState.selected || (gameState.isCtrlPressed ? gameState.hovered : null);
                 
-                // Only show moves if Ctrl is held OR a piece is actively selected
                 if ((gameState.isCtrlPressed || gameState.selected) && movesSource) {
                    const moves = getValidMoves(movesSource.r, movesSource.c);
                    moves.forEach(m => {
@@ -344,7 +367,7 @@
 
         function getPieceColor(p) { return p === p.toUpperCase() ? 'w' : 'b'; }
 
-        // --- MOVE GENERATION (Simplified for Practice) ---
+        // --- MOVE GENERATION ---
         function getValidMoves(r, c) {
             const piece = gameState.board[r][c];
             if (!piece) return [];
@@ -353,11 +376,11 @@
             const type = piece.toLowerCase();
 
             const tryAdd = (tr, tc) => {
-                if (tr < 0 || tr > 7 || tc < 0 || tc > 7) return false; // Out of bounds
+                if (tr < 0 || tr > 7 || tc < 0 || tc > 7) return false;
                 const target = gameState.board[tr][tc];
-                if (target && getPieceColor(target) === color) return false; // Blocked by self
+                if (target && getPieceColor(target) === color) return false; 
                 moves.push({r: tr, c: tc});
-                return !target; // Return true if empty (continue sliding), false if capture (stop sliding)
+                return !target; 
             };
 
             const slidingMoves = (dirs) => {
@@ -454,7 +477,7 @@
         }
         animate();
 
-        /* --- INITIALIZATION SEQUENCE --- */
+        /* --- SEQUENCE --- */
         setTimeout(() => {
             document.getElementById('boot').style.opacity = '0';
             setTimeout(() => {
@@ -483,12 +506,11 @@
                 game.style.display = 'flex';
                 setTimeout(() => { 
                     game.style.opacity = '1'; 
-                    initGame(); // Start Game Engine
+                    initGame(); 
                 }, 50);
             }, 1000);
         }
 
-        /* --- UI UTILS --- */
         function toggleHelp() { 
             document.getElementById('help-menu').classList.toggle('active'); 
             document.getElementById('gear-btn').classList.toggle('active');

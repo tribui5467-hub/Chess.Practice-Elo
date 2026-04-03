@@ -13,201 +13,293 @@
         body, html { margin: 0; padding: 0; background: #000; color: white; font-family: 'Segoe UI', Tahoma, sans-serif; overflow: hidden; height: 100vh; width: 100vw; }
         canvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0.6; }
 
-        /* --- 1. BOOT & LOADING --- */
+        /* --- 1. BOOT SCREEN --- */
         #boot { position: fixed; inset: 0; background: black; z-index: 30000; display: flex; justify-content: center; align-items: center; transition: 1s; }
+        .equinox-text { font-size: 32px; letter-spacing: 12px; font-weight: 200; color: #fff; clip-path: inset(0 100% 0 0); animation: reveal 2.5s forwards; }
         .divider { width: 2px; height: 40px; background: white; margin: 0 25px; transform: scaleY(0); animation: pop-divider 0.6s var(--smooth) forwards 2s; }
-        .controller-icon { font-size: 42px; opacity: 0; transform: translateX(-50px); animation: slide-reveal 0.8s var(--smooth) forwards 2.5s; }
+        .controller-box { position: relative; width: 150px; height: 150px; display: flex; align-items: center; justify-content: center; overflow: visible; }
+        .aura-circle { position: absolute; width: 85px; height: 85px; border-radius: 50%; border: 3px solid var(--n-blue); opacity: 0; box-shadow: 0 0 35px var(--n-blue), inset 0 0 15px var(--n-blue); animation: aura-glow 1s forwards 3s, aura-pulse 3s infinite alternate 4s; z-index: 1; }
+        .controller-icon { font-size: 42px; transform: translateX(-180%); animation: slide-in 0.8s var(--smooth) forwards 2.5s; z-index: 2; }
+        @keyframes reveal { to { clip-path: inset(0 0 0 0); } }
         @keyframes pop-divider { to { transform: scaleY(1); } }
-        @keyframes slide-reveal { to { opacity: 1; transform: translateX(0); } }
+        @keyframes slide-in { to { transform: translateX(0); } }
+        @keyframes aura-glow { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
+        @keyframes aura-pulse { 0% { border-color: var(--n-blue); box-shadow: 0 0 20px var(--n-blue); } 100% { border-color: var(--n-pink); box-shadow: 0 0 45px var(--n-pink); transform: scale(1.15); } }
 
+        /* --- 2. LOADING SCREEN --- */
         #assets { position: fixed; inset: 0; background: #000; z-index: 20000; display: none; opacity: 0; transition: 1.5s; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        .elo-line { width: 0; height: 2px; background: var(--n-blue); margin: 25px 0; box-shadow: 0 0 15px var(--n-blue); animation: center-wipe 1.2s var(--smooth) forwards 1s; }
-        @keyframes center-wipe { from { width: 0; left: 50%; } to { width: 600px; left: calc(50% - 300px); } }
-        .elo-desc { font-size: 15px; color: #aaa; width: 500px; line-height: 1.8; margin: 0 auto; opacity: 0; animation: fadeUp 1s forwards 1.8s; }
-        @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+        .elo-title { font-size: 42px; color: var(--n-blue); transform: translateY(30px); opacity: 0; animation: up 1s var(--smooth) forwards 0.5s; letter-spacing: 4px; }
+        .elo-line { width: 0; height: 2px; background: var(--n-blue); margin: 25px 0; box-shadow: 0 0 15px var(--n-blue); animation: pop-line-long 1.2s var(--smooth) forwards 1s; }
+        .elo-desc { font-size: 15px; color: #aaa; max-width: 700px; opacity: 0; clip-path: inset(0 0 100% 0); animation: wipe 1.2s var(--smooth) forwards 1.8s; line-height: 1.8; padding: 0 20px; }
+        @keyframes up { to { opacity: 1; transform: translateY(0); } }
+        @keyframes pop-line-long { to { width: 600px; } }
+        @keyframes wipe { to { opacity: 1; clip-path: inset(0 0 0 0); } }
+        .rainbow-container { width: 420px; height: 35px; border-radius: 17px; padding: 2px; background: linear-gradient(to right, #ff0000, #ff8c00, #ffff00, #00ff00); display: flex; align-items: center; justify-content: center; margin-top: 40px; }
+        .bar-wrap { width: 100%; height: 100%; background: #000; border-radius: 15px; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; }
+        #fill { position: absolute; left: 0; height: 100%; width: 0%; background: #00ffff; box-shadow: 2px 0 10px #00ffff; transition: width 0.4s var(--smooth); }
+        #perc { position: relative; z-index: 2; font-weight: bold; font-size: 14px; color: white; mix-blend-mode: difference; }
 
-        /* --- 2. BOARD & PIECES --- */
+        /* --- 3. GAME HUD & COOL HIGHLIGHTS --- */
         #game { display: none; width: 100vw; height: 100vh; justify-content: center; align-items: center; opacity: 0; transition: 1.5s; z-index: 5; }
-        .board { width: 560px; height: 560px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid #111; background: #000; position: relative; }
-        .sq { width: 70px; height: 70px; display: flex; justify-content: center; align-items: center; cursor: pointer; position: relative; }
-        .w { background: rgba(45, 45, 55, 0.9); } .b { background: rgba(20, 20, 25, 0.9); }
-        .piece { font-size: 48px; transition: transform 0.4s var(--smooth), filter 0.5s; filter: grayscale(1) brightness(0.3); pointer-events: none; }
-        .active-match .piece { filter: grayscale(0) brightness(1.2); pointer-events: auto; }
-
-        /* Highlights */
-        .sq.hover-red { box-shadow: inset 0 0 0 2px var(--n-red), 0 0 25px var(--n-red); z-index: 10; }
-        .sq.hover-orange { box-shadow: inset 0 0 0 2px var(--n-orange), 0 0 25px var(--n-orange); z-index: 10; }
-        .sq.hover-yellow { box-shadow: inset 0 0 0 2px var(--n-yellow), 0 0 25px var(--n-yellow); z-index: 10; }
-        .sq.hover-blue { box-shadow: inset 0 0 0 2px var(--n-blue), 0 0 25px var(--n-blue); z-index: 10; }
-        .valid-dot { position: absolute; width: 22px; height: 22px; background: var(--n-blue); border-radius: 50%; opacity: 0.7; box-shadow: 0 0 15px var(--n-blue); animation: zoomIn 0.3s forwards; pointer-events: none; }
-        @keyframes zoomIn { from { transform: scale(0); } to { transform: scale(1); } }
-
-        /* --- 3. UI LAYER (GEAR & PLAY) --- */
-        #ui-layer { position: fixed; bottom: 30px; right: 30px; z-index: 1000; display: flex; align-items: center; gap: 15px; }
-        .gear-btn { font-size: 32px; color: var(--n-blue); cursor: pointer; transition: 0.6s var(--smooth); }
-        .gear-btn.active { color: var(--n-green); transform: rotate(90deg); }
+        .board { width: 560px; height: 560px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid #111; background: #000; z-index: 10; position: relative; transition: filter 0.6s var(--smooth); }
         
-        .play-square { 
-            width: 150px; height: 50px; background: rgba(0,0,0,0.8); border: 2px solid var(--n-blue); 
-            border-radius: 10px; color: var(--n-blue); display: none; align-items: center; 
-            justify-content: space-between; padding: 0 15px; cursor: pointer; font-weight: bold; letter-spacing: 2px;
+        .sq { width: 70px; height: 70px; display: flex; justify-content: center; align-items: center; cursor: pointer; position: relative; transition: box-shadow 0.2s var(--smooth); z-index: 1; }
+        .w { background: rgba(45, 45, 55, 0.9); } .b { background: rgba(20, 20, 25, 0.9); }
+        
+        .piece { font-size: 48px; transition: transform 0.3s var(--smooth), opacity 0.8s; filter: brightness(0); opacity: 0; transform: scale(0.5); pointer-events: none; user-select: none; z-index: 2; }
+        .piece.unlocked { filter: brightness(1); opacity: 1; transform: scale(1); pointer-events: none; }
+        .piece.selected { transform: scale(1.15) translateY(-5px); filter: drop-shadow(0 5px 15px black); }
+
+        /* SQUARED NEON HIGHLIGHTS */
+        .sq.hover-red { box-shadow: inset 0 0 0 2px var(--n-red), inset 0 0 10px rgba(250, 65, 45, 0.3), 0 0 25px var(--n-red); z-index: 10; }
+        .sq.hover-orange { box-shadow: inset 0 0 0 2px var(--n-orange), inset 0 0 10px rgba(244, 148, 60, 0.3), 0 0 25px var(--n-orange); z-index: 10; }
+        .sq.hover-yellow { box-shadow: inset 0 0 0 2px var(--n-yellow), inset 0 0 10px rgba(241, 196, 15, 0.3), 0 0 25px var(--n-yellow); z-index: 10; }
+        .sq.hover-green { box-shadow: inset 0 0 0 2px var(--n-green), inset 0 0 10px rgba(129, 182, 76, 0.3), 0 0 25px var(--n-green); z-index: 10; }
+        .sq.hover-blue { box-shadow: inset 0 0 0 2px var(--n-blue), inset 0 0 10px rgba(0, 242, 255, 0.3), 0 0 25px var(--n-blue); z-index: 10; }
+
+        .valid-marker { position: absolute; width: 22px; height: 22px; border-radius: 50%; background: rgba(0, 242, 255, 0.6); box-shadow: 0 0 15px var(--n-blue); pointer-events: none; z-index: 3; animation: breathe 2s ease-in-out infinite; }
+        .sq.capture-move .valid-marker { background: transparent; width: 64px; height: 64px; border-radius: 50%; border: 4px solid var(--n-red); box-shadow: 0 0 20px var(--n-red), inset 0 0 10px var(--n-red); animation: breathe-capture 1.5s ease-in-out infinite; }
+        
+        @keyframes breathe { 0%, 100% { transform: scale(0.9); opacity: 0.6; } 50% { transform: scale(1.1); opacity: 1; } }
+        @keyframes breathe-capture { 0%, 100% { transform: scale(0.95); opacity: 0.7; border-color: var(--n-red); } 50% { transform: scale(1.05); opacity: 1; border-color: #ff5555; } }
+
+        /* --- SETTINGS MENU --- */
+        #settings-container { position: fixed; bottom: 20px; right: 20px; display: flex; align-items: center; gap: 15px; z-index: 1000; }
+        #play-btn-main { background: rgba(0,0,0,0.8); border: 1px solid var(--n-blue); color: var(--n-blue); padding: 8px 25px; border-radius: 20px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        #play-btn-main:hover { background: var(--n-blue); color: black; box-shadow: 0 0 15px var(--n-blue); }
+        
+        .dots-wrapper { display: flex; gap: 4px; padding: 10px; cursor: pointer; position: relative; }
+        .dots-wrapper span { width: 5px; height: 5px; background: var(--n-blue); border-radius: 50%; transition: 0.3s; }
+        .dots-wrapper:hover span { transform: scale(1.3); background: white; }
+
+        .dropup-menu { position: absolute; bottom: 50px; right: 0; background: #080808; border: 1px solid #333; border-radius: 10px; width: 200px; display: none; flex-direction: column; overflow: hidden; box-shadow: 0 0 30px rgba(0,0,0,0.8); }
+        .dropup-menu.active { display: flex; animation: slideUp 0.3s var(--smooth); }
+        .menu-item { padding: 15px 20px; font-size: 13px; color: #ccc; cursor: pointer; transition: 0.2s; }
+        .menu-item:hover { background: #111; color: var(--n-blue); }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- RESIGN SCREEN --- */
+        #resign-screen { position: fixed; inset: 0; background: black; z-index: 40000; display: none; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: 1.5s; }
+        .resign-cinematic-text { font-size: 60px; letter-spacing: 20px; color: var(--n-red); text-shadow: 0 0 40px var(--n-red); margin-bottom: 50px; font-weight: 200; }
+        .play-again-btn { padding: 15px 40px; background: transparent; border: 1px solid white; color: white; border-radius: 40px; cursor: pointer; font-size: 16px; letter-spacing: 3px; transition: all 0.6s var(--bounce); }
+        .play-again-btn:hover { transform: scale(1.25); background: white; color: black; box-shadow: 0 0 50px white; border-color: white; }
+
+        /* --- 4. HELP MENU --- */
+        #help-menu { 
+            position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(0.9); 
+            width: 780px; background: #050608; border: 2px solid var(--n-blue); border-radius: 15px; 
+            z-index: 31000; padding: 30px; opacity: 0; pointer-events: none; transition: 0.5s var(--smooth);
+            box-shadow: 0 0 50px rgba(0,242,255,0.3); overflow: hidden;
         }
-        .play-square.show { display: flex; animation: slideIn 0.4s var(--smooth); }
-        .dots-v { display: flex; flex-direction: column; gap: 3px; padding: 5px; }
-        .dots-v span { width: 4px; height: 4px; background: currentColor; border-radius: 50%; }
-
-        /* --- 4. HELP MENU & NEON POPOUT --- */
-        #help-menu { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(0.9); width: 850px; height: 650px; background: #050608; border: 2px solid var(--n-blue); border-radius: 15px; z-index: 31000; padding: 30px; opacity: 0; pointer-events: none; transition: 0.5s var(--smooth); display: flex; flex-direction: column; }
         #help-menu.active { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
+        #game.blurred { filter: blur(15px); }
+
+        .x-close-circle {
+            position: absolute; top: 20px; right: 20px; width: 40px; height: 40px;
+            border: 2px solid black; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.3s;
+        }
+        .x-close-circle::before, .x-close-circle::after { content: ''; position: absolute; width: 18px; height: 2px; background: black; }
+        .x-close-circle::before { transform: rotate(45deg); } .x-close-circle::after { transform: rotate(-45deg); }
+        .x-close-circle:hover { background: var(--n-red); border-color: var(--n-red); }
+        .x-close-circle:hover::before, .x-close-circle:hover::after { background: white; }
+
         .help-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px; }
-        .tab-btn { background: none; border: 1px solid #333; color: #888; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 12px; text-transform: uppercase; }
+        .tab-btn { background: none; border: 1px solid #333; color: #888; padding: 8px 16px; cursor: pointer; border-radius: 4px; transition: 0.3s; font-size: 12px; text-transform: uppercase; }
         .tab-btn.active { border-color: var(--n-blue); color: var(--n-blue); background: rgba(0,242,255,0.1); }
-        .tab-content { display: none; overflow-y: auto; flex-grow: 1; padding-right: 10px; }
+        .tab-content { display: none; max-height: 500px; overflow-y: auto; padding-right: 15px; transition: filter 0.4s; }
         .tab-content.active { display: block; }
-        .asset-card { border-left: 3px solid var(--n-blue); background: rgba(255,255,255,0.03); padding: 15px; margin-bottom: 12px; font-size: 13px; line-height: 1.7; border-radius: 0 8px 8px 0; transition: 0.3s; cursor: pointer; }
 
-        /* Neon Popout Duplicate */
-        #popout-overlay { position: fixed; inset: 0; z-index: 33000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(15px); background: rgba(0,0,0,0.7); }
-        .neon-box { background: #050608; border: 2px solid var(--n-blue); box-shadow: 0 0 50px var(--n-blue); border-radius: 20px; padding: 40px; width: 550px; position: relative; animation: popIn 0.4s var(--bounce); }
-        .pop-close { position: absolute; top: 15px; right: 15px; width: 35px; height: 35px; border-radius: 50%; border: 1px solid #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; }
-        .pop-close:hover { background: var(--n-red); border-color: var(--n-red); }
+        .asset-card { border-left: 3px solid var(--n-blue); background: rgba(255,255,255,0.03); padding: 15px; margin-bottom: 12px; font-size: 13px; line-height: 1.7; border-radius: 0 8px 8px 0; transition: 0.4s var(--smooth); cursor: pointer; transform-origin: center; }
+        .asset-card:hover { transform: scale(1.02); background: rgba(255,255,255,0.06); border-left-color: var(--n-pink); }
+        
+        /* EXPANDED DEFINITION STYLE */
+        .asset-card.expanded {
+            position: fixed; inset: 20%; height: fit-content; z-index: 100;
+            background: #050608; border: 2px solid var(--n-blue); border-radius: 20px;
+            padding: 40px; transform: scale(1.1); font-size: 18px;
+            box-shadow: 0 0 100px black;
+        }
 
-        .close-interface-btn { width: 100%; margin-top: 20px; background: none; border: 2px solid #444; color: #888; padding: 15px; border-radius: 10px; cursor: pointer; font-weight: bold; letter-spacing: 3px; transition: 0.3s; }
-        .close-interface-btn:hover { border-color: var(--n-red); background: var(--n-red); color: white; }
+        .group-label { color: var(--n-blue); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; margin: 25px 0 12px 0; border-bottom: 1px solid #222; display: block; padding-bottom: 5px; font-weight: bold; }
+        .asset-card b { color: var(--n-yellow); margin-right: 8px; }
+        .icon-glyph { font-size: 20px; width: 35px; display: inline-block; text-align: center; vertical-align: middle; margin-right: 10px; }
+        .close-menu-btn { width: 100%; padding: 15px; margin-top: 20px; background: rgba(250, 65, 45, 0.1); border: 1px solid var(--n-red); color: var(--n-red); cursor: pointer; border-radius: 8px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; }
+        .close-menu-btn:hover { background: var(--n-red); color: white; box-shadow: 0 0 15px var(--n-red); }
     </style>
 </head>
 <body>
+
     <canvas id="bg-canvas"></canvas>
+
     <div id="boot">
         <div class="equinox-text">EQUINOX GAMES</div>
         <div class="divider"></div>
-        <div class="controller-box"><div class="controller-icon">🎮</div><div class="aura-circle" id="aura"></div></div>
+        <div class="controller-box">
+            <div class="aura-circle"></div>
+            <div class="controller-icon">🎮</div>
+        </div>
     </div>
 
     <div id="assets">
-        <div style="font-size:42px; color:var(--n-blue); letter-spacing:4px; margin-bottom:10px;">Chess Practice | Elo</div>
+        <div class="elo-title">Chess Practice | Elo</div>
         <div class="elo-line"></div>
         <div class="elo-desc">Regular chess practice boosts your Elo rating by improving strategic understanding, anticipatory skills, and tactical abilities. It promotes critical thinking and mental agility, while game analysis helps identify patterns. Practicing with others builds community and motivation. Consistency is key to mastering chess at any skill level.</div>
-        <div id="perc" style="margin-top:40px; font-weight:bold; color:var(--n-blue); font-size:24px;">0%</div>
+        <div class="rainbow-container">
+            <div class="bar-wrap">
+                <div id="fill"></div>
+                <div id="perc">0%</div>
+            </div>
+        </div>
     </div>
 
     <div id="game">
         <div class="board" id="board"></div>
-        <div id="ui-layer">
-            <div id="gear" class="gear-btn" onclick="toggleGear()">⚙</div>
-            <div id="play-btn" class="play-square">
-                <span onclick="startMatch()">PLAY</span>
-                <div class="dots-v" onclick="e=event;e.stopPropagation();document.getElementById('drop').classList.toggle('active')">
-                    <span></span><span></span><span></span>
-                </div>
-                <div id="drop" style="position:absolute; bottom:65px; right:0; background:#0a0a0a; border:1px solid #333; border-radius:8px; width:180px; display:none; flex-direction:column; overflow:hidden;">
-                    <div style="padding:12px 20px; cursor:pointer;" onclick="location.reload()">Resign</div>
-                    <div style="padding:12px 20px; cursor:pointer;" onclick="toggleHelp()">Archived Help Menu</div>
+        
+        <div id="settings-container">
+            <button id="play-btn-main">PLAY</button>
+            <div class="dots-wrapper" onclick="toggleSettings(event)">
+                <span></span><span></span><span></span>
+                <div id="dropup" class="dropup-menu">
+                    <div class="menu-item" onclick="resignGame()">Resign</div>
+                    <div class="menu-item" onclick="openHelpMenu()">Archived Help Menu</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="popout-overlay" onclick="closePopout()">
-        <div class="neon-box" onclick="event.stopPropagation()">
-            <div class="pop-close" onclick="closePopout()">✖</div>
-            <div id="popout-content"></div>
-        </div>
+    <div id="resign-screen">
+        <div class="resign-cinematic-text">CONCEDED</div>
+        <button class="play-again-btn" onclick="location.reload()">PLAY AGAIN</button>
     </div>
 
     <div id="help-menu">
+        <div class="x-close-circle" onclick="openHelpMenu()"></div>
         <div class="help-tabs">
-            <button class="tab-btn active" onclick="tab(event, 'tab-pieces')">Pieces</button>
-            <button class="tab-btn" onclick="tab(event, 'tab-icons')">Icons</button>
-            <button class="tab-btn" onclick="tab(event, 'tab-mechanics')">Mechanics</button>
+            <button class="tab-btn active" onclick="openTab(event, 'tab-pieces')">Pieces</button>
+            <button class="tab-btn" onclick="openTab(event, 'tab-icons')">Icons</button>
+            <button class="tab-btn" onclick="openTab(event, 'tab-mechanics')">Mechanics</button>
         </div>
+        
         <div id="tab-pieces" class="tab-content active">
-            <div class="asset-card" onclick="openPopout(this)"><b>The Pawn</b> The fundamental infantry unit of chess. It possesses a restricted forward movement of one square, yet captures diagonally. Upon its initial move, it may advance two squares. Reaching the terminal rank allows for promotion into a Queen, Rook, Bishop, or Knight, granting the piece immense late-game utility.</div>
-            <div class="asset-card" onclick="openPopout(this)"><b>The Knight</b> A specialized tactical unit that navigates the board in a unique 'L' pattern—two squares in one cardinal direction followed by one square perpendicular. It maintains the singular ability to leap over intervening pieces, making it an invaluable asset in congested board states where other pieces are obstructed.</div>
-            <div class="asset-card" onclick="openPopout(this)"><b>The Bishop</b> A sophisticated long-range operative that slides any distance along diagonal trajectories. Each Bishop is permanently confined to the square colour it begins on, requiring them to work in coordinated pairs to control both light and dark regions of the board effectively throughout the middle and end game.</div>
-            <div class="asset-card" onclick="openPopout(this)"><b>The Rook</b> A formidable heavy piece moving in straight horizontal or vertical lines across any number of unoccupied squares. It plays a critical role in king safety through the castling maneuver and is often the primary force behind powerful ladder checkmates during the final stages of the match.</div>
-            <div class="asset-card" onclick="openPopout(this)"><b>The Queen</b> The most versatile and powerful asset on the board. She combines the movement capabilities of both the Rook and the Bishop, sliding any distance in any straight or diagonal direction. Her presence dictates the tempo and pressure of the match, serving as both a primary attacker and a central defender.</div>
-            <div class="asset-card" onclick="openPopout(this)"><b>The King</b> The pivotal figure around which the entire game revolves. While moving only one square in any direction, his preservation is absolute. If the King is placed under attack and cannot find a safe square, the match concludes immediately, rendering his protection the player's ultimate strategic priority.</div>
+            <div class="asset-card"><b>The Pawn</b> The fundamental infantry unit of chess. It possesses a restricted forward movement of one square, yet captures diagonally. Upon its initial move, it may advance two squares. Reaching the terminal rank allows for promotion into a Queen, Rook, Bishop, or Knight, granting the piece immense late-game utility.</div>
+            <div class="asset-card"><b>The Knight</b> A specialized tactical unit that navigates the board in a unique 'L' pattern—two squares in one cardinal direction followed by one square perpendicular. It maintains the singular ability to leap over intervening pieces, making it an invaluable asset in congested board states where other pieces are obstructed.</div>
+            <div class="asset-card"><b>The Bishop</b> A sophisticated long-range operative that slides any distance along diagonal trajectories. Each Bishop is permanently confined to the square colour it begins on, requiring them to work in coordinated pairs to control both light and dark regions of the board effectively throughout the middle and end game.</div>
+            <div class="asset-card"><b>The Rook</b> A formidable heavy piece moving in straight horizontal or vertical lines across any number of unoccupied squares. It plays a critical role in king safety through the castling maneuver and is often the primary force behind powerful ladder checkmates during the final stages of the match.</div>
+            <div class="asset-card"><b>The Queen</b> The most versatile and powerful asset on the board. She combines the movement capabilities of both the Rook and the Bishop, sliding any distance in any straight or diagonal direction. Her presence dictates the tempo and pressure of the match, serving as both a primary attacker and a central defender.</div>
+            <div class="asset-card"><b>The King</b> The pivotal figure around which the entire game revolves. While moving only one square in any direction, his preservation is absolute. If the King is placed under attack and cannot find a safe square, the match concludes immediately, rendering his protection the player's ultimate strategic priority.</div>
         </div>
+
         <div id="tab-icons" class="tab-content">
-            <div class="asset-card" onclick="openPopout(this)"><b>The Best Move (Star)</b> This designation signifies the absolute strongest continuation identified by the engine analysis. Playing this move optimizes your winning probability and represents the highest level of technical accuracy possible in the current position, often finding the only path to a victory.</div>
-            <div class="asset-card" onclick="openPopout(this)"><b>Good Move (Tick)</b> Indicates a solid, fundamentally sound choice that maintains the current evaluation of the position. While it may not be the engine's primary preference, it adheres to sound chess principles and ensures the player does not concede any unnecessary tactical advantages.</div>
+            <div class="group-label">Positive Indicators</div>
+            <div class="asset-card"><span class="icon-glyph">⭐</span><b>The Best Move (Star)</b> This designation signifies the absolute strongest continuation identified by the engine analysis. Playing this move optimizes your winning probability and represents the highest level of technical accuracy possible in the current position, often finding the only path to a victory.</div>
+            <div class="asset-card"><span class="icon-glyph">✔️</span><b>Good Move (Tick)</b> Indicates a solid, fundamentally sound choice that maintains the current evaluation of the position. While it may not be the engine's primary preference, it adheres to sound chess principles and ensures the player does not concede any unnecessary tactical advantages.</div>
+            <div class="group-label">Negative Indicators</div>
+            <div class="asset-card"><span class="icon-glyph">!</span><b>Inaccuracy (Exclamation)</b> Marks a sub-optimal move that noticeably weakens your standing. It suggests a missed opportunity to apply pressure or a minor positional concession that allows the opponent to improve their pieces more easily than the optimal continuation would have permitted.</div>
+            <div class="asset-card"><span class="icon-glyph">!!</span><b>Blunder (Death Emoji)</b> A catastrophic error that tangibly reduces your advantage or directly allows the opponent to achieve a winning position. This usually results from an overlooked tactical sequence or a serious misunderstanding of the immediate requirements of the board position.</div>
+            <div class="asset-card"><span class="icon-glyph">💀</span><b>Fatal Blunder (Death)</b> Reserved for moves that lead to an immediate loss of the game or the loss of a major piece without compensation. This classification represents a total collapse of strategy and typically shifts the game evaluation into a forced win for the opponent.</div>
+            <div class="group-label">Exotic Classifications</div>
+            <div class="asset-card"><span class="icon-glyph">?</span><b>Mystery Move (Question)</b> Used to denote moves that complicate the position in ways the engine cannot immediately resolve. It signifies a high-variance choice that creates a chaotic environment where both players have equal chances to succeed or fail based on subsequent precision.</div>
+            <div class="asset-card"><span class="icon-glyph">??</span><b>The Brilliant Move (Double Question)</b> Although visually appearing similar to a blunder, this highlights a high-level sacrifice that appears as an error but leads to a forced winning advantage. It signifies a move that is difficult for humans to calculate but mathematically sound under deep analysis.</div>
+            <div class="asset-card"><span class="icon-glyph">📖</span><b>The Book Move (Manual)</b> Indicates that the move belongs to the established library of opening theory. This confirms the player is following paths analyzed by grandmasters for centuries to reach a balanced and playable middle-game position with known strategic goals.</div>
         </div>
+
         <div id="tab-mechanics" class="tab-content">
-            <div class="asset-card" onclick="openPopout(this)"><b>Capturing Methodology</b> To capture an opponent's unit, you must move your piece onto the square it currently occupies. The displaced piece is permanently removed from the field. You cannot capture your own units or occupy a square already held by your own color, requiring careful navigation of space.</div>
-            <div class="asset-card" onclick="openPopout(this)"><b>En Passant</b> A specialized pawn capture occurring when an opponent moves their pawn two squares forward from its starting position and lands adjacent to your pawn. You may capture that pawn as if it had only moved one square, provided you do so on the very next turn.</div>
+            <div class="group-label">Core Mechanics</div>
+            <div class="asset-card"><b>Capturing Methodology</b> To capture an opponent's unit, you must move your piece onto the square it currently occupies. The displaced piece is permanently removed from the field. You cannot capture your own units or occupy a square already held by your own color, requiring careful navigation of space.</div>
+            <div class="asset-card"><b>En Passant</b> A specialized pawn capture occurring when an opponent moves their pawn two squares forward from its starting position and lands adjacent to your pawn. You may capture that pawn as if it had only moved one square, provided you do so on the very next turn.</div>
+            <div class="group-label">Ending Conditions</div>
+            <div class="asset-card"><b>Checkmate (Absolute Victory)</b> The definitive conclusion of a chess match. This occurs when a King is under direct threat of capture and possesses no legal moves to relocate, block the line of attack, or eliminate the attacking piece entirely. The game ends immediately in a win for the attacker.</div>
+            <div class="asset-card"><b>Stalemate (Technical Draw)</b> A unique situation where the player whose turn it is has no legal moves remaining, yet their King is not currently in check. Because the player cannot move but is not defeated, the game ends in a draw, often occurring as a defensive 'swindle'.</div>
+            <div class="asset-card"><b>Resignation (Concession)</b> A formal acknowledgement of defeat. A player may choose to resign at any moment if they determine the position is strategically hopeless. This is considered professional courtesy when a loss is mathematically certain, immediately awarding the full victory to the opponent.</div>
+            <div class="asset-card"><b>Timeout (Temporal Loss)</b> In timed competitive play, if a player's clock expires before they complete their required moves, they lose the game immediately. This emphasizes the importance of time management as a critical strategic resource, where speed is as vital as tactical precision.</div>
         </div>
-        <button class="close-interface-btn" onclick="toggleHelp()">CLOSE INTERFACE</button>
+        <button class="close-menu-btn" onclick="openHelpMenu()">Return to Match</button>
     </div>
 
     <script>
-        const gs = { active: false, board: [], selected: null, ctrl: false };
-        const pm = { 'r':'♜','n':'♞','b':'♝','q':'♛','k':'♚','p':'♟','R':'♖','N':'♘','B':'♗','Q':'♕','K':'♔','P':'♙' };
+        const gameState = { board: [], selected: null, hovered: null, isCtrlPressed: false, turn: 'w' };
+        const pieceMap = { 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚', 'p': '♟', 'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔', 'P': '♙' };
 
-        function init() {
-            gs.board = [['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']];
-            render();
+        function initGame() {
+            gameState.board = [['r','n','b','q','k','b','n','r'],['p','p','p','p','p','p','p','p'],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],['P','P','P','P','P','P','P','P'],['R','N','B','Q','K','B','N','R']];
+            renderBoard();
         }
-        function render() {
+
+        function renderBoard() {
             const b = document.getElementById('board'); b.innerHTML = '';
-            for(let r=0; r<8; r++) for(let c=0; c<8; c++) {
-                const s = document.createElement('div'); s.className = `sq ${(r+c)%2===0?'w':'b'}`; s.id=`s${r}${c}`;
-                s.onclick = () => handleSq(r,c);
-                s.onmouseenter = () => hover(r,c);
-                s.onmouseleave = () => clearHover();
-                if(gs.board[r][c]) {
-                    const p = document.createElement('div'); p.className = 'piece'; p.id=`p${r}${c}`; p.innerText = pm[gs.board[r][c]];
-                    s.appendChild(p);
+            for(let r=0; r<8; r++) {
+                for(let c=0; c<8; c++) {
+                    const sq = document.createElement('div');
+                    sq.className = `sq ${(r+c)%2===0 ? 'w' : 'b'}`;
+                    sq.dataset.r = r; sq.dataset.c = c;
+                    sq.onmouseenter = () => { gameState.hovered = {r, c}; updateHighlights(); };
+                    sq.onmouseleave = () => { gameState.hovered = null; updateHighlights(); };
+                    sq.onclick = () => handleClick(r, c);
+                    const pieceCode = gameState.board[r][c];
+                    if (pieceCode) {
+                        const p = document.createElement('div');
+                        p.className = 'piece unlocked'; p.innerText = pieceMap[pieceCode];
+                        sq.appendChild(p);
+                    }
+                    b.appendChild(sq);
                 }
-                b.appendChild(s);
             }
         }
-        function handleSq(r, c) {
-            if(!gs.active) return;
-            if(gs.selected) {
-                const r1 = gs.selected.r, c1 = gs.selected.c;
-                const p = document.getElementById(`p${r1}${c1}`);
-                const sRect = document.getElementById(`s${r}${c}`).getBoundingClientRect();
-                const pRect = p.getBoundingClientRect();
-                p.style.transform = `translate(${sRect.left - pRect.left}px, ${sRect.top - pRect.top}px)`;
-                setTimeout(() => { gs.board[r][c] = gs.board[r1][c1]; gs.board[r1][c1] = null; gs.selected = null; render(); }, 400);
-            } else if(gs.board[r][c]) { gs.selected = {r, c}; if(gs.ctrl) showMoves(r,c); }
+
+        function handleClick(r, c) {
+            if (gameState.selected) {
+                const moves = getValidMoves(gameState.selected.r, gameState.selected.c);
+                if (moves.find(m => m.r === r && m.c === c)) {
+                    gameState.board[r][c] = gameState.board[gameState.selected.r][gameState.selected.c];
+                    gameState.board[gameState.selected.r][gameState.selected.c] = null;
+                    gameState.selected = null; gameState.turn = gameState.turn === 'w' ? 'b' : 'w';
+                    renderBoard(); return;
+                }
+            }
+            if (gameState.board[r][c]) {
+                gameState.selected = (gameState.selected && gameState.selected.r === r && gameState.selected.c === c) ? null : {r, c};
+            } else { gameState.selected = null; }
+            updateHighlights();
         }
 
-        function toggleGear() { document.getElementById('gear').classList.toggle('active'); document.getElementById('play-btn').classList.toggle('show'); }
-        function openPopout(card) { document.getElementById('popout-overlay').style.display='flex'; document.getElementById('popout-content').innerHTML = card.innerHTML; }
-        function closePopout() { document.getElementById('popout-overlay').style.display='none'; }
-        function tab(e, n) { document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active')); document.getElementById(n).classList.add('active'); document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); e.target.classList.add('active'); }
-        function startMatch() { gs.active = true; document.getElementById('game').classList.add('active-match'); }
-        function toggleHelp() { document.getElementById('help-menu').classList.toggle('active'); }
-
-        const cv=document.getElementById('bg-canvas'), cx=cv.getContext('2d');
-        function resize() { cv.width=window.innerWidth; cv.height=window.innerHeight; } resize();
-        let pts=[]; for(let i=0; i<80; i++) pts.push({x:Math.random()*cv.width, y:Math.random()*cv.height, v:Math.random()*0.4+0.1});
-        function anim() { cx.clearRect(0,0,cv.width,cv.height); cx.fillStyle='rgba(255,255,255,0.2)'; pts.forEach(p=>{ cx.beginPath(); cx.arc(p.x, p.y, 1.5, 0, 7); cx.fill(); p.y-=p.v; if(p.y<0) p.y=cv.height; }); requestAnimationFrame(anim); } anim();
-
-        setTimeout(() => {
-            document.getElementById('boot').style.opacity = '0';
-            setTimeout(() => {
-                document.getElementById('boot').style.display = 'none';
-                const a=document.getElementById('assets'); a.style.display='flex'; setTimeout(()=>a.style.opacity='1',50);
-                let p=0, iv=setInterval(() => {
-                    p+=2; document.getElementById('perc').innerText=p+'%';
-                    if(p>=100) { clearInterval(iv); a.style.opacity='0'; setTimeout(()=>{a.style.display='none'; document.getElementById('game').style.display='flex'; setTimeout(()=>{document.getElementById('game').style.opacity='1';init();},50);},1000); }
-                }, 100);
-            }, 1000);
-        }, 4500);
-
-        function hover(r, c) {
-            const p = gs.board[r][c]; if(!p) return;
-            const type = p.toLowerCase();
-            let cl = 'hover-blue';
-            if(type==='k'||type==='q') cl='hover-red';
-            else if(type==='r'||type==='b') cl='hover-orange';
-            else if(type==='n') cl='hover-yellow';
-            document.getElementById(`s${r}${c}`).classList.add(cl);
+        function updateHighlights() {
+            document.querySelectorAll('.sq').forEach(sq => {
+                sq.className = sq.className.replace(/hover-\w+/, '').trim();
+                sq.classList.remove('capture-move');
+                const marker = sq.querySelector('.valid-marker'); if(marker) marker.remove();
+            });
+            const target = gameState.hovered || gameState.selected;
+            if (target) {
+                const piece = gameState.board[target.r][target.c];
+                const sqDiv = getSqDiv(target.r, target.c);
+                if (piece && sqDiv) {
+                    const type = piece.toLowerCase();
+                    let colorClass = '';
+                    if (type === 'k' || type === 'q') colorClass = 'hover-red';
+                    else if (type === 'r' || type === 'b') colorClass = 'hover-orange';
+                    else if (type === 'n') colorClass = 'hover-yellow';
+                    else if (type === 'p') {
+                        colorClass = 'hover-green';
+                        if ((piece === 'P' && target.r <= 3) || (piece === 'p' && target.r >= 4)) colorClass = 'hover-blue';
+                    }
+                    sqDiv.classList.add(colorClass);
+                }
+                const movesSource = gameState.selected || (gameState.isCtrlPressed ? gameState.hovered : null);
+                if ((gameState.isCtrlPressed || gameState.selected) && movesSource) {
+                   getValidMoves(movesSource.r, movesSource.c).forEach(m => {
+                       const mDiv = getSqDiv(m.r, m.c);
+                       const marker = document.createElement('div'); marker.className = 'valid-marker';
+                       mDiv.appendChild(marker);
+                       if(gameState.board[m.r][m.c]) mDiv.classList.add('capture-move');
+                   });
+                }
+            }
+            document.querySelectorAll('.piece').forEach(p => p.classList.remove('selected'));
+            if (gameState.selected) {
+                const pDiv = getSqDiv(gameState.selected.r, gameState.selected.c).querySelector('.piece');
+                if(pDiv) pDiv.classList.add('selected');
+            }
         }
-        function clearHover() { document.querySelectorAll('.sq').forEach(s=>s.classList.remove('hover-red','hover-blue','hover-orange','hover-yellow')); }
-    </script>
-</body>
-</html>
+
+        function

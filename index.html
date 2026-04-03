@@ -5,15 +5,6 @@
     <title>Equinox Games | Chess Practice</title>
     <style>
         :root { 
-            .particle { position: absolute; pointer-events: none; border-radius: 50%; z-index: 1000; }
-            .death-particle { background: var(--n-red); box-shadow: 0 0 10px var(--n-red); }
-.white-particle { background: #fff; box-shadow: 0 0 5px #fff; opacity: 0.4; pointer-events: none; }
-@keyframes bgFloat {
-    0% { transform: translateY(110vh) scale(0); opacity: 0; }
-    50% { opacity: 0.5; }
-    100% { transform: translateY(-10vh) scale(1.2); opacity: 0; }
-}
-
             --n-blue: #00f2ff; --n-green: #39FF14; --n-red: #fa412d; 
             --n-orange: #f4943c; --n-yellow: #f1c40f; 
             --smooth: cubic-bezier(0.4, 0, 0.2, 1);
@@ -85,7 +76,7 @@
 </head>
 <body>
 
-    <div id="boot"><div class="equinox-text">Eqinox Games</div></div>
+    <div id="boot"><div class="equinox-text">EQUINOX SYSTEM</div></div>
     <div id="turn-info">WHITE'S TURN</div>
 
     <div id="settings-panel">
@@ -238,7 +229,7 @@
                 movePieceSmooth(selectedSq, i);
                 currentTurn = currentTurn === 'W' ? 'B' : 'W';
                 document.getElementById('play-btn').classList.add('ongoing');
-                document.getElementById('play-btn').innerText = "Game Ongoing";
+                document.getElementById('play-btn').innerText = "GAME ONGOING";
             }
             selectedSq = null;
             document.querySelectorAll('.sq').forEach(s => s.classList.remove('selected'));
@@ -260,5 +251,5 @@
     setTimeout(() => { document.getElementById('boot').style.display='none'; }, 3000);
     initBoard();
 </script>
-  </body>
+</body>
 </html>

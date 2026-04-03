@@ -57,7 +57,7 @@
 
         .piece { 
             font-size: 50px; user-select: none; z-index: 10; pointer-events: none;
-            transition: transform 0.48s var(--smooth); /* Smooth slide */
+            transition: transform 0.48s var(--smooth); /* SMOOTH GLIDE */
             position: relative;
         }
         .white-p { color: #fff; text-shadow: 0 0 10px #fff; }
@@ -67,10 +67,19 @@
         .shockwave { position: absolute; border: 2px solid white; border-radius: 50%; pointer-events: none; z-index: 99; animation: wave 0.6s ease-out forwards; transform: translate(-50%, -50%); }
         @keyframes wave { 0% { width: 0; height: 0; opacity: 1; } 100% { width: 200px; height: 200px; opacity: 0; } }
         .p-white { position: absolute; width: 4px; height: 4px; background: white; pointer-events: none; z-index: 101; border-radius: 50%; }
-        .engine-icon { position: absolute; top: -10px; right: -10px; font-size: 30px; z-index: 100; animation: iconPop 0.5s var(--smooth) forwards; pointer-events: none; }
-        @keyframes iconPop { 0% { transform: scale(0) rotate(-45deg); opacity: 0; } 100% { transform: scale(1) rotate(0deg); opacity: 1; } }
+        .engine-icon { 
+            position: absolute; top: -12px; right: -12px; font-size: 34px; z-index: 100; 
+            animation: iconPop 0.6s var(--smooth) forwards; pointer-events: none; 
+        }
+        @keyframes iconPop { 
+            0% { transform: scale(0) rotate(-30deg); opacity: 0; } 
+            60% { transform: scale(1.4); } 
+            100% { transform: scale(1); opacity: 1; } 
+        }
+        .engine-icon.fade-out { animation: iconFade 1s forwards; }
+        @keyframes iconFade { to { transform: scale(0.6); opacity: 0; } }
 
-        /* Help Menu - exact original style */
+        /* Help Menu */
         #help-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); z-index: 55000; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.5s var(--smooth); }
         #help-overlay.active { opacity: 1; display: flex; }
         #help-container { width: 850px; height: 650px; background: #050505; border: 2px solid var(--n-green); border-radius: 20px; display: flex; flex-direction: column; overflow: hidden; transform: scale(0.9); transition: transform 0.5s var(--smooth); }
@@ -124,7 +133,7 @@
         <div style="cursor:pointer; color:#666; text-align:center; padding:15px; border:1px solid #333; border-radius:10px; margin-top:20px;" onclick="openHelp()">ARCHIVED HELP</div>
     </div>
 
-    <!-- Help Menu (FULL ORIGINAL) -->
+    <!-- Help Menu (full original) -->
     <div id="help-overlay">
         <div id="help-container">
             <div class="help-header">
@@ -139,7 +148,7 @@
         </div>
     </div>
 
-    <!-- Expansion Overlay -->
+    <!-- Expansion -->
     <div id="expansion-overlay">
         <div id="expansion-box">
             <button class="close-expanded" onclick="closeExpansion()">✕</button>
@@ -156,7 +165,7 @@
     let selectedSq = null;
     let ctrlLocked = false;
     let isAIActive = false;
-    let currentDifficulty = 2;
+    let currentDifficulty = 3; // default professional
 
     const glyphs = { 'r':'♜','n':'♞','b':'♝','q':'♛','k':'♚','p':'♟','R':'♖','N':'♘','B':'♗','Q':'♕','K':'♔','P':'♙' };
     const hlMap = { 'k':'hl-king','q':'hl-queen','r':'hl-rook','b':'hl-bishop','n':'hl-knight','p':'hl-pawn' };
@@ -191,7 +200,7 @@
         document.getElementById('turn-info').innerText = currentTurn === 'W' ? "WHITE'S TURN" : "BLACK'S TURN";
     }
 
-    // SMOOTH SLIDING ANIMATION
+    // SMOOTH GLIDE ANIMATION
     function movePieceWithAnimation(from, to) {
         const fromSq = document.querySelector(`[data-idx="${from}"]`);
         const toSq = document.querySelector(`[data-idx="${to}"]`);
@@ -201,7 +210,7 @@
             boardState[to] = boardState[from];
             boardState[from] = null;
             render();
-            spawnVFX(to);
+            spawnVFX(to, boardState[to] ? 'star' : 'tick');
             return;
         }
 
@@ -219,19 +228,39 @@
         pieceEl.style.transform = 'translate(0, 0)';
 
         setTimeout(() => {
+            const wasCapture = !!boardState[to];
             boardState[to] = boardState[from];
             boardState[from] = null;
             render();
-            spawnVFX(to);
+            spawnVFX(to, wasCapture ? 'blunder' : 'tick'); // blunder icon on bad captures
             if (isAIActive && currentTurn === 'B') setTimeout(aiLogic, 700);
         }, 490);
     }
 
-    function spawnVFX(idx) {
+    function spawnVFX(idx, type) {
         const sq = document.querySelector(`[data-idx="${idx}"]`);
         if (!sq) return;
-        const rect = sq.getBoundingClientRect();
 
+        const icon = document.createElement('div');
+        icon.className = 'engine-icon';
+
+        // Icons exactly matching the video style
+        if (type === 'star') icon.innerHTML = '⭐';
+        else if (type === 'tick') icon.innerHTML = '✔️';
+        else if (type === 'blunder') icon.innerHTML = '‼️';   // double exclamation like the video
+        else icon.innerHTML = '✔️';
+
+        icon.style.color = type === 'blunder' ? '#ff2d55' : '#39ff14';
+        sq.appendChild(icon);
+
+        // Auto despawn with fade (exactly like the video)
+        setTimeout(() => {
+            icon.classList.add('fade-out');
+            setTimeout(() => icon.remove(), 900);
+        }, 1400);
+
+        // Shockwave + particles (original VFX)
+        const rect = sq.getBoundingClientRect();
         const wave = document.createElement('div');
         wave.className = 'shockwave';
         wave.style.left = `${rect.left + 37}px`;
@@ -271,11 +300,7 @@
         const r1 = Math.floor(f/8), c1 = f%8, r2 = Math.floor(t/8), c2 = t%8;
         const dr = Math.abs(r2-r1), dc = Math.abs(c2-c1), type = p.toLowerCase();
         switch (type) {
-            case 'p': 
-                const d = p === 'P' ? -1 : 1;
-                return (dc === 0 && r2-r1 === d && !tar) || 
-                       (dc === 0 && r2-r1 === 2*d && r1 === (p==='P'?6:1) && !tar) || 
-                       (dc === 1 && r2-r1 === d && tar);
+            case 'p': const d = p === 'P' ? -1 : 1; return (dc === 0 && r2-r1 === d && !tar) || (dc === 0 && r2-r1 === 2*d && r1 === (p==='P'?6:1) && !tar) || (dc === 1 && r2-r1 === d && tar);
             case 'r': return (r1 === r2 || c1 === c2) && isPathClear(f, t);
             case 'n': return dr*dc === 2;
             case 'b': return dr === dc && isPathClear(f, t);
@@ -305,6 +330,7 @@
         }
     }
 
+    // HARDER AI - different per tier
     function aiLogic() {
         let moves = [];
         for(let f=0; f<64; f++) {
@@ -313,11 +339,19 @@
             }
         }
         if (moves.length === 0) return;
+
         let chosen = moves[Math.floor(Math.random()*moves.length)];
-        if (currentDifficulty >= 3) {
+
+        if (currentDifficulty >= 5) { // Grandmaster - very strong
             const captures = moves.filter(m => m.capture);
             if (captures.length > 0) chosen = captures[Math.floor(Math.random()*captures.length)];
+        } else if (currentDifficulty >= 3) { // Professional / Master - good capture preference
+            const captures = moves.filter(m => m.capture);
+            if (captures.length > 0) chosen = captures[Math.floor(Math.random()*captures.length)];
+        } else if (currentDifficulty >= 1) { // Beginner / Moderate - some preference
+            chosen = moves.find(m => m.capture) || chosen;
         }
+
         movePieceWithAnimation(chosen.f, chosen.t);
         currentTurn = 'W';
     }
@@ -325,9 +359,46 @@
     function updateDots(idx) {
         document.querySelectorAll('.ctrl-dot').forEach(d => d.classList.remove('ctrl-dot'));
         for (let i = 0; i < 64; i++) {
-            if (isValid(idx, i)) document.querySelector(`[data-idx="${i}"]`)?.classList.add('ctrl-dot');
+            if (isValid(idx, i)) {
+                const sq = document.querySelector(`[data-idx="${i}"]`);
+                if (sq) {
+                    sq.classList.add('ctrl-dot');
+                    // If it's a capture, add the captured piece's hover highlight color
+                    if (boardState[i]) {
+                        const capturedType = boardState[i].toLowerCase();
+                        let hl = hlMap[capturedType];
+                        if (capturedType === 'p') hl = 'hl-pawn';
+                        if (hl) sq.classList.add(hl);
+                    }
+                }
+            }
         }
     }
+
+    // Hover + Ctrl combined highlight
+    document.addEventListener('mouseover', (e) => {
+        const sq = e.target.closest('.sq'); if (!sq) return;
+        const p = boardState[sq.dataset.idx]; if (!p) return;
+        let hl = hlMap[p.toLowerCase()];
+        if (p.toLowerCase() === 'p') {
+            const row = Math.floor(sq.dataset.idx / 8), dist = (p === 'P') ? row : (7 - row);
+            if (dist >= 1 && dist <= 5) hl = 'hl-pawn-blue';
+        }
+        sq.classList.add(hl);
+    });
+    document.addEventListener('mouseout', (e) => {
+        const sq = e.target.closest('.sq');
+        if (sq) sq.className = sq.className.split(' ').filter(c => !c.startsWith('hl-')).join(' ');
+    });
+
+    // Ctrl toggle
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Control') {
+            ctrlLocked = !ctrlLocked;
+            if (!ctrlLocked) document.querySelectorAll('.ctrl-dot').forEach(d => d.classList.remove('ctrl-dot'));
+            else if (selectedSq !== null) updateDots(selectedSq);
+        }
+    });
 
     // UI
     function toggleSettings() { document.getElementById('settings-panel').classList.toggle('open'); }
@@ -347,14 +418,8 @@
         document.querySelectorAll('.diff-option').forEach(el => el.style.border = parseInt(el.dataset.diff) === lvl ? '2px solid var(--n-blue)' : 'none');
     }
     function showResignMenu() {
-        if (confirm("Resign the game?")) document.getElementById('resign-overlay').classList.add('active');
+        if (confirm("Resign the game?")) location.reload();
     }
-    function restartGame() {
-        document.getElementById('resign-overlay').classList.remove('active');
-        init();
-        currentTurn = 'W';
-    }
-
     function openHelp() {
         const overlay = document.getElementById('help-overlay');
         overlay.style.display = 'flex';
@@ -381,31 +446,6 @@
         overlay.classList.remove('active');
         setTimeout(() => overlay.style.display = 'none', 400);
     }
-
-    // Hover highlights (original)
-    document.addEventListener('mouseover', (e) => {
-        const sq = e.target.closest('.sq'); if (!sq) return;
-        const p = boardState[sq.dataset.idx]; if (!p) return;
-        let hl = hlMap[p.toLowerCase()];
-        if (p.toLowerCase() === 'p') {
-            const row = Math.floor(sq.dataset.idx / 8), dist = (p === 'P') ? row : (7 - row);
-            if (dist >= 1 && dist <= 5) hl = 'hl-pawn-blue';
-        }
-        sq.classList.add(hl);
-    });
-    document.addEventListener('mouseout', (e) => {
-        const sq = e.target.closest('.sq');
-        if (sq) sq.className = sq.className.split(' ').filter(c => !c.startsWith('hl-')).join(' ');
-    });
-
-    // Ctrl toggle
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Control') {
-            ctrlLocked = !ctrlLocked;
-            if (!ctrlLocked) document.querySelectorAll('.ctrl-dot').forEach(d => d.classList.remove('ctrl-dot'));
-            else if (selectedSq !== null) updateDots(selectedSq);
-        }
-    });
 
     setTimeout(() => { document.getElementById('boot').style.display = 'none'; }, 3000);
     init();

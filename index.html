@@ -38,14 +38,38 @@
         #fill { position: absolute; left: 0; height: 100%; width: 0%; background: #00ffff; box-shadow: 2px 0 10px #00ffff; transition: width 0.4s var(--smooth); }
         #perc { position: relative; z-index: 2; font-weight: bold; font-size: 14px; color: white; mix-blend-mode: difference; }
 
-        /* --- 3. GAME HUD --- */
+        /* --- 3. GAME HUD & INTERACTIVITY --- */
         #game { display: none; width: 100vw; height: 100vh; justify-content: center; align-items: center; opacity: 0; transition: 1.5s; z-index: 5; }
-        .board { width: 560px; height: 560px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid #111; background: #000; z-index: 10; }
-        .sq { width: 70px; height: 70px; display: flex; justify-content: center; align-items: center; cursor: pointer; }
-        .w { background: rgba(45, 45, 55, 0.9); } .b { background: rgba(20, 20, 25, 0.9); }
-        .piece { font-size: 48px; transition: 0.8s var(--smooth); filter: brightness(0); opacity: 0; transform: scale(0.5); pointer-events: none; }
-        .piece.unlocked { filter: brightness(1); opacity: 1; transform: scale(1); pointer-events: auto; }
+        .board { width: 560px; height: 560px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid #111; background: #000; z-index: 10; position: relative; }
         
+        .sq { width: 70px; height: 70px; display: flex; justify-content: center; align-items: center; cursor: pointer; position: relative; transition: box-shadow 0.2s, background-color 0.2s; }
+        .w { background: rgba(45, 45, 55, 0.9); } .b { background: rgba(20, 20, 25, 0.9); }
+        
+        /* Piece Styling */
+        .piece { font-size: 48px; transition: transform 0.3s var(--smooth), opacity 0.8s; filter: brightness(0); opacity: 0; transform: scale(0.5); pointer-events: none; user-select: none; z-index: 2; }
+        .piece.unlocked { filter: brightness(1); opacity: 1; transform: scale(1); pointer-events: none; /* Events handled by square */ }
+        .piece.selected { transform: scale(1.15) translateY(-5px); filter: drop-shadow(0 5px 10px black); }
+
+        /* COLOR CODED HOVER STATES */
+        /* Intensity relies on box-shadow inset for inner glow and standard for outer glow */
+        .sq.hover-red { box-shadow: inset 0 0 20px var(--n-red), 0 0 15px var(--n-red); z-index: 5; }
+        .sq.hover-orange { box-shadow: inset 0 0 20px var(--n-orange), 0 0 15px var(--n-orange); z-index: 5; }
+        .sq.hover-yellow { box-shadow: inset 0 0 20px var(--n-yellow), 0 0 15px var(--n-yellow); z-index: 5; }
+        .sq.hover-green { box-shadow: inset 0 0 20px var(--n-green), 0 0 15px var(--n-green); z-index: 5; }
+        .sq.hover-blue { box-shadow: inset 0 0 20px var(--n-blue), 0 0 15px var(--n-blue); z-index: 5; }
+
+        /* VALID MOVE MARKERS (Activated by CTRL) */
+        .valid-marker {
+            position: absolute; width: 20px; height: 20px; border-radius: 50%;
+            background: rgba(0, 242, 255, 0.4); box-shadow: 0 0 10px var(--n-blue);
+            pointer-events: none; z-index: 3; animation: pulse-marker 1.5s infinite;
+        }
+        .sq.capture-move .valid-marker {
+            background: rgba(250, 65, 45, 0.4); box-shadow: 0 0 10px var(--n-red);
+            width: 60px; height: 60px; border-radius: 50%; border: 4px solid var(--n-red); background: transparent;
+        }
+        @keyframes pulse-marker { 0% { transform: scale(0.8); opacity: 0.5; } 100% { transform: scale(1.2); opacity: 0; } }
+
         #gear-btn { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; background: none; border: none; color: var(--n-blue); font-size: 35px; cursor: pointer; z-index: 100; transition: 0.4s var(--smooth); display: flex; align-items: center; justify-content: center; }
         #gear-btn.active { color: var(--n-green); transform: rotate(90deg); }
 
@@ -110,8 +134,6 @@
             <button class="tab-btn" onclick="openTab(event, 'tab-icons')">Icons</button>
             <button class="tab-btn" onclick="openTab(event, 'tab-mechanics')">Mechanics</button>
         </div>
-
-        <!-- PIECES TAB -->
         <div id="tab-pieces" class="tab-content active">
             <div class="asset-card"><b>The Pawn</b> The fundamental infantry unit of chess. It possesses a restricted forward movement of one square, yet captures diagonally. Upon its initial move, it may advance two squares. Reaching the terminal rank allows for promotion into a Queen, Rook, Bishop, or Knight, granting the piece immense late-game utility.</div>
             <div class="asset-card"><b>The Knight</b> A specialized tactical unit that navigates the board in a unique 'L' pattern—two squares in one cardinal direction followed by one square perpendicular. It maintains the singular ability to leap over intervening pieces, making it an invaluable asset in congested board states where other pieces are obstructed.</div>
@@ -120,42 +142,266 @@
             <div class="asset-card"><b>The Queen</b> The most versatile and powerful asset on the board. She combines the movement capabilities of both the Rook and the Bishop, sliding any distance in any straight or diagonal direction. Her presence dictates the tempo and pressure of the match, serving as both a primary attacker and a central defender.</div>
             <div class="asset-card"><b>The King</b> The pivotal figure around which the entire game revolves. While moving only one square in any direction, his preservation is absolute. If the King is placed under attack and cannot find a safe square, the match concludes immediately, rendering his protection the player's ultimate strategic priority.</div>
         </div>
-
-        <!-- ICONS TAB -->
         <div id="tab-icons" class="tab-content">
             <span class="group-label">Positive Indicators</span>
             <div class="asset-card"><span class="icon-glyph">⭐</span><b>The Best Move (Star)</b> This designation signifies the absolute strongest continuation identified by the engine analysis. Playing this move optimizes your winning probability and represents the highest level of technical accuracy possible in the current position, often finding the only path to a victory.</div>
             <div class="asset-card"><span class="icon-glyph">✔️</span><b>Good Move (Tick)</b> Indicates a solid, fundamentally sound choice that maintains the current evaluation of the position. While it may not be the engine's primary preference, it adheres to sound chess principles and ensures the player does not concede any unnecessary tactical advantages.</div>
-            
             <span class="group-label">Negative Indicators</span>
             <div class="asset-card"><span class="icon-glyph">!</span><b>Inaccuracy (Exclamation)</b> Marks a sub-optimal move that noticeably weakens your standing. It suggests a missed opportunity to apply pressure or a minor positional concession that allows the opponent to improve their pieces more easily than the optimal continuation would have permitted.</div>
             <div class="asset-card"><span class="icon-glyph">!!</span><b>Blunder (Death Emoji)</b> A catastrophic error that tangibly reduces your advantage or directly allows the opponent to achieve a winning position. This usually results from an overlooked tactical sequence or a serious misunderstanding of the immediate requirements of the board position.</div>
             <div class="asset-card"><span class="icon-glyph">💀</span><b>Fatal Blunder (Death)</b> Reserved for moves that lead to an immediate loss of the game or the loss of a major piece without compensation. This classification represents a total collapse of strategy and typically shifts the game evaluation into a forced win for the opponent.</div>
-            
             <span class="group-label">Exotic Classifications</span>
             <div class="asset-card"><span class="icon-glyph">?</span><b>Mystery Move (Question)</b> Used to denote moves that complicate the position in ways the engine cannot immediately resolve. It signifies a high-variance choice that creates a chaotic environment where both players have equal chances to succeed or fail based on subsequent precision.</div>
             <div class="asset-card"><span class="icon-glyph">??</span><b>The Brilliant Move (Double Question)</b> Although visually appearing similar to a blunder, this highlights a high-level sacrifice that appears as an error but leads to a forced winning advantage. It signifies a move that is difficult for humans to calculate but mathematically sound under deep analysis.</div>
             <div class="asset-card"><span class="icon-glyph">📖</span><b>The Book Move (Manual)</b> Indicates that the move belongs to the established library of opening theory. This confirms the player is following paths analyzed by grandmasters for centuries to reach a balanced and playable middle-game position with known strategic goals.</div>
         </div>
-
-        <!-- MECHANICS TAB -->
         <div id="tab-mechanics" class="tab-content">
             <span class="group-label">Core Mechanics</span>
             <div class="asset-card"><b>Capturing Methodology</b> To capture an opponent's unit, you must move your piece onto the square it currently occupies. The displaced piece is permanently removed from the field. You cannot capture your own units or occupy a square already held by your own color, requiring careful navigation of space.</div>
             <div class="asset-card"><b>En Passant</b> A specialized pawn capture occurring when an opponent moves their pawn two squares forward from its starting position and lands adjacent to your pawn. You may capture that pawn as if it had only moved one square, provided you do so on the very next turn.</div>
-
             <span class="group-label">Ending Conditions</span>
             <div class="asset-card"><b>Checkmate (Absolute Victory)</b> The definitive conclusion of a chess match. This occurs when a King is under direct threat of capture and possesses no legal moves to relocate, block the line of attack, or eliminate the attacking piece entirely. The game ends immediately in a win for the attacker.</div>
             <div class="asset-card"><b>Stalemate (Technical Draw)</b> A unique situation where the player whose turn it is has no legal moves remaining, yet their King is not currently in check. Because the player cannot move but is not defeated, the game ends in a draw, often occurring as a defensive 'swindle'.</div>
             <div class="asset-card"><b>Resignation (Concession)</b> A formal acknowledgement of defeat. A player may choose to resign at any moment if they determine the position is strategically hopeless. This is considered professional courtesy when a loss is mathematically certain, immediately awarding the full victory to the opponent.</div>
             <div class="asset-card"><b>Timeout (Temporal Loss)</b> In timed competitive play, if a player's clock expires before they complete their required moves, they lose the game immediately. This emphasizes the importance of time management as a critical strategic resource, where speed is as vital as tactical precision.</div>
         </div>
-
         <button class="close-menu-btn" onclick="toggleHelp()">Return to Match</button>
     </div>
 
     <script>
-        // --- 1. PARTICLE SYSTEM ---
+        /* --- GAME STATE ENGINE --- */
+        const gameState = {
+            board: [],
+            selected: null, // {r, c}
+            hovered: null,  // {r, c}
+            isCtrlPressed: false,
+            turn: 'w' // 'w' or 'b'
+        };
+        
+        const pieceMap = {
+            'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚', 'p': '♟',
+            'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔', 'P': '♙'
+        };
+
+        // --- INPUT HANDLERS ---
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Control') {
+                gameState.isCtrlPressed = true;
+                updateHighlights();
+            }
+        });
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'Control') {
+                gameState.isCtrlPressed = false;
+                updateHighlights();
+            }
+        });
+
+        function initGame() {
+            // Standard Start Pos
+            const layout = [
+                ['r','n','b','q','k','b','n','r'],
+                ['p','p','p','p','p','p','p','p'],
+                [null,null,null,null,null,null,null,null],
+                [null,null,null,null,null,null,null,null],
+                [null,null,null,null,null,null,null,null],
+                [null,null,null,null,null,null,null,null],
+                ['P','P','P','P','P','P','P','P'],
+                ['R','N','B','Q','K','B','N','R']
+            ];
+            gameState.board = layout;
+            renderBoard();
+        }
+
+        function renderBoard() {
+            const b = document.getElementById('board');
+            b.innerHTML = '';
+            for(let r=0; r<8; r++) {
+                for(let c=0; c<8; c++) {
+                    const sq = document.createElement('div');
+                    sq.className = `sq ${(r+c)%2===0 ? 'w' : 'b'}`;
+                    sq.dataset.r = r; 
+                    sq.dataset.c = c;
+                    
+                    // Interaction Listeners
+                    sq.onmouseenter = () => { gameState.hovered = {r, c}; updateHighlights(); };
+                    sq.onmouseleave = () => { gameState.hovered = null; updateHighlights(); };
+                    sq.onclick = () => handleClick(r, c);
+
+                    const pieceCode = gameState.board[r][c];
+                    if (pieceCode) {
+                        const p = document.createElement('div');
+                        p.className = 'piece unlocked'; // Already unlocked for gameplay
+                        p.innerText = pieceMap[pieceCode];
+                        sq.appendChild(p);
+                    }
+                    b.appendChild(sq);
+                }
+            }
+        }
+
+        function handleClick(r, c) {
+            const piece = gameState.board[r][c];
+            
+            // 1. Move if a piece is already selected and this is a valid move
+            if (gameState.selected) {
+                const moves = getValidMoves(gameState.selected.r, gameState.selected.c);
+                const isMove = moves.find(m => m.r === r && m.c === c);
+                if (isMove) {
+                    // Execute Move
+                    gameState.board[r][c] = gameState.board[gameState.selected.r][gameState.selected.c];
+                    gameState.board[gameState.selected.r][gameState.selected.c] = null;
+                    gameState.selected = null;
+                    gameState.turn = gameState.turn === 'w' ? 'b' : 'w'; // Switch turn
+                    renderBoard(); // Re-render to update positions
+                    return;
+                }
+            }
+
+            // 2. Select Logic
+            if (piece) {
+                // Optional: Enforce turn order
+                // if (getPieceColor(piece) !== gameState.turn) return; 
+                
+                if (gameState.selected && gameState.selected.r === r && gameState.selected.c === c) {
+                    gameState.selected = null; // Deselect
+                } else {
+                    gameState.selected = {r, c};
+                }
+                updateHighlights();
+            } else {
+                gameState.selected = null; // Clicked empty space
+                updateHighlights();
+            }
+        }
+
+        function updateHighlights() {
+            // Clear all previous
+            document.querySelectorAll('.sq').forEach(sq => {
+                sq.className = sq.className.replace(/hover-\w+/, '').trim(); // remove colors
+                sq.classList.remove('capture-move');
+                const marker = sq.querySelector('.valid-marker');
+                if(marker) marker.remove();
+            });
+
+            // A. PIECE HOVER COLOR LOGIC (Mouseover)
+            // OR Selected Piece Logic
+            const target = gameState.hovered || gameState.selected;
+            
+            if (target) {
+                const piece = gameState.board[target.r][target.c];
+                const sqDiv = getSqDiv(target.r, target.c);
+                
+                if (piece && sqDiv) {
+                    const type = piece.toLowerCase();
+                    let colorClass = '';
+                    
+                    // King/Queen -> Red
+                    if (type === 'k' || type === 'q') colorClass = 'hover-red';
+                    // Rook/Bishop -> Orange
+                    else if (type === 'r' || type === 'b') colorClass = 'hover-orange';
+                    // Knight -> Yellow
+                    else if (type === 'n') colorClass = 'hover-yellow';
+                    // Pawn -> Green or Blue (Promotion)
+                    else if (type === 'p') {
+                        colorClass = 'hover-green';
+                        const isWhite = piece === 'P';
+                        // White promotes at row 0, starts row 6. Steps: 1->Blue, 2->Blue, 3->Blue.
+                        if (isWhite && target.r <= 3) colorClass = 'hover-blue';
+                        if (!isWhite && target.r >= 4) colorClass = 'hover-blue';
+                    }
+                    sqDiv.classList.add(colorClass);
+                }
+
+                // B. CTRL KEY -> SHOW VALID MOVES
+                // We show moves for the SELECTED piece if exists, otherwise the HOVERED piece
+                const movesSource = gameState.selected || (gameState.isCtrlPressed ? gameState.hovered : null);
+                
+                // Only show moves if Ctrl is held OR a piece is actively selected
+                if ((gameState.isCtrlPressed || gameState.selected) && movesSource) {
+                   const moves = getValidMoves(movesSource.r, movesSource.c);
+                   moves.forEach(m => {
+                       const mDiv = getSqDiv(m.r, m.c);
+                       const marker = document.createElement('div');
+                       marker.className = 'valid-marker';
+                       mDiv.appendChild(marker);
+                       if(gameState.board[m.r][m.c]) mDiv.classList.add('capture-move');
+                   });
+                }
+            }
+            
+            // Selected Visual
+            document.querySelectorAll('.piece').forEach(p => p.classList.remove('selected'));
+            if (gameState.selected) {
+                const pDiv = getSqDiv(gameState.selected.r, gameState.selected.c).querySelector('.piece');
+                if(pDiv) pDiv.classList.add('selected');
+            }
+        }
+
+        function getSqDiv(r, c) {
+            return document.querySelector(`.sq[data-r='${r}'][data-c='${c}']`);
+        }
+
+        function getPieceColor(p) { return p === p.toUpperCase() ? 'w' : 'b'; }
+
+        // --- MOVE GENERATION (Simplified for Practice) ---
+        function getValidMoves(r, c) {
+            const piece = gameState.board[r][c];
+            if (!piece) return [];
+            const moves = [];
+            const color = getPieceColor(piece);
+            const type = piece.toLowerCase();
+
+            const tryAdd = (tr, tc) => {
+                if (tr < 0 || tr > 7 || tc < 0 || tc > 7) return false; // Out of bounds
+                const target = gameState.board[tr][tc];
+                if (target && getPieceColor(target) === color) return false; // Blocked by self
+                moves.push({r: tr, c: tc});
+                return !target; // Return true if empty (continue sliding), false if capture (stop sliding)
+            };
+
+            const slidingMoves = (dirs) => {
+                dirs.forEach(d => {
+                    for (let i = 1; i < 8; i++) {
+                        if (!tryAdd(r + d[0] * i, c + d[1] * i)) break;
+                    }
+                });
+            };
+
+            if (type === 'p') {
+                const dir = color === 'w' ? -1 : 1;
+                const startRow = color === 'w' ? 6 : 1;
+                // Forward 1
+                if (!gameState.board[r+dir]?.[c]) {
+                    moves.push({r: r+dir, c: c});
+                    // Forward 2
+                    if (r === startRow && !gameState.board[r+dir*2]?.[c]) {
+                        moves.push({r: r+dir*2, c: c});
+                    }
+                }
+                // Captures
+                [[dir, -1], [dir, 1]].forEach(d => {
+                    const tr = r+d[0], tc = c+d[1];
+                    if (gameState.board[tr]?.[tc] && getPieceColor(gameState.board[tr][tc]) !== color) {
+                        moves.push({r: tr, c: tc});
+                    }
+                });
+            }
+            else if (type === 'n') {
+                [[2,1],[2,-1],[-2,1],[-2,-1],[1,2],[1,-2],[-1,2],[-1,-2]].forEach(d => tryAdd(r+d[0], c+d[1]));
+            }
+            else if (type === 'b') slidingMoves([[1,1],[1,-1],[-1,1],[-1,-1]]);
+            else if (type === 'r') slidingMoves([[1,0],[-1,0],[0,1],[0,-1]]);
+            else if (type === 'q') slidingMoves([[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]);
+            else if (type === 'k') {
+                [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]].forEach(d => tryAdd(r+d[0], c+d[1]));
+            }
+
+            return moves;
+        }
+
+
+        /* --- PARTICLE BACKGROUND --- */
         const canvas = document.getElementById('bg-canvas');
         const ctx = canvas.getContext('2d');
         let particles = [];
@@ -208,7 +454,7 @@
         }
         animate();
 
-        // --- 2. TRANSITION SEQUENCE ---
+        /* --- INITIALIZATION SEQUENCE --- */
         setTimeout(() => {
             document.getElementById('boot').style.opacity = '0';
             setTimeout(() => {
@@ -235,37 +481,18 @@
                 document.getElementById('assets').style.display = 'none';
                 const game = document.getElementById('game');
                 game.style.display = 'flex';
-                setTimeout(() => { game.style.opacity = '1'; createBoard(); }, 50);
+                setTimeout(() => { 
+                    game.style.opacity = '1'; 
+                    initGame(); // Start Game Engine
+                }, 50);
             }, 1000);
         }
 
-        // --- 3. BOARD INITIALIZATION ---
-        function createBoard() {
-            const b = document.getElementById('board');
-            const row1 = ['♜','♞','♝','♛','♚','♝','♞','♜'];
-            const row8 = ['♖','♘','♗','♕','♔','♗','♘','♖'];
-            for(let i=0; i<64; i++) {
-                let s = document.createElement('div');
-                let row = Math.floor(i / 8);
-                s.className = `sq ${(row + i % 8) % 2 == 0 ? 'w' : 'b'}`;
-                let p = document.createElement('div'); p.className = 'piece';
-                
-                if(row === 0) p.innerText = row1[i % 8];
-                else if(row === 1) p.innerText = '♟';
-                else if(row === 6) p.innerText = '♙';
-                else if(row === 7) p.innerText = row8[i % 8];
-                
-                s.appendChild(p); b.appendChild(s);
-                setTimeout(() => p.classList.add('unlocked'), 200 + (i * 12));
-            }
-        }
-
-        // --- 4. UI LOGIC ---
+        /* --- UI UTILS --- */
         function toggleHelp() { 
             document.getElementById('help-menu').classList.toggle('active'); 
             document.getElementById('gear-btn').classList.toggle('active');
         }
-
         function openTab(evt, tabName) {
             document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
             document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));

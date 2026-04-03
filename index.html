@@ -31,7 +31,6 @@
         .ai-config { margin-top: 20px; border: 1px solid #222; padding: 20px; border-radius: 10px; }
         select { background: #111; color: var(--n-blue); border: 1px solid var(--n-blue); padding: 10px; width: 100%; margin-top: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; }
 
-        /* Difficulty Box - Smooth */
         #difficulty-box {
             margin-top: 15px; padding: 15px; background: #0a0a0a; border: 1px solid #333;
             border-radius: 8px; display: none; flex-direction: column; gap: 8px;
@@ -180,9 +179,9 @@
     let selectedSq = null;
     let ctrlLocked = false;
     let isAIActive = false;
-    let currentDifficulty = 2; // default moderate
+    let currentDifficulty = 2;
 
-    const helpData = { /* exact original from your code */ 
+    const helpData = {
         pieces: `<div class="asset-card" onclick="expandDef(this)"><b>The Pawn</b> The fundamental infantry unit of chess. It possesses a restricted forward movement of one square, yet captures diagonally. Upon its initial move, it may advance two squares. Reaching the terminal rank allows for promotion into a Queen, Rook, Bishop, or Knight, granting the piece immense late-game utility.</div><div class="asset-card" onclick="expandDef(this)"><b>The Knight</b> A specialized tactical unit that navigates the board in a unique 'L' pattern—two squares in one cardinal direction followed by one square perpendicular. It maintains the singular ability to leap over intervening pieces, making it an invaluable asset in congested board states where other pieces are obstructed.</div><div class="asset-card" onclick="expandDef(this)"><b>The Bishop</b> A sophisticated long-range operative that slides any distance along diagonal trajectories. Each Bishop is permanently confined to the square colour it begins on, requiring them to work in coordinated pairs to control both light and dark regions of the board effectively throughout the middle and end game.</div><div class="asset-card" onclick="expandDef(this)"><b>The Rook</b> A formidable heavy piece moving in straight horizontal or vertical lines across any number of unoccupied squares. It plays a critical role in king safety through the castling maneuver and is often the primary force behind powerful ladder checkmates during the final stages of the match.</div><div class="asset-card" onclick="expandDef(this)"><b>The Queen</b> The most versatile and powerful asset on the board. She combines the movement capabilities of both the Rook and the Bishop, sliding any distance in any straight or diagonal direction. Her presence dictates the tempo and pressure of the match, serving as both a primary attacker and a central defender.</div><div class="asset-card" onclick="expandDef(this)"><b>The King</b> The pivotal figure around which the entire game revolves. While moving only one square in any direction, his preservation is absolute. If the King is placed under attack and cannot find a safe square, the match concludes immediately, rendering his protection the player's ultimate strategic priority.</div>`,
         icons: `<span class="group-label">Positive Indicators</span><div class="asset-card" onclick="expandDef(this)"><b>The Best Move (Star)</b> This designation signifies the absolute strongest continuation identified by the engine analysis. Playing this move optimizes your winning probability and represents the highest level of technical accuracy possible in the current position, often finding the only path to a victory.</div><div class="asset-card" onclick="expandDef(this)"><b>Good Move (Tick)</b> Indicates a solid, fundamentally sound choice that maintains the current evaluation of the position. While it may not be the engine's primary preference, it adheres to sound chess principles and ensures the player does not concede any unnecessary tactical advantages.</div><span class="group-label">Negative Indicators</span><div class="asset-card" onclick="expandDef(this)"><b>Inaccuracy (Exclamation)</b> Marks a sub-optimal move that noticeably weakens your standing. It suggests a missed opportunity to apply pressure or a minor positional concession that allows the opponent to improve their pieces more easily than the optimal continuation would have permitted.</div><div class="asset-card" onclick="expandDef(this)"><b>Blunder (Death Emoji)</b> A catastrophic error that tangibly reduces your advantage or directly allows the opponent to achieve a winning position. This usually results from an overlooked tactical sequence or a serious misunderstanding of the immediate requirements of the board position.</div><div class="asset-card" onclick="expandDef(this)"><b>Fatal Blunder (Death)</b> Reserved for moves that lead to an immediate loss of the game or the loss of a major piece without compensation. This classification represents a total collapse of strategy and typically shifts the game evaluation into a forced win for the opponent.</div>`,
         mechanics: `<span class="group-label">Core Mechanics</span><div class="asset-card" onclick="expandDef(this)"><b>Capturing Methodology</b> To capture an opponent's unit, you must move your piece onto the square it currently occupies. The displaced piece is permanently removed from the field. You cannot capture your own units or occupy a square already held by your own color, requiring careful navigation of space.</div><div class="asset-card" onclick="expandDef(this)"><b>En Passant</b> A specialized pawn capture occurring when an opponent moves their pawn two squares forward from its starting position and lands adjacent to your pawn. You may capture that pawn as if it had only moved one square, provided you do so on the very next turn.</div><span class="group-label">Ending Conditions</span><div class="asset-card" onclick="expandDef(this)"><b>Checkmate (Absolute Victory)</b> The definitive conclusion of a chess match. This occurs when a King is under direct threat of capture and possesses no legal moves to relocate, block the line of attack, or eliminate the attacking piece entirely. The game ends immediately in a win for the attacker.</div><div class="asset-card" onclick="expandDef(this)"><b>Stalemate (Technical Draw)</b> A unique situation where the player whose turn it is has no legal moves remaining, yet their King is not currently in check. Because the player cannot move but is not defeated, the game ends in a draw, often occurring as a defensive 'swindle'.</div><div class="asset-card" onclick="expandDef(this)"><b>Resignation (Concession)</b> A formal acknowledgement of defeat. A player may choose to resign at any moment if they determine the position is strategically hopeless. This is considered professional courtesy when a loss is mathematically certain, immediately awarding the full victory to the opponent.</div><div class="asset-card" onclick="expandDef(this)"><b>Timeout (Temporal Loss)</b> In timed competitive play, if a player's clock expires before they complete their required moves, they lose the game immediately. This emphasizes the importance of time management as a critical strategic resource, where speed is as vital as tactical precision.</div>`
@@ -215,7 +214,7 @@
         document.getElementById('turn-info').innerText = currentTurn === 'W' ? "WHITE'S TURN" : "BLACK'S TURN";
     }
 
-    // SMOOTH SLIDE + VFX
+    // SMOOTH SLIDE MOVEMENT
     function movePieceWithAnimation(from, to) {
         const fromSq = document.querySelector(`[data-idx="${from}"]`);
         const toSq = document.querySelector(`[data-idx="${to}"]`);
@@ -291,17 +290,34 @@
         setTimeout(() => icon.remove(), 1800);
     }
 
+    // PATH CLEAR CHECK (prevents jumping)
+    function isPathClear(f, t) {
+        const r1 = Math.floor(f/8), c1 = f%8, r2 = Math.floor(t/8), c2 = t%8;
+        const dr = Math.sign(r2-r1), dc = Math.sign(c2-c1);
+        let cr = r1 + dr, cc = c1 + dc;
+        while (cr !== r2 || cc !== c2) {
+            if (boardState[cr * 8 + cc]) return false;
+            cr += dr; cc += dc;
+        }
+        return true;
+    }
+
     function isValid(f, t) {
         if (f === t) return false;
         const p = boardState[f], tar = boardState[t];
         if (tar && (p === p.toUpperCase()) === (tar === tar.toUpperCase())) return false;
-        const r1 = Math.floor(f/8), c1 = f%8, r2 = Math.floor(t/8), c2 = t%8, dr = Math.abs(r2-r1), dc = Math.abs(c2-c1), type = p.toLowerCase();
+        const r1 = Math.floor(f/8), c1 = f%8, r2 = Math.floor(t/8), c2 = t%8;
+        const dr = Math.abs(r2-r1), dc = Math.abs(c2-c1), type = p.toLowerCase();
         switch (type) {
-            case 'p': const d = p === 'P' ? -1 : 1; return dc === 0 && r2-r1 === d && !tar || dc === 0 && r2-r1 === 2*d && r1 === (p === 'P' ? 6 : 1) && !tar || dc === 1 && r2-r1 === d && tar;
-            case 'r': return (r1 === r2 || c1 === c2);
+            case 'p': 
+                const d = p === 'P' ? -1 : 1;
+                return (dc === 0 && r2-r1 === d && !tar) || 
+                       (dc === 0 && r2-r1 === 2*d && r1 === (p === 'P' ? 6 : 1) && !tar) || 
+                       (dc === 1 && r2-r1 === d && tar);
+            case 'r': return (r1 === r2 || c1 === c2) && isPathClear(f, t);
             case 'n': return dr*dc === 2;
-            case 'b': return dr === dc;
-            case 'q': return (r1 === r2 || c1 === c2 || dr === dc);
+            case 'b': return dr === dc && isPathClear(f, t);
+            case 'q': return (r1 === r2 || c1 === c2 || dr === dc) && isPathClear(f, t);
             case 'k': return dr <= 1 && dc <= 1;
         }
         return false;
@@ -327,7 +343,6 @@
         }
     }
 
-    // Improved AI with different difficulty tiers
     function aiLogic() {
         let moves = [];
         for(let f=0; f<64; f++) {
@@ -339,26 +354,11 @@
         }
         if (moves.length === 0) return;
 
-        let chosen;
-        switch(currentDifficulty) {
-            case 0: // Demonstration - completely random
-                chosen = moves[Math.floor(Math.random()*moves.length)];
-                break;
-            case 1: // Beginner - mostly random, slight capture bias
-                chosen = moves.find(m => m.capture) || moves[Math.floor(Math.random()*moves.length)];
-                break;
-            case 2: // Moderate - prefers captures
-                chosen = moves.filter(m => m.capture).length > 0 ? moves.filter(m => m.capture)[Math.floor(Math.random()*moves.filter(m => m.capture).length)] : moves[Math.floor(Math.random()*moves.length)];
-                break;
-            case 3: // Professional - strong capture preference
-            case 4: // Master
-            case 5: // Grandmaster - always prefer capture if possible
-                chosen = moves.find(m => m.capture) || moves[Math.floor(Math.random()*moves.length)];
-                break;
-            default:
-                chosen = moves[Math.floor(Math.random()*moves.length)];
+        let chosen = moves[Math.floor(Math.random()*moves.length)];
+        if (currentDifficulty >= 3) {
+            const captures = moves.filter(m => m.capture);
+            if (captures.length > 0) chosen = captures[Math.floor(Math.random()*captures.length)];
         }
-
         movePieceWithAnimation(chosen.f, chosen.t);
         currentTurn = 'W';
     }
@@ -373,7 +373,7 @@
         }
     }
 
-    // UI Functions
+    // UI
     function toggleSettings() { settingsPanel.classList.toggle('open'); }
     function toggleAI() {
         isAIActive = document.getElementById('ai-toggle').value === 'ai';
@@ -392,7 +392,6 @@
             el.style.border = parseInt(el.dataset.diff) === lvl ? '2px solid var(--n-blue)' : 'none';
         });
     }
-
     function showResignMenu() {
         if (confirm("Resign the game?")) resignOverlay.classList.add('active');
     }
@@ -428,7 +427,7 @@
         setTimeout(() => expansionOverlay.style.display = 'none', 400);
     }
 
-    // Hover + Ctrl
+    // Hover highlights
     document.addEventListener('mouseover', (e) => {
         const sq = e.target.closest('.sq'); if (!sq) return;
         const p = boardState[sq.dataset.idx]; if (!p) return;
@@ -444,6 +443,7 @@
         if (sq) sq.className = sq.className.split(' ').filter(c => !c.startsWith('hl-')).join(' ');
     });
 
+    // Ctrl toggle
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Control') {
             ctrlLocked = !ctrlLocked;

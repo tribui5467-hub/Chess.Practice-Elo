@@ -15,7 +15,7 @@
         #boot { position: fixed; inset: 0; background: black; z-index: 100000; display: flex; justify-content: center; align-items: center; }
         .equinox-text { font-size: 32px; letter-spacing: 12px; font-weight: 200; color: #fff; }
 
-        /* Settings - matching your screenshot style */
+        /* Settings */
         #settings-panel {
             position: fixed; top: 0; right: -400px; width: 400px; height: 100vh;
             background: #050505; border-left: 2px solid var(--n-blue);
@@ -53,6 +53,10 @@
             text-transform: uppercase; margin-bottom: 20px; position: relative; font-size: 18px;
         }
         #play-btn.locked { filter: grayscale(1) brightness(0.7); cursor: not-allowed; }
+        #play-btn::after { 
+            content: '⋮'; font-size: 28px; position: absolute; right: 20px; top: 50%; 
+            transform: translateY(-50%); color: #000; font-weight: bold; 
+        }
 
         /* 3 dots menu */
         #play-menu {
@@ -79,7 +83,7 @@
 
         .piece { 
             font-size: 50px; user-select: none; z-index: 10; pointer-events: none;
-            transition: transform 0.48s var(--smooth);
+            transition: transform 0.48s var(--smooth); /* SMOOTH GLIDE */
             position: relative;
         }
         .white-p { color: #fff; text-shadow: 0 0 10px #fff; }
@@ -147,7 +151,7 @@
         <div id="gear-handle" onclick="toggleSettings()">
             <span id="gear-icon">⚙</span>
         </div>
-        <h2 style="color: #00f2ff; margin-top: 0; letter-spacing: 5px; text-align:center;">SETTINGS</h2>
+        <h2 style="color: var(--n-blue); margin-top: 0; letter-spacing: 5px; text-align:center;">SETTINGS</h2>
         <button id="play-btn" onclick="startGame()">PLAY</button>
 
         <div class="ai-config">
@@ -167,7 +171,7 @@
                 <div class="diff-option" data-diff="5" style="background:#4b0082;color:#c026d3;" onclick="setDifficulty(5)">GRANDMASTER</div>
             </div>
 
-            <!-- Session Time - same width as opponent type -->
+            <!-- Session Time - same length as opponent type -->
             <div id="time-box">
                 <label style="font-size: 10px; color: var(--n-blue); letter-spacing: 2px;">SESSION PERIOD (MINUTES)</label>
                 <input type="text" id="time-input" placeholder="UNLIMITED or number" style="width:100%; padding:12px; font-size:15px;" onkeypress="if(event.key==='Enter') setCustomTime()">
@@ -184,7 +188,7 @@
         <div class="menu-item" onclick="resetBoard()">Reset</div>
     </div>
 
-    <!-- Full Original Help Menu with exotic icon classifications -->
+    <!-- Full Original Help Menu -->
     <div id="help-overlay">
         <div id="help-container">
             <div class="help-header">
@@ -260,7 +264,7 @@
         document.getElementById('turn-info').innerText = currentTurn === 'W' ? "WHITE'S TURN" : "BLACK'S TURN";
     }
 
-    // SMOOTH SLIDING
+    // SMOOTH SLIDING MOVEMENT
     function movePieceWithAnimation(from, to) {
         if (!gameStarted) return;
         const fromSq = document.querySelector(`[data-idx="${from}"]`);
@@ -534,7 +538,7 @@
         setTimeout(() => overlay.style.display = 'none', 400);
     }
 
-    // 3 dots trigger
+    // 3 dots trigger (clicking the PLAY button shows the menu)
     document.getElementById('play-btn').addEventListener('click', (e) => {
         if (!gameStarted) return;
         const menu = document.getElementById('play-menu');

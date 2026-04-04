@@ -15,7 +15,7 @@
         #boot { position: fixed; inset: 0; background: black; z-index: 100000; display: flex; justify-content: center; align-items: center; }
         .equinox-text { font-size: 32px; letter-spacing: 12px; font-weight: 200; color: #fff; }
 
-        /* Settings */
+        /* Settings Panel */
         #settings-panel {
             position: fixed; top: 0; right: -400px; width: 400px; height: 100vh;
             background: #050505; border-left: 2px solid var(--n-blue);
@@ -33,11 +33,7 @@
         #settings-panel.open #gear-icon { transform: rotate(180deg); color: var(--n-green); }
 
         .ai-config { margin-top: 20px; border: 1px solid #222; padding: 20px; border-radius: 10px; }
-        select, input { 
-            background: #111; color: var(--n-blue); border: 2px solid var(--n-blue); 
-            padding: 12px; width: 100%; margin-top: 8px; border-radius: 6px; font-weight: bold; 
-            font-size: 15px; 
-        }
+        select { background: #111; color: var(--n-blue); border: 1px solid var(--n-blue); padding: 10px; width: 100%; margin-top: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; }
 
         #difficulty-box {
             margin-top: 15px; padding: 15px; background: #0a0a0a; border: 1px solid #333;
@@ -48,17 +44,13 @@
         .diff-option { padding: 10px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: all 0.2s; }
 
         #play-btn { 
-            background: #39FF14; color: #000; border: none; padding: 16px; 
-            font-weight: 900; cursor: pointer; border-radius: 8px; width: 100%; 
-            text-transform: uppercase; margin-bottom: 20px; position: relative; font-size: 18px;
+            background: var(--n-green); color: #000; border: none; padding: 15px; 
+            font-weight: 900; cursor: pointer; border-radius: 10px; width: 100%; 
+            text-transform: uppercase; margin-bottom: 20px; position: relative; 
         }
         #play-btn.locked { filter: grayscale(1) brightness(0.7); cursor: not-allowed; }
-        #play-btn::after { 
-            content: '⋮'; font-size: 28px; position: absolute; right: 20px; top: 50%; 
-            transform: translateY(-50%); color: #000; font-weight: bold; 
-        }
 
-        /* 3 dots menu */
+        /* Vertical 3 dots menu */
         #play-menu {
             position: absolute; top: 100%; right: 20px; background: #111; border: 2px solid var(--n-blue);
             border-radius: 8px; padding: 8px 0; width: 220px; display: none; z-index: 46000;
@@ -72,6 +64,7 @@
         .board { width: 600px; height: 600px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid #1a1a1a; background: #000; position: relative; }
         .sq { width: 75px; height: 75px; display: flex; justify-content: center; align-items: center; cursor: pointer; position: relative; overflow: hidden; }
         .w { background: #2a2a2e; } .b { background: #1a1a1c; }
+        .locked .piece { filter: grayscale(1) brightness(0.6); pointer-events: none; }
 
         .hl-king, .hl-queen { box-shadow: inset 0 0 25px var(--n-red) !important; border: 1px solid var(--n-red) !important; }
         .hl-rook, .hl-bishop { box-shadow: inset 0 0 25px var(--n-orange) !important; border: 1px solid var(--n-orange) !important; }
@@ -83,13 +76,13 @@
 
         .piece { 
             font-size: 50px; user-select: none; z-index: 10; pointer-events: none;
-            transition: transform 0.48s var(--smooth); /* SMOOTH GLIDE */
+            transition: transform 0.48s var(--smooth);
             position: relative;
         }
         .white-p { color: #fff; text-shadow: 0 0 10px #fff; }
         .black-p { color: #666; text-shadow: 0 0 10px #000; }
 
-        /* Engine Icons */
+        /* Engine Icons - zoom + spin exactly like the video */
         .engine-icon { 
             position: absolute; top: -12px; right: -12px; font-size: 34px; z-index: 100; 
             animation: videoIconPop 0.65s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; 
@@ -108,7 +101,7 @@
         @keyframes wave { 0% { width: 0; height: 0; opacity: 1; } 100% { width: 200px; height: 200px; opacity: 0; } }
         .p-white { position: absolute; width: 4px; height: 4px; background: white; pointer-events: none; z-index: 101; border-radius: 50%; }
 
-        /* Full Original Help Menu */
+        /* Help Menu */
         #help-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); z-index: 55000; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.5s var(--smooth); }
         #help-overlay.active { opacity: 1; display: flex; }
         #help-container { width: 850px; height: 650px; background: #050505; border: 2px solid var(--n-green); border-radius: 20px; display: flex; flex-direction: column; overflow: hidden; transform: scale(0.9); transition: transform 0.5s var(--smooth); }
@@ -170,25 +163,19 @@
                 <div class="diff-option" data-diff="4" style="background:#8b0000;color:#ff2d55;" onclick="setDifficulty(4)">MASTER</div>
                 <div class="diff-option" data-diff="5" style="background:#4b0082;color:#c026d3;" onclick="setDifficulty(5)">GRANDMASTER</div>
             </div>
-
-            <!-- Session Time - same length as opponent type -->
-            <div id="time-box">
-                <label style="font-size: 10px; color: var(--n-blue); letter-spacing: 2px;">SESSION PERIOD (MINUTES)</label>
-                <input type="text" id="time-input" placeholder="UNLIMITED or number" style="width:100%; padding:12px; font-size:15px;" onkeypress="if(event.key==='Enter') setCustomTime()">
-            </div>
         </div>
 
         <div style="cursor:pointer; color:#666; text-align:center; padding:15px; border:1px solid #333; border-radius:10px; margin-top:20px;" onclick="openHelp()">ARCHIVED HELP</div>
     </div>
 
-    <!-- 3 dots menu -->
+    <!-- Vertical 3 dots menu -->
     <div id="play-menu">
         <div class="menu-item" onclick="resignGame()">Resign</div>
         <div class="menu-item" onclick="openHelp()">Archived Help</div>
         <div class="menu-item" onclick="resetBoard()">Reset</div>
     </div>
 
-    <!-- Full Original Help Menu -->
+    <!-- Help Menu -->
     <div id="help-overlay">
         <div id="help-container">
             <div class="help-header">
@@ -232,7 +219,7 @@
 
     const glyphs = { 'r':'♜','n':'♞','b':'♝','q':'♛','k':'♚','p':'♟','R':'♖','N':'♘','B':'♗','Q':'♕','K':'♔','P':'♙' };
     const hlMap = { 'k':'hl-king','q':'hl-queen','r':'hl-rook','b':'hl-bishop','n':'hl-knight','p':'hl-pawn' };
-    const pieceValue = { 'p':1, 'n':3, 'b':3, 'r':5, 'q':9, 'k':1000 };
+    const pieceValue = { 'p':1, 'n':3, 'b':3.5, 'r':5, 'q':9, 'k':100 };
 
     const helpData = {
         pieces: `<div class="asset-card" onclick="expandDef(this)"><b>The Pawn</b> The fundamental infantry unit of chess. It possesses a restricted forward movement of one square, yet captures diagonally. Upon its initial move, it may advance two squares. Reaching the terminal rank allows for promotion into a Queen, Rook, Bishop, or Knight, granting the piece immense late-game utility.</div><div class="asset-card" onclick="expandDef(this)"><b>The Knight</b> A specialized tactical unit that navigates the board in a unique 'L' pattern—two squares in one cardinal direction followed by one square perpendicular. It maintains the singular ability to leap over intervening pieces, making it an invaluable asset in congested board states where other pieces are obstructed.</div><div class="asset-card" onclick="expandDef(this)"><b>The Bishop</b> A sophisticated long-range operative that slides any distance along diagonal trajectories. Each Bishop is permanently confined to the square colour it begins on, requiring them to work in coordinated pairs to control both light and dark regions of the board effectively throughout the middle and end game.</div><div class="asset-card" onclick="expandDef(this)"><b>The Rook</b> A formidable heavy piece moving in straight horizontal or vertical lines across any number of unoccupied squares. It plays a critical role in king safety through the castling maneuver and is often the primary force behind powerful ladder checkmates during the final stages of the match.</div><div class="asset-card" onclick="expandDef(this)"><b>The Queen</b> The most versatile and powerful asset on the board. She combines the movement capabilities of both the Rook and the Bishop, sliding any distance in any straight or diagonal direction. Her presence dictates the tempo and pressure of the match, serving as both a primary attacker and a central defender.</div><div class="asset-card" onclick="expandDef(this)"><b>The King</b> The pivotal figure around which the entire game revolves. While moving only one square in any direction, his preservation is absolute. If the King is placed under attack and cannot find a safe square, the match concludes immediately, rendering his protection the player's ultimate strategic priority.</div>`,
@@ -264,7 +251,6 @@
         document.getElementById('turn-info').innerText = currentTurn === 'W' ? "WHITE'S TURN" : "BLACK'S TURN";
     }
 
-    // SMOOTH SLIDING MOVEMENT
     function movePieceWithAnimation(from, to) {
         if (!gameStarted) return;
         const fromSq = document.querySelector(`[data-idx="${from}"]`);
@@ -305,12 +291,12 @@
 
     function spawnVFX(idx, isCapture) {
         const sq = document.querySelector(`[data-idx="${idx}"]`);
-        if (!sq || !isCapture) return;
+        if (!sq) return;
 
         const icon = document.createElement('div');
         icon.className = 'engine-icon';
-        icon.innerHTML = '‼️';
-        icon.style.color = '#ff2d55';
+        icon.innerHTML = isCapture ? '‼️' : '✔️';
+        icon.style.color = isCapture ? '#ff2d55' : '#39ff14';
         sq.appendChild(icon);
 
         setTimeout(() => {
@@ -367,13 +353,44 @@
         }
     }
 
+    // Smarter AI with piece value awareness and sacrifice logic
+    function aiLogic() {
+        let moves = [];
+        for(let f=0; f<64; f++) {
+            if(boardState[f] && boardState[f] === boardState[f].toLowerCase()) {
+                for(let t=0; t<64; t++) {
+                    if(isValid(f, t)) {
+                        const captured = boardState[t];
+                        const movingPiece = boardState[f].toLowerCase();
+                        const captureValue = captured ? pieceValue[captured.toLowerCase()] : 0;
+                        const myValue = pieceValue[movingPiece];
+                        let score = captureValue * 1.2 - myValue * 0.3; // prefer captures, slight penalty for moving valuable pieces
+
+                        // Avoid bad sacrifices (especially on higher difficulties)
+                        if (captureValue > 0 && captureValue < myValue && currentDifficulty >= 3) score -= (myValue - captureValue) * 2;
+
+                        moves.push({f, t, capture: !!captured, score});
+                    }
+                }
+            }
+        }
+        if (moves.length === 0) { checkGameEnd(); return; }
+
+        // Difficulty tiers
+        if (currentDifficulty >= 5) moves.sort((a,b) => b.score - a.score); // Grandmaster - best moves
+        else if (currentDifficulty >= 3) moves.sort((a,b) => b.score - a.score); // Professional - good captures, avoids dumb sacs
+        else if (currentDifficulty >= 1) moves.sort((a,b) => (b.capture ? 1 : 0) - (a.capture ? 1 : 0)); // Beginner - prefers captures
+        else moves.sort(() => Math.random() - 0.5); // Demonstration - random
+
+        const chosen = moves[0];
+        movePieceWithAnimation(chosen.f, chosen.t);
+        currentTurn = 'W';
+    }
+
     function updateDots(idx) {
         document.querySelectorAll('.ctrl-dot').forEach(d => d.classList.remove('ctrl-dot'));
         for (let i = 0; i < 64; i++) {
-            if (isValid(idx, i)) {
-                const sq = document.querySelector(`[data-idx="${i}"]`);
-                if (sq) sq.classList.add('ctrl-dot');
-            }
+            if (isValid(idx, i)) document.querySelector(`[data-idx="${i}"]`)?.classList.add('ctrl-dot');
         }
     }
 
@@ -403,13 +420,17 @@
     function checkGameEnd() {
         const kingPos = findKing(currentTurn);
         if (kingPos === -1) return;
+
         const inCheck = isSquareAttacked(kingPos, currentTurn === 'W' ? 'B' : 'W');
         const hasMoves = hasAnyLegalMoves(currentTurn);
 
         if (!hasMoves) {
             gameStarted = false;
-            if (inCheck) showEndScreen(currentTurn === 'W' ? "BLACK WINS" : "WHITE WINS", "CHECKMATE");
-            else showEndScreen("DRAW", "STALEMATE");
+            if (inCheck) {
+                showEndScreen(currentTurn === 'W' ? "BLACK WINS" : "WHITE WINS", "CHECKMATE");
+            } else {
+                showEndScreen("DRAW", "STALEMATE");
+            }
         }
     }
 
@@ -450,33 +471,6 @@
         document.getElementById('play-btn').classList.remove('locked');
     }
 
-    function aiLogic() {
-        let moves = [];
-        for(let f=0; f<64; f++) {
-            if(boardState[f] && boardState[f] === boardState[f].toLowerCase()) {
-                for(let t=0; t<64; t++) {
-                    if(isValid(f, t)) {
-                        const captured = boardState[t];
-                        const movingPiece = boardState[f].toLowerCase();
-                        const captureValue = captured ? pieceValue[captured.toLowerCase()] : 0;
-                        const myValue = pieceValue[movingPiece];
-                        let score = captureValue - (captureValue > myValue * 1.5 ? myValue * 3 : 0);
-                        moves.push({f, t, score});
-                    }
-                }
-            }
-        }
-        if (moves.length === 0) { checkGameEnd(); return; }
-
-        if (currentDifficulty >= 5) moves.sort((a,b) => b.score - a.score);
-        else if (currentDifficulty >= 3) moves = moves.filter(m => m.score >= -5).sort((a,b) => b.score - a.score);
-        else moves.sort((a,b) => b.score - a.score);
-
-        const chosen = moves[0];
-        movePieceWithAnimation(chosen.f, chosen.t);
-        currentTurn = 'W';
-    }
-
     function toggleSettings() { document.getElementById('settings-panel').classList.toggle('open'); }
     function toggleAI() {
         isAIActive = document.getElementById('ai-toggle').value === 'ai';
@@ -487,11 +481,6 @@
     function setDifficulty(lvl) {
         currentDifficulty = lvl;
         document.querySelectorAll('.diff-option').forEach(el => el.style.border = parseInt(el.dataset.diff) === lvl ? '2px solid var(--n-blue)' : 'none');
-    }
-
-    function setCustomTime() {
-        const val = document.getElementById('time-input').value.trim().toUpperCase();
-        alert(`Session time set to ${val === '' || val === 'UNLIMITED' ? 'UNLIMITED' : val + ' minutes'}`);
     }
 
     function startGame() {
@@ -538,7 +527,6 @@
         setTimeout(() => overlay.style.display = 'none', 400);
     }
 
-    // 3 dots trigger (clicking the PLAY button shows the menu)
     document.getElementById('play-btn').addEventListener('click', (e) => {
         if (!gameStarted) return;
         const menu = document.getElementById('play-menu');

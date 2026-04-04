@@ -15,7 +15,7 @@
         #boot { position: fixed; inset: 0; background: black; z-index: 100000; display: flex; justify-content: center; align-items: center; }
         .equinox-text { font-size: 32px; letter-spacing: 12px; font-weight: 200; color: #fff; }
 
-        /* Settings */
+        /* Settings - matching your screenshot style */
         #settings-panel {
             position: fixed; top: 0; right: -400px; width: 400px; height: 100vh;
             background: #050505; border-left: 2px solid var(--n-blue);
@@ -34,8 +34,9 @@
 
         .ai-config { margin-top: 20px; border: 1px solid #222; padding: 20px; border-radius: 10px; }
         select, input { 
-            background: #111; color: var(--n-blue); border: 1px solid var(--n-blue); 
-            padding: 10px; width: 100%; margin-top: 10px; border-radius: 5px; font-weight: bold; 
+            background: #111; color: var(--n-blue); border: 2px solid var(--n-blue); 
+            padding: 12px; width: 100%; margin-top: 8px; border-radius: 6px; font-weight: bold; 
+            font-size: 15px; 
         }
 
         #difficulty-box {
@@ -47,9 +48,9 @@
         .diff-option { padding: 10px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: all 0.2s; }
 
         #play-btn { 
-            background: var(--n-green); color: #000; border: none; padding: 15px; 
-            font-weight: 900; cursor: pointer; border-radius: 10px; width: 100%; 
-            text-transform: uppercase; margin-bottom: 20px; position: relative; 
+            background: #39FF14; color: #000; border: none; padding: 16px; 
+            font-weight: 900; cursor: pointer; border-radius: 8px; width: 100%; 
+            text-transform: uppercase; margin-bottom: 20px; position: relative; font-size: 18px;
         }
         #play-btn.locked { filter: grayscale(1) brightness(0.7); cursor: not-allowed; }
 
@@ -78,13 +79,13 @@
 
         .piece { 
             font-size: 50px; user-select: none; z-index: 10; pointer-events: none;
-            transition: transform 0.48s var(--smooth); /* SMOOTH GLIDE */
+            transition: transform 0.48s var(--smooth);
             position: relative;
         }
         .white-p { color: #fff; text-shadow: 0 0 10px #fff; }
         .black-p { color: #666; text-shadow: 0 0 10px #000; }
 
-        /* Engine Icons - zoom+spin */
+        /* Engine Icons */
         .engine-icon { 
             position: absolute; top: -12px; right: -12px; font-size: 34px; z-index: 100; 
             animation: videoIconPop 0.65s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; 
@@ -146,7 +147,7 @@
         <div id="gear-handle" onclick="toggleSettings()">
             <span id="gear-icon">⚙</span>
         </div>
-        <h2 style="color: var(--n-blue); margin-top: 0; letter-spacing: 5px; text-align:center;">SETTINGS</h2>
+        <h2 style="color: #00f2ff; margin-top: 0; letter-spacing: 5px; text-align:center;">SETTINGS</h2>
         <button id="play-btn" onclick="startGame()">PLAY</button>
 
         <div class="ai-config">
@@ -169,7 +170,7 @@
             <!-- Session Time - same width as opponent type -->
             <div id="time-box">
                 <label style="font-size: 10px; color: var(--n-blue); letter-spacing: 2px;">SESSION PERIOD (MINUTES)</label>
-                <input type="text" id="time-input" placeholder="UNLIMITED or number" style="width:100%; padding:10px;" onkeypress="if(event.key==='Enter') setCustomTime()">
+                <input type="text" id="time-input" placeholder="UNLIMITED or number" style="width:100%; padding:12px; font-size:15px;" onkeypress="if(event.key==='Enter') setCustomTime()">
             </div>
         </div>
 
@@ -183,7 +184,7 @@
         <div class="menu-item" onclick="resetBoard()">Reset</div>
     </div>
 
-    <!-- Full Original Help Menu -->
+    <!-- Full Original Help Menu with exotic icon classifications -->
     <div id="help-overlay">
         <div id="help-container">
             <div class="help-header">
@@ -259,7 +260,7 @@
         document.getElementById('turn-info').innerText = currentTurn === 'W' ? "WHITE'S TURN" : "BLACK'S TURN";
     }
 
-    // SMOOTH SLIDING MOVEMENT
+    // SMOOTH SLIDING
     function movePieceWithAnimation(from, to) {
         if (!gameStarted) return;
         const fromSq = document.querySelector(`[data-idx="${from}"]`);
@@ -372,7 +373,6 @@
         }
     }
 
-    // Hover + Ctrl capture color highlights
     document.addEventListener('mouseover', (e) => {
         const sq = e.target.closest('.sq'); if (!sq) return;
         const p = boardState[sq.dataset.idx]; if (!p) return;
@@ -396,7 +396,6 @@
         }
     });
 
-    // Checkmate / Stalemate
     function checkGameEnd() {
         const kingPos = findKing(currentTurn);
         if (kingPos === -1) return;
@@ -447,7 +446,6 @@
         document.getElementById('play-btn').classList.remove('locked');
     }
 
-    // AI
     function aiLogic() {
         let moves = [];
         for(let f=0; f<64; f++) {
@@ -475,7 +473,6 @@
         currentTurn = 'W';
     }
 
-    // UI
     function toggleSettings() { document.getElementById('settings-panel').classList.toggle('open'); }
     function toggleAI() {
         isAIActive = document.getElementById('ai-toggle').value === 'ai';

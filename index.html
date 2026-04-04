@@ -15,7 +15,7 @@
         #boot { position: fixed; inset: 0; background: black; z-index: 100000; display: flex; justify-content: center; align-items: center; }
         .equinox-text { font-size: 32px; letter-spacing: 12px; font-weight: 200; color: #fff; }
 
-        /* Settings Panel - FIXED */
+        /* Settings Panel */
         #settings-panel {
             position: fixed; top: 0; right: -400px; width: 400px; height: 100vh;
             background: #050505; border-left: 2px solid var(--n-blue);
@@ -82,7 +82,7 @@
         .white-p { color: #fff; text-shadow: 0 0 10px #fff; }
         .black-p { color: #666; text-shadow: 0 0 10px #000; }
 
-        /* Engine Icons - zoom + spin like the video */
+        /* Engine Icons - exact zoom+spin from video */
         .engine-icon { 
             position: absolute; top: -12px; right: -12px; font-size: 34px; z-index: 100; 
             animation: videoIconPop 0.65s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; 
@@ -168,7 +168,7 @@
         <div style="cursor:pointer; color:#666; text-align:center; padding:15px; border:1px solid #333; border-radius:10px; margin-top:20px;" onclick="openHelp()">ARCHIVED HELP</div>
     </div>
 
-    <!-- Vertical 3 dots menu -->
+    <!-- Vertical 3 dots menu (now contains Archived Help) -->
     <div id="play-menu">
         <div class="menu-item" onclick="resignGame()">Resign</div>
         <div class="menu-item" onclick="openHelp()">Archived Help</div>
@@ -220,6 +220,8 @@
     const glyphs = { 'r':'♜','n':'♞','b':'♝','q':'♛','k':'♚','p':'♟','R':'♖','N':'♘','B':'♗','Q':'♕','K':'♔','P':'♙' };
     const hlMap = { 'k':'hl-king','q':'hl-queen','r':'hl-rook','b':'hl-bishop','n':'hl-knight','p':'hl-pawn' };
 
+    const pieceValue = { 'p':1, 'n':3, 'b':3, 'r':5, 'q':9, 'k':1000 };
+
     const helpData = {
         pieces: `<div class="asset-card" onclick="expandDef(this)"><b>The Pawn</b> The fundamental infantry unit of chess. It possesses a restricted forward movement of one square, yet captures diagonally. Upon its initial move, it may advance two squares. Reaching the terminal rank allows for promotion into a Queen, Rook, Bishop, or Knight, granting the piece immense late-game utility.</div><div class="asset-card" onclick="expandDef(this)"><b>The Knight</b> A specialized tactical unit that navigates the board in a unique 'L' pattern—two squares in one cardinal direction followed by one square perpendicular. It maintains the singular ability to leap over intervening pieces, making it an invaluable asset in congested board states where other pieces are obstructed.</div><div class="asset-card" onclick="expandDef(this)"><b>The Bishop</b> A sophisticated long-range operative that slides any distance along diagonal trajectories. Each Bishop is permanently confined to the square colour it begins on, requiring them to work in coordinated pairs to control both light and dark regions of the board effectively throughout the middle and end game.</div><div class="asset-card" onclick="expandDef(this)"><b>The Rook</b> A formidable heavy piece moving in straight horizontal or vertical lines across any number of unoccupied squares. It plays a critical role in king safety through the castling maneuver and is often the primary force behind powerful ladder checkmates during the final stages of the match.</div><div class="asset-card" onclick="expandDef(this)"><b>The Queen</b> The most versatile and powerful asset on the board. She combines the movement capabilities of both the Rook and the Bishop, sliding any distance in any straight or diagonal direction. Her presence dictates the tempo and pressure of the match, serving as both a primary attacker and a central defender.</div><div class="asset-card" onclick="expandDef(this)"><b>The King</b> The pivotal figure around which the entire game revolves. While moving only one square in any direction, his preservation is absolute. If the King is placed under attack and cannot find a safe square, the match concludes immediately, rendering his protection the player's ultimate strategic priority.</div>`,
         icons: `<span class="group-label">Positive Indicators</span><div class="asset-card" onclick="expandDef(this)"><b>The Best Move (Star)</b> This designation signifies the absolute strongest continuation identified by the engine analysis. Playing this move optimizes your winning probability and represents the highest level of technical accuracy possible in the current position, often finding the only path to a victory.</div><div class="asset-card" onclick="expandDef(this)"><b>Good Move (Tick)</b> Indicates a solid, fundamentally sound choice that maintains the current evaluation of the position. While it may not be the engine's primary preference, it adheres to sound chess principles and ensures the player does not concede any unnecessary tactical advantages.</div><span class="group-label">Negative Indicators</span><div class="asset-card" onclick="expandDef(this)"><b>Inaccuracy (Exclamation)</b> Marks a sub-optimal move that noticeably weakens your standing. It suggests a missed opportunity to apply pressure or a minor positional concession that allows the opponent to improve their pieces more easily than the optimal continuation would have permitted.</div><div class="asset-card" onclick="expandDef(this)"><b>Blunder (Death Emoji)</b> A catastrophic error that tangibly reduces your advantage or directly allows the opponent to achieve a winning position. This usually results from an overlooked tactical sequence or a serious misunderstanding of the immediate requirements of the board position.</div><div class="asset-card" onclick="expandDef(this)"><b>Fatal Blunder (Death)</b> Reserved for moves that lead to an immediate loss of the game or the loss of a major piece without compensation. This classification represents a total collapse of strategy and typically shifts the game evaluation into a forced win for the opponent.</div>`,
@@ -250,18 +252,20 @@
         document.getElementById('turn-info').innerText = currentTurn === 'W' ? "WHITE'S TURN" : "BLACK'S TURN";
     }
 
-    // SMOOTH GLIDE
     function movePieceWithAnimation(from, to) {
         if (!gameStarted) return;
         const fromSq = document.querySelector(`[data-idx="${from}"]`);
         const toSq = document.querySelector(`[data-idx="${to}"]`);
         const pieceEl = fromSq ? fromSq.querySelector('.piece') : null;
 
+        const wasCapture = !!boardState[to]; // only !! on captures
+
         if (!pieceEl) {
             boardState[to] = boardState[from];
             boardState[from] = null;
             render();
-            spawnVFX(to, !!boardState[to]);
+            if (wasCapture) spawnVFX(to, true);
+            checkGameEnd();
             return;
         }
 
@@ -280,7 +284,8 @@
             boardState[to] = boardState[from];
             boardState[from] = null;
             render();
-            spawnVFX(to, !!boardState[to]);
+            if (wasCapture) spawnVFX(to, true);
+            checkGameEnd();
             if (isAIActive && currentTurn === 'B') setTimeout(aiLogic, 700);
         }, 490);
     }
@@ -301,7 +306,7 @@
         }, 1400);
     }
 
-    function isPathClear(f, t) {
+    function isPathClear(f, t) { /* same as before */ 
         const r1 = Math.floor(f/8), c1 = f%8, r2 = Math.floor(t/8), c2 = t%8;
         const dr = Math.sign(r2-r1), dc = Math.sign(c2-c1);
         let cr = r1 + dr, cc = c1 + dc;
@@ -312,7 +317,7 @@
         return true;
     }
 
-    function isValid(f, t) {
+    function isValid(f, t) { /* same as before */ 
         if (f === t) return false;
         const p = boardState[f], tar = boardState[t];
         if (tar && (p === p.toUpperCase()) === (tar === tar.toUpperCase())) return false;
@@ -349,20 +354,36 @@
         }
     }
 
+    // IMPROVED AI - different per tier + piece value awareness
     function aiLogic() {
         let moves = [];
         for(let f=0; f<64; f++) {
             if(boardState[f] && boardState[f] === boardState[f].toLowerCase()) {
-                for(let t=0; t<64; t++) if(isValid(f, t)) moves.push({f, t, capture: !!boardState[t]});
+                for(let t=0; t<64; t++) {
+                    if(isValid(f, t)) {
+                        const captured = boardState[t];
+                        const movingPiece = boardState[f].toLowerCase();
+                        const captureValue = captured ? pieceValue[captured.toLowerCase()] : 0;
+                        const myValue = pieceValue[movingPiece];
+                        const score = captureValue - (captureValue > myValue ? myValue * 2 : 0); // penalize bad sacrifices
+                        moves.push({f, t, capture: !!captured, score});
+                    }
+                }
             }
         }
-        if (moves.length === 0) return;
+        if (moves.length === 0) { checkGameEnd(); return; }
 
-        let chosen = moves[Math.floor(Math.random()*moves.length)];
-        if (currentDifficulty >= 3) {
-            const captures = moves.filter(m => m.capture);
-            if (captures.length > 0) chosen = captures[Math.floor(Math.random()*captures.length)];
+        // Tier-based intelligence
+        if (currentDifficulty >= 5) { // Grandmaster - smart sacrifices & best captures
+            moves.sort((a,b) => b.score - a.score);
+        } else if (currentDifficulty >= 3) { // Professional / Master - good captures, avoid dumb sacrifices
+            moves = moves.filter(m => m.score >= -3);
+            moves.sort((a,b) => b.score - a.score);
+        } else if (currentDifficulty >= 1) { // Beginner / Moderate - some logic
+            moves.sort((a,b) => b.capture - a.capture);
         }
+
+        const chosen = moves[0];
         movePieceWithAnimation(chosen.f, chosen.t);
         currentTurn = 'W';
     }
@@ -370,14 +391,11 @@
     function updateDots(idx) {
         document.querySelectorAll('.ctrl-dot').forEach(d => d.classList.remove('ctrl-dot'));
         for (let i = 0; i < 64; i++) {
-            if (isValid(idx, i)) {
-                const sq = document.querySelector(`[data-idx="${i}"]`);
-                if (sq) sq.classList.add('ctrl-dot');
-            }
+            if (isValid(idx, i)) document.querySelector(`[data-idx="${i}"]`)?.classList.add('ctrl-dot');
         }
     }
 
-    // Hover
+    // Hover + Ctrl
     document.addEventListener('mouseover', (e) => {
         const sq = e.target.closest('.sq'); if (!sq) return;
         const p = boardState[sq.dataset.idx]; if (!p) return;
@@ -393,7 +411,6 @@
         if (sq) sq.className = sq.className.split(' ').filter(c => !c.startsWith('hl-')).join(' ');
     });
 
-    // Ctrl toggle
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Control') {
             ctrlLocked = !ctrlLocked;
@@ -402,50 +419,46 @@
         }
     });
 
-    // Settings & UI
-    function toggleSettings() {
-        document.getElementById('settings-panel').classList.toggle('open');
-    }
+    // ENDING SYSTEM (Checkmate / Stalemate)
+    function checkGameEnd() {
+        const kingPos = findKing(currentTurn);
+        if (kingPos === -1) return;
 
-    function toggleAI() {
-        isAIActive = document.getElementById('ai-toggle').value === 'ai';
-        const box = document.getElementById('difficulty-box');
-        if (isAIActive) {
-            box.style.display = 'flex';
-            setTimeout(() => box.classList.add('show'), 10);
-        } else {
-            box.classList.remove('show');
-            setTimeout(() => box.style.display = 'none', 400);
+        const inCheck = isSquareAttacked(kingPos, currentTurn === 'W' ? 'B' : 'W');
+        const hasMoves = hasAnyLegalMoves(currentTurn);
+
+        if (!hasMoves) {
+            gameStarted = false;
+            if (inCheck) {
+                showEndScreen(currentTurn === 'W' ? "BLACK WINS" : "WHITE WINS", "CHECKMATE");
+            } else {
+                showEndScreen("DRAW", "STALEMATE");
+            }
         }
     }
 
-    function setDifficulty(lvl) {
-        currentDifficulty = lvl;
-        document.querySelectorAll('.diff-option').forEach(el => {
-            el.style.border = parseInt(el.dataset.diff) === lvl ? '2px solid var(--n-blue)' : 'none';
-        });
+    function findKing(color) {
+        const king = color === 'W' ? 'K' : 'k';
+        for(let i=0; i<64; i++) if(boardState[i] === king) return i;
+        return -1;
     }
 
-    function startGame() {
-        gameStarted = true;
-        document.getElementById('play-btn').classList.add('locked');
-        render();
+    function isSquareAttacked(pos, byColor) {
+        for(let f=0; f<64; f++) {
+            if(boardState[f] && ((boardState[f] === boardState[f].toUpperCase()) === (byColor === 'W'))) {
+                if(isValid(f, pos)) return true;
+            }
+        }
+        return false;
     }
 
-    function showResignMenu() {
-        document.getElementById('play-menu').style.display = 'block';
-    }
-
-    function resignGame() {
-        document.getElementById('play-menu').style.display = 'none';
-        showEndScreen("I SURRENDER", "You resigned");
-    }
-
-    function resetBoard() {
-        document.getElementById('play-menu').style.display = 'none';
-        init();
-        gameStarted = false;
-        document.getElementById('play-btn').classList.remove('locked');
+    function hasAnyLegalMoves(color) {
+        for(let f=0; f<64; f++) {
+            if(boardState[f] && ((boardState[f] === boardState[f].toUpperCase()) === (color === 'W'))) {
+                for(let t=0; t<64; t++) if(isValid(f, t)) return true;
+            }
+        }
+        return false;
     }
 
     function showEndScreen(title, subtitle) {
@@ -456,6 +469,36 @@
 
     function restartGame() {
         document.getElementById('end-overlay').style.display = 'none';
+        init();
+        gameStarted = false;
+        document.getElementById('play-btn').classList.remove('locked');
+    }
+
+    // UI
+    function toggleSettings() { document.getElementById('settings-panel').classList.toggle('open'); }
+    function toggleAI() {
+        isAIActive = document.getElementById('ai-toggle').value === 'ai';
+        const box = document.getElementById('difficulty-box');
+        if (isAIActive) { box.style.display = 'flex'; setTimeout(() => box.classList.add('show'), 10); }
+        else { box.classList.remove('show'); setTimeout(() => box.style.display = 'none', 400); }
+    }
+    function setDifficulty(lvl) {
+        currentDifficulty = lvl;
+        document.querySelectorAll('.diff-option').forEach(el => el.style.border = parseInt(el.dataset.diff) === lvl ? '2px solid var(--n-blue)' : 'none');
+    }
+
+    function startGame() {
+        gameStarted = true;
+        document.getElementById('play-btn').classList.add('locked');
+        render();
+    }
+
+    function resignGame() {
+        document.getElementById('play-menu').style.display = 'none';
+        showEndScreen("I SURRENDER", "You resigned");
+    }
+    function resetBoard() {
+        document.getElementById('play-menu').style.display = 'none';
         init();
         gameStarted = false;
         document.getElementById('play-btn').classList.remove('locked');
@@ -488,10 +531,16 @@
         setTimeout(() => overlay.style.display = 'none', 400);
     }
 
-    // Click outside to close play menu
-    document.addEventListener('click', function(e) {
+    // 3 dots menu trigger
+    document.getElementById('play-btn').addEventListener('click', (e) => {
+        if (!gameStarted) return;
         const menu = document.getElementById('play-menu');
-        if (!e.target.closest('#play-btn')) menu.style.display = 'none';
+        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        e.stopImmediatePropagation();
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('#play-btn')) document.getElementById('play-menu').style.display = 'none';
     });
 
     setTimeout(() => { document.getElementById('boot').style.display = 'none'; }, 3000);

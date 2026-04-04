@@ -82,7 +82,7 @@
         .white-p { color: #fff; text-shadow: 0 0 10px #fff; }
         .black-p { color: #666; text-shadow: 0 0 10px #000; }
 
-        /* Engine Icons - zoom + spin exactly like the video */
+        /* Engine Icons - zoom + spin like the video */
         .engine-icon { 
             position: absolute; top: -12px; right: -12px; font-size: 34px; z-index: 100; 
             animation: videoIconPop 0.65s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; 
@@ -164,11 +164,9 @@
                 <div class="diff-option" data-diff="5" style="background:#4b0082;color:#c026d3;" onclick="setDifficulty(5)">GRANDMASTER</div>
             </div>
         </div>
-
-        <div style="cursor:pointer; color:#666; text-align:center; padding:15px; border:1px solid #333; border-radius:10px; margin-top:20px;" onclick="openHelp()">ARCHIVED HELP</div>
     </div>
 
-    <!-- Vertical 3 dots menu -->
+    <!-- Vertical 3 dots menu (with Archived Help) -->
     <div id="play-menu">
         <div class="menu-item" onclick="resignGame()">Resign</div>
         <div class="menu-item" onclick="openHelp()">Archived Help</div>
@@ -353,7 +351,6 @@
         }
     }
 
-    // Smarter AI with piece value awareness and sacrifice logic
     function aiLogic() {
         let moves = [];
         for(let f=0; f<64; f++) {
@@ -364,11 +361,8 @@
                         const movingPiece = boardState[f].toLowerCase();
                         const captureValue = captured ? pieceValue[captured.toLowerCase()] : 0;
                         const myValue = pieceValue[movingPiece];
-                        let score = captureValue * 1.2 - myValue * 0.3; // prefer captures, slight penalty for moving valuable pieces
-
-                        // Avoid bad sacrifices (especially on higher difficulties)
+                        let score = captureValue * 1.2 - myValue * 0.3;
                         if (captureValue > 0 && captureValue < myValue && currentDifficulty >= 3) score -= (myValue - captureValue) * 2;
-
                         moves.push({f, t, capture: !!captured, score});
                     }
                 }
@@ -376,11 +370,10 @@
         }
         if (moves.length === 0) { checkGameEnd(); return; }
 
-        // Difficulty tiers
-        if (currentDifficulty >= 5) moves.sort((a,b) => b.score - a.score); // Grandmaster - best moves
-        else if (currentDifficulty >= 3) moves.sort((a,b) => b.score - a.score); // Professional - good captures, avoids dumb sacs
-        else if (currentDifficulty >= 1) moves.sort((a,b) => (b.capture ? 1 : 0) - (a.capture ? 1 : 0)); // Beginner - prefers captures
-        else moves.sort(() => Math.random() - 0.5); // Demonstration - random
+        if (currentDifficulty >= 5) moves.sort((a,b) => b.score - a.score);
+        else if (currentDifficulty >= 3) moves.sort((a,b) => b.score - a.score);
+        else if (currentDifficulty >= 1) moves.sort((a,b) => (b.capture ? 1 : 0) - (a.capture ? 1 : 0));
+        else moves.sort(() => Math.random() - 0.5);
 
         const chosen = moves[0];
         movePieceWithAnimation(chosen.f, chosen.t);
@@ -527,6 +520,7 @@
         setTimeout(() => overlay.style.display = 'none', 400);
     }
 
+    // 3 dots menu trigger (click the PLAY button after game starts)
     document.getElementById('play-btn').addEventListener('click', (e) => {
         if (!gameStarted) return;
         const menu = document.getElementById('play-menu');

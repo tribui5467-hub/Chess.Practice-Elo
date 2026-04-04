@@ -33,7 +33,10 @@
         #settings-panel.open #gear-icon { transform: rotate(180deg); color: var(--n-green); }
 
         .ai-config { margin-top: 20px; border: 1px solid #222; padding: 20px; border-radius: 10px; }
-        select, input { background: #111; color: var(--n-blue); border: 1px solid var(--n-blue); padding: 10px; width: 100%; margin-top: 10px; border-radius: 5px; font-weight: bold; }
+        select, input { 
+            background: #111; color: var(--n-blue); border: 1px solid var(--n-blue); 
+            padding: 10px; width: 100%; margin-top: 10px; border-radius: 5px; font-weight: bold; 
+        }
 
         #difficulty-box {
             margin-top: 15px; padding: 15px; background: #0a0a0a; border: 1px solid #333;
@@ -81,7 +84,7 @@
         .white-p { color: #fff; text-shadow: 0 0 10px #fff; }
         .black-p { color: #666; text-shadow: 0 0 10px #000; }
 
-        /* Engine Icons */
+        /* Engine Icons - zoom+spin */
         .engine-icon { 
             position: absolute; top: -12px; right: -12px; font-size: 34px; z-index: 100; 
             animation: videoIconPop 0.65s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; 
@@ -100,7 +103,7 @@
         @keyframes wave { 0% { width: 0; height: 0; opacity: 1; } 100% { width: 200px; height: 200px; opacity: 0; } }
         .p-white { position: absolute; width: 4px; height: 4px; background: white; pointer-events: none; z-index: 101; border-radius: 50%; }
 
-        /* Help Menu */
+        /* Full Original Help Menu */
         #help-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); z-index: 55000; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.5s var(--smooth); }
         #help-overlay.active { opacity: 1; display: flex; }
         #help-container { width: 850px; height: 650px; background: #050505; border: 2px solid var(--n-green); border-radius: 20px; display: flex; flex-direction: column; overflow: hidden; transform: scale(0.9); transition: transform 0.5s var(--smooth); }
@@ -163,11 +166,10 @@
                 <div class="diff-option" data-diff="5" style="background:#4b0082;color:#c026d3;" onclick="setDifficulty(5)">GRANDMASTER</div>
             </div>
 
-            <!-- Session Time - Typing box with Unlimited option -->
+            <!-- Session Time - same width as opponent type -->
             <div id="time-box">
                 <label style="font-size: 10px; color: var(--n-blue); letter-spacing: 2px;">SESSION PERIOD (MINUTES)</label>
-                <input type="text" id="time-input" placeholder="UNLIMITED or number of minutes" style="width:100%; padding:12px; font-size:15px;" onkeypress="if(event.key==='Enter') setCustomTime()">
-                <div style="margin-top:8px; font-size:11px; color:#666;">Type a number or leave as UNLIMITED</div>
+                <input type="text" id="time-input" placeholder="UNLIMITED or number" style="width:100%; padding:10px;" onkeypress="if(event.key==='Enter') setCustomTime()">
             </div>
         </div>
 
@@ -181,7 +183,7 @@
         <div class="menu-item" onclick="resetBoard()">Reset</div>
     </div>
 
-    <!-- Help Menu (unchanged) -->
+    <!-- Full Original Help Menu -->
     <div id="help-overlay">
         <div id="help-container">
             <div class="help-header">
@@ -222,16 +224,15 @@
     let isAIActive = false;
     let currentDifficulty = 3;
     let gameStarted = false;
-    let sessionMinutes = 0; // 0 = unlimited
 
     const glyphs = { 'r':'♜','n':'♞','b':'♝','q':'♛','k':'♚','p':'♟','R':'♖','N':'♘','B':'♗','Q':'♕','K':'♔','P':'♙' };
     const hlMap = { 'k':'hl-king','q':'hl-queen','r':'hl-rook','b':'hl-bishop','n':'hl-knight','p':'hl-pawn' };
     const pieceValue = { 'p':1, 'n':3, 'b':3, 'r':5, 'q':9, 'k':1000 };
 
     const helpData = {
-        pieces: `<div class="asset-card" onclick="expandDef(this)"><b>The Pawn</b> The fundamental infantry unit of chess...</div>`, // (full original text - keep as is)
-        icons: `...`,
-        mechanics: `...`
+        pieces: `<div class="asset-card" onclick="expandDef(this)"><b>The Pawn</b> The fundamental infantry unit of chess. It possesses a restricted forward movement of one square, yet captures diagonally. Upon its initial move, it may advance two squares. Reaching the terminal rank allows for promotion into a Queen, Rook, Bishop, or Knight, granting the piece immense late-game utility.</div><div class="asset-card" onclick="expandDef(this)"><b>The Knight</b> A specialized tactical unit that navigates the board in a unique 'L' pattern—two squares in one cardinal direction followed by one square perpendicular. It maintains the singular ability to leap over intervening pieces, making it an invaluable asset in congested board states where other pieces are obstructed.</div><div class="asset-card" onclick="expandDef(this)"><b>The Bishop</b> A sophisticated long-range operative that slides any distance along diagonal trajectories. Each Bishop is permanently confined to the square colour it begins on, requiring them to work in coordinated pairs to control both light and dark regions of the board effectively throughout the middle and end game.</div><div class="asset-card" onclick="expandDef(this)"><b>The Rook</b> A formidable heavy piece moving in straight horizontal or vertical lines across any number of unoccupied squares. It plays a critical role in king safety through the castling maneuver and is often the primary force behind powerful ladder checkmates during the final stages of the match.</div><div class="asset-card" onclick="expandDef(this)"><b>The Queen</b> The most versatile and powerful asset on the board. She combines the movement capabilities of both the Rook and the Bishop, sliding any distance in any straight or diagonal direction. Her presence dictates the tempo and pressure of the match, serving as both a primary attacker and a central defender.</div><div class="asset-card" onclick="expandDef(this)"><b>The King</b> The pivotal figure around which the entire game revolves. While moving only one square in any direction, his preservation is absolute. If the King is placed under attack and cannot find a safe square, the match concludes immediately, rendering his protection the player's ultimate strategic priority.</div>`,
+        icons: `<span class="group-label">Positive Indicators</span><div class="asset-card" onclick="expandDef(this)"><b>The Best Move (Star)</b> This designation signifies the absolute strongest continuation identified by the engine analysis. Playing this move optimizes your winning probability and represents the highest level of technical accuracy possible in the current position, often finding the only path to a victory.</div><div class="asset-card" onclick="expandDef(this)"><b>Good Move (Tick)</b> Indicates a solid, fundamentally sound choice that maintains the current evaluation of the position. While it may not be the engine's primary preference, it adheres to sound chess principles and ensures the player does not concede any unnecessary tactical advantages.</div><span class="group-label">Negative Indicators</span><div class="asset-card" onclick="expandDef(this)"><b>Inaccuracy (Exclamation)</b> Marks a sub-optimal move that noticeably weakens your standing. It suggests a missed opportunity to apply pressure or a minor positional concession that allows the opponent to improve their pieces more easily than the optimal continuation would have permitted.</div><div class="asset-card" onclick="expandDef(this)"><b>Blunder (Death Emoji)</b> A catastrophic error that tangibly reduces your advantage or directly allows the opponent to achieve a winning position. This usually results from an overlooked tactical sequence or a serious misunderstanding of the immediate requirements of the board position.</div><div class="asset-card" onclick="expandDef(this)"><b>Fatal Blunder (Death)</b> Reserved for moves that lead to an immediate loss of the game or the loss of a major piece without compensation. This classification represents a total collapse of strategy and typically shifts the game evaluation into a forced win for the opponent.</div>`,
+        mechanics: `<span class="group-label">Core Mechanics</span><div class="asset-card" onclick="expandDef(this)"><b>Capturing Methodology</b> To capture an opponent's unit, you must move your piece onto the square it currently occupies. The displaced piece is permanently removed from the field. You cannot capture your own units or occupy a square already held by your own color, requiring careful navigation of space.</div><div class="asset-card" onclick="expandDef(this)"><b>En Passant</b> A specialized pawn capture occurring when an opponent moves their pawn two squares forward from its starting position and lands adjacent to your pawn. You may capture that pawn as if it had only moved one square, provided you do so on the very next turn.</div><span class="group-label">Ending Conditions</span><div class="asset-card" onclick="expandDef(this)"><b>Checkmate (Absolute Victory)</b> The definitive conclusion of a chess match. This occurs when a King is under direct threat of capture and possesses no legal moves to relocate, block the line of attack, or eliminate the attacking piece entirely. The game ends immediately in a win for the attacker.</div><div class="asset-card" onclick="expandDef(this)"><b>Stalemate (Technical Draw)</b> A unique situation where the player whose turn it is has no legal moves remaining, yet their King is not currently in check. Because the player cannot move but is not defeated, the game ends in a draw, often occurring as a defensive 'swindle'.</div><div class="asset-card" onclick="expandDef(this)"><b>Resignation (Concession)</b> A formal acknowledgement of defeat. A player may choose to resign at any moment if they determine the position is strategically hopeless. This is considered professional courtesy when a loss is mathematically certain, immediately awarding the full victory to the opponent.</div><div class="asset-card" onclick="expandDef(this)"><b>Timeout (Temporal Loss)</b> In timed competitive play, if a player's clock expires before they complete their required moves, they lose the game immediately. This emphasizes the importance of time management as a critical strategic resource, where speed is as vital as tactical precision.</div>`
     };
 
     function init() {
@@ -258,7 +259,7 @@
         document.getElementById('turn-info').innerText = currentTurn === 'W' ? "WHITE'S TURN" : "BLACK'S TURN";
     }
 
-    // SMOOTH GLIDE
+    // SMOOTH SLIDING MOVEMENT
     function movePieceWithAnimation(from, to) {
         if (!gameStarted) return;
         const fromSq = document.querySelector(`[data-idx="${from}"]`);
@@ -313,8 +314,6 @@
         }, 1400);
     }
 
-    // ... (isPathClear, isValid, handleSquare, updateDots, hover, Ctrl toggle - same as previous)
-
     function isPathClear(f, t) {
         const r1 = Math.floor(f/8), c1 = f%8, r2 = Math.floor(t/8), c2 = t%8;
         const dr = Math.sign(r2-r1), dc = Math.sign(c2-c1);
@@ -366,19 +365,14 @@
     function updateDots(idx) {
         document.querySelectorAll('.ctrl-dot').forEach(d => d.classList.remove('ctrl-dot'));
         for (let i = 0; i < 64; i++) {
-            if (isValid(idx, i) && boardState[i]) {
+            if (isValid(idx, i)) {
                 const sq = document.querySelector(`[data-idx="${i}"]`);
-                if (sq) {
-                    sq.classList.add('ctrl-dot');
-                    const capturedType = boardState[i].toLowerCase();
-                    let hl = hlMap[capturedType] || 'hl-queen';
-                    sq.classList.add(hl);
-                }
+                if (sq) sq.classList.add('ctrl-dot');
             }
         }
     }
 
-    // Hover
+    // Hover + Ctrl capture color highlights
     document.addEventListener('mouseover', (e) => {
         const sq = e.target.closest('.sq'); if (!sq) return;
         const p = boardState[sq.dataset.idx]; if (!p) return;
@@ -453,7 +447,7 @@
         document.getElementById('play-btn').classList.remove('locked');
     }
 
-    // AI (smarter)
+    // AI
     function aiLogic() {
         let moves = [];
         for(let f=0; f<64; f++) {
@@ -495,14 +489,8 @@
     }
 
     function setCustomTime() {
-        const input = document.getElementById('time-input').value.trim().toUpperCase();
-        if (input === '' || input === 'UNLIMITED') {
-            sessionMinutes = 0;
-        } else {
-            const num = parseInt(input);
-            sessionMinutes = isNaN(num) ? 0 : Math.max(0, num);
-        }
-        alert(`Session time set to ${sessionMinutes === 0 ? 'UNLIMITED' : sessionMinutes + ' minutes'}`);
+        const val = document.getElementById('time-input').value.trim().toUpperCase();
+        alert(`Session time set to ${val === '' || val === 'UNLIMITED' ? 'UNLIMITED' : val + ' minutes'}`);
     }
 
     function startGame() {
@@ -549,7 +537,7 @@
         setTimeout(() => overlay.style.display = 'none', 400);
     }
 
-    // 3 dots
+    // 3 dots trigger
     document.getElementById('play-btn').addEventListener('click', (e) => {
         if (!gameStarted) return;
         const menu = document.getElementById('play-menu');

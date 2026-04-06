@@ -29,6 +29,16 @@
         #gear-icon { font-size: 45px; color: var(--n-blue); transition: transform 0.6s var(--smooth); }
         #settings-panel.open #gear-icon { transform: rotate(180deg); color: var(--n-green); }
 
+        .ai-config { margin-top: 20px; border: 1px solid #222; padding: 20px; border-radius: 10px; }
+        select { background: #111; color: var(--n-blue); border: 1px solid var(--n-blue); padding: 10px; width: 100%; margin-top: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        #difficulty-box {
+            margin-top: 15px; padding: 15px; background: #0a0a0a; border: 1px solid #333;
+            border-radius: 8px; display: none; flex-direction: column; gap: 8px;
+            opacity: 0; transform: translateY(-15px); transition: all 0.45s var(--smooth);
+        }
+        #difficulty-box.show { display: flex; opacity: 1; transform: translateY(0); }
+        .diff-option { padding: 10px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: all 0.2s; }
+
         #play-btn {
             background: var(--n-green); color: #000; border: none; padding: 15px;
             font-weight: 900; cursor: pointer; border-radius: 10px; width: 100%;
@@ -62,7 +72,7 @@
         .white-p { color: #fff; text-shadow: 0 0 10px #fff; }
         .black-p { color: #666; text-shadow: 0 0 10px #000; }
 
-        /* Help Menu */
+        /* Help Menu - fully restored */
         #help-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); z-index: 55000; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.5s var(--smooth); }
         #help-overlay.active { opacity: 1; display: flex; }
         #help-container { width: 850px; height: 650px; background: #050505; border: 2px solid var(--n-green); border-radius: 20px; display: flex; flex-direction: column; overflow: hidden; transform: scale(0.9); transition: transform 0.5s var(--smooth); }
@@ -224,7 +234,6 @@
         const boardRect = boardEl.getBoundingClientRect();
         const fromRect = fromSq.getBoundingClientRect();
         const toRect = toSq.getBoundingClientRect();
-
         const startX = fromRect.left - boardRect.left;
         const startY = fromRect.top - boardRect.top;
         const endX = toRect.left - boardRect.left;
@@ -238,7 +247,6 @@
         movingPiece.style.top = `${startY}px`;
         movingPiece.style.zIndex = '1000';
         movingPiece.style.transition = 'none';
-
         void movingPiece.offsetWidth;
 
         movingPiece.style.transition = `left 0.55s var(--smooth), top 0.55s var(--smooth)`;
@@ -356,7 +364,6 @@
         }
     }
 
-    // Mouse hover highlights
     document.addEventListener('mouseover', (e) => {
         const sq = e.target.closest('.sq'); if (!sq) return;
         const p = boardState[sq.dataset.idx]; if (!p) return;
@@ -492,18 +499,16 @@
     }
     // ===================================================
 
-    // 3 dots menu (fixed positioning)
+    // 3 dots menu
     document.getElementById('play-btn').addEventListener('click', (e) => {
         if (!gameStarted) return;
         const menu = document.getElementById('play-menu');
-        menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
         e.stopImmediatePropagation();
     });
 
     document.addEventListener('click', (e) => {
-        if (!e.target.closest('#play-btn')) {
-            document.getElementById('play-menu').style.display = 'none';
-        }
+        if (!e.target.closest('#play-btn')) document.getElementById('play-menu').style.display = 'none';
     });
 
     setTimeout(() => { document.getElementById('boot').style.display = 'none'; }, 3000);

@@ -10,10 +10,8 @@
             --smooth: cubic-bezier(0.25, 0.8, 0.25, 1);
         }
         body, html { margin: 0; padding: 0; background: #000; color: white; font-family: 'Segoe UI', Tahoma, sans-serif; overflow: hidden; height: 100vh; width: 100vw; }
-        /* Boot */
         #boot { position: fixed; inset: 0; background: black; z-index: 100000; display: flex; justify-content: center; align-items: center; }
         .equinox-text { font-size: 32px; letter-spacing: 12px; font-weight: 200; color: #fff; }
-        /* Settings Panel */
         #settings-panel {
             position: fixed; top: 0; right: -400px; width: 400px; height: 100vh;
             background: #050505; border-left: 2px solid var(--n-blue);
@@ -45,7 +43,6 @@
         }
         #play-btn.locked { filter: grayscale(1) brightness(0.7); cursor: not-allowed; }
         #play-btn::after { content: '⋮'; font-size: 28px; position: absolute; right: 20px; top: 50%; transform: translateY(-50%); }
-        /* 3 dots dropdown */
         #play-menu {
             position: absolute; top: 100%; right: 20px; background: #111; border: 2px solid var(--n-blue);
             border-radius: 8px; padding: 8px 0; width: 220px; display: none; z-index: 46000;
@@ -53,12 +50,10 @@
         }
         .menu-item { padding: 12px 20px; cursor: pointer; transition: 0.2s; }
         .menu-item:hover { background: #222; color: var(--n-green); }
-        /* Board */
         #game { display: flex; width: 100vw; height: 100vh; justify-content: center; align-items: center; background: radial-gradient(circle, #0d0d0d 0%, #000 100%); }
         .board { width: 600px; height: 600px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid #1a1a1a; background: #000; position: relative; }
         .sq { width: 75px; height: 75px; display: flex; justify-content: center; align-items: center; cursor: pointer; position: relative; overflow: hidden; }
         .w { background: #2a2a2e; } .b { background: #1a1a1c; }
-        .locked .piece { filter: grayscale(1) brightness(0.6); pointer-events: none; }
         .hl-king, .hl-queen { box-shadow: inset 0 0 25px var(--n-red) !important; border: 1px solid var(--n-red) !important; }
         .hl-rook, .hl-bishop { box-shadow: inset 0 0 25px var(--n-orange) !important; border: 1px solid var(--n-orange) !important; }
         .hl-knight { box-shadow: inset 0 0 25px var(--n-yellow) !important; border: 1px solid var(--n-yellow) !important; }
@@ -68,12 +63,10 @@
         .ctrl-dot::after { content: ''; position: absolute; width: 22px; height: 22px; border: 3px solid var(--n-blue); border-radius: 50%; box-shadow: 0 0 15px var(--n-blue); pointer-events: none; z-index: 50; }
         .piece {
             font-size: 50px; user-select: none; z-index: 10; pointer-events: none;
-            transition: transform 0.48s var(--smooth);
             position: relative;
         }
         .white-p { color: #fff; text-shadow: 0 0 10px #fff; }
         .black-p { color: #666; text-shadow: 0 0 10px #000; }
-        /* Engine Icons */
         .engine-icon {
             position: absolute; top: -12px; right: -12px; font-size: 34px; z-index: 100;
             animation: videoIconPop 0.65s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
@@ -86,11 +79,7 @@
         }
         .engine-icon.fade-out { animation: iconFade 0.9s forwards; }
         @keyframes iconFade { to { transform: scale(0.4) rotate(90deg); opacity: 0; } }
-        /* VFX */
-        .shockwave { position: absolute; border: 2px solid white; border-radius: 50%; pointer-events: none; z-index: 99; animation: wave 0.6s ease-out forwards; transform: translate(-50%, -50%); }
-        @keyframes wave { 0% { width: 0; height: 0; opacity: 1; } 100% { width: 200px; height: 200px; opacity: 0; } }
-        .p-white { position: absolute; width: 4px; height: 4px; background: white; pointer-events: none; z-index: 101; border-radius: 50%; }
-        /* Help Menu - FULL ORIGINAL */
+        /* Help Menu */
         #help-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); z-index: 55000; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.5s var(--smooth); }
         #help-overlay.active { opacity: 1; display: flex; }
         #help-container { width: 850px; height: 650px; background: #050505; border: 2px solid var(--n-green); border-radius: 20px; display: flex; flex-direction: column; overflow: hidden; transform: scale(0.9); transition: transform 0.5s var(--smooth); }
@@ -107,7 +96,6 @@
         #expansion-box { width: 85%; max-width: 950px; background: #050505; border: 3px solid var(--n-blue); border-radius: 30px; padding: 60px; position: relative; box-shadow: 0 0 80px var(--n-blue); transform: scale(0.8); transition: transform 0.4s var(--smooth); }
         .close-expanded { position: absolute; top: 25px; right: 25px; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border: 2px solid var(--n-red); color: var(--n-red); border-radius: 50%; font-size: 24px; cursor: pointer; transition: 0.3s; background: none; }
         .close-expanded:hover { background: var(--n-red); color: white; }
-        /* Epic End Screen */
         #end-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.96); backdrop-filter: blur(25px);
             z-index: 90000; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 20px;
@@ -146,22 +134,14 @@
                 <div class="diff-option" data-diff="4" style="background:#8b0000;color:#ff2d55;" onclick="setDifficulty(4)">MASTER</div>
                 <div class="diff-option" data-diff="5" style="background:#4b0082;color:#c026d3;" onclick="setDifficulty(5)">GRANDMASTER</div>
             </div>
-            <div id="time-box">
-                <label style="font-size: 10px; color: var(--n-blue); letter-spacing: 2px;">SESSION PERIOD</label>
-                <div class="time-option" data-time="0" onclick="setTime(0)">UNLIMITED</div>
-                <div class="time-option" data-time="300" onclick="setTime(300)">5 MINUTES</div>
-                <div class="time-option" data-time="600" onclick="setTime(600)">10 MINUTES</div>
-                <div class="time-option" data-time="900" onclick="setTime(900)">15 MINUTES</div>
-            </div>
         </div>
     </div>
-    <!-- 3 dots menu with Archived Help -->
     <div id="play-menu">
         <div class="menu-item" onclick="resignGame()">Resign</div>
         <div class="menu-item" onclick="openHelp()">Archived Help</div>
         <div class="menu-item" onclick="resetBoard()">Reset</div>
     </div>
-    <!-- Full Help Menu -->
+    <!-- Help Menu -->
     <div id="help-overlay">
         <div id="help-container">
             <div class="help-header">
@@ -182,13 +162,14 @@
             <div id="expansion-text" style="font-size: 22px; line-height: 1.8; color: #eee;"></div>
         </div>
     </div>
-    <!-- Epic End Screen -->
+    <!-- End Screen -->
     <div id="end-overlay">
         <div id="end-title"></div>
         <div id="end-subtitle"></div>
         <button id="end-btn" onclick="restartGame()">ANOTHER SESSION</button>
     </div>
     <div id="game"><div class="board" id="board"></div></div>
+
 <script>
     const boardEl = document.getElementById('board');
     let boardState = Array(64).fill(null);
@@ -198,19 +179,23 @@
     let isAIActive = false;
     let currentDifficulty = 3;
     let gameStarted = false;
+
     const glyphs = { 'r':'♜','n':'♞','b':'♝','q':'♛','k':'♚','p':'♟','R':'♖','N':'♘','B':'♗','Q':'♕','K':'♔','P':'♙' };
     const hlMap = { 'k':'hl-king','q':'hl-queen','r':'hl-rook','b':'hl-bishop','n':'hl-knight','p':'hl-pawn' };
     const pieceValue = { 'p':1, 'n':3, 'b':3.5, 'r':5, 'q':9, 'k':100 };
+
     const helpData = {
         pieces: `<div class="asset-card" onclick="expandDef(this)"><b>The Pawn</b> The fundamental infantry unit of chess. It possesses a restricted forward movement of one square, yet captures diagonally. Upon its initial move, it may advance two squares. Reaching the terminal rank allows for promotion into a Queen, Rook, Bishop, or Knight, granting the piece immense late-game utility.</div><div class="asset-card" onclick="expandDef(this)"><b>The Knight</b> A specialized tactical unit that navigates the board in a unique 'L' pattern—two squares in one cardinal direction followed by one square perpendicular. It maintains the singular ability to leap over intervening pieces, making it an invaluable asset in congested board states where other pieces are obstructed.</div><div class="asset-card" onclick="expandDef(this)"><b>The Bishop</b> A sophisticated long-range operative that slides any distance along diagonal trajectories. Each Bishop is permanently confined to the square colour it begins on, requiring them to work in coordinated pairs to control both light and dark regions of the board effectively throughout the middle and end game.</div><div class="asset-card" onclick="expandDef(this)"><b>The Rook</b> A formidable heavy piece moving in straight horizontal or vertical lines across any number of unoccupied squares. It plays a critical role in king safety through the castling maneuver and is often the primary force behind powerful ladder checkmates during the final stages of the match.</div><div class="asset-card" onclick="expandDef(this)"><b>The Queen</b> The most versatile and powerful asset on the board. She combines the movement capabilities of both the Rook and the Bishop, sliding any distance in any straight or diagonal direction. Her presence dictates the tempo and pressure of the match, serving as both a primary attacker and a central defender.</div><div class="asset-card" onclick="expandDef(this)"><b>The King</b> The pivotal figure around which the entire game revolves. While moving only one square in any direction, his preservation is absolute. If the King is placed under attack and cannot find a safe square, the match concludes immediately, rendering his protection the player's ultimate strategic priority.</div>`,
         icons: `<span class="group-label">Positive Indicators</span><div class="asset-card" onclick="expandDef(this)"><b>The Best Move (Star)</b> This designation signifies the absolute strongest continuation identified by the engine analysis. Playing this move optimizes your winning probability and represents the highest level of technical accuracy possible in the current position, often finding the only path to a victory.</div><div class="asset-card" onclick="expandDef(this)"><b>Good Move (Tick)</b> Indicates a solid, fundamentally sound choice that maintains the current evaluation of the position. While it may not be the engine's primary preference, it adheres to sound chess principles and ensures the player does not concede any unnecessary tactical advantages.</div><span class="group-label">Negative Indicators</span><div class="asset-card" onclick="expandDef(this)"><b>Inaccuracy (Exclamation)</b> Marks a sub-optimal move that noticeably weakens your standing. It suggests a missed opportunity to apply pressure or a minor positional concession that allows the opponent to improve their pieces more easily than the optimal continuation would have permitted.</div><div class="asset-card" onclick="expandDef(this)"><b>Blunder (Death Emoji)</b> A catastrophic error that tangibly reduces your advantage or directly allows the opponent to achieve a winning position. This usually results from an overlooked tactical sequence or a serious misunderstanding of the immediate requirements of the board position.</div><div class="asset-card" onclick="expandDef(this)"><b>Fatal Blunder (Death)</b> Reserved for moves that lead to an immediate loss of the game or the loss of a major piece without compensation. This classification represents a total collapse of strategy and typically shifts the game evaluation into a forced win for the opponent.</div>`,
         mechanics: `<span class="group-label">Core Mechanics</span><div class="asset-card" onclick="expandDef(this)"><b>Capturing Methodology</b> To capture an opponent's unit, you must move your piece onto the square it currently occupies. The displaced piece is permanently removed from the field. You cannot capture your own units or occupy a square already held by your own color, requiring careful navigation of space.</div><div class="asset-card" onclick="expandDef(this)"><b>En Passant</b> A specialized pawn capture occurring when an opponent moves their pawn two squares forward from its starting position and lands adjacent to your pawn. You may capture that pawn as if it had only moved one square, provided you do so on the very next turn.</div><span class="group-label">Ending Conditions</span><div class="asset-card" onclick="expandDef(this)"><b>Checkmate (Absolute Victory)</b> The definitive conclusion of a chess match. This occurs when a King is under direct threat of capture and possesses no legal moves to relocate, block the line of attack, or eliminate the attacking piece entirely. The game ends immediately in a win for the attacker.</div><div class="asset-card" onclick="expandDef(this)"><b>Stalemate (Technical Draw)</b> A unique situation where the player whose turn it is has no legal moves remaining, yet their King is not currently in check. Because the player cannot move but is not defeated, the game ends in a draw, often occurring as a defensive 'swindle'.</div><div class="asset-card" onclick="expandDef(this)"><b>Resignation (Concession)</b> A formal acknowledgement of defeat. A player may choose to resign at any moment if they determine the position is strategically hopeless. This is considered professional courtesy when a loss is mathematically certain, immediately awarding the full victory to the opponent.</div><div class="asset-card" onclick="expandDef(this)"><b>Timeout (Temporal Loss)</b> In timed competitive play, if a player's clock expires before they complete their required moves, they lose the game immediately. This emphasizes the importance of time management as a critical strategic resource, where speed is as vital as tactical precision.</div>`
     };
+
     function init() {
         const map = "rnbqkbnrpppppppp................................PPPPPPPPRNBQKBNR";
         for(let i=0; i<64; i++) boardState[i] = map[i] === '.' ? null : map[i];
         render();
     }
+
     function render() {
         boardEl.innerHTML = '';
         for (let i = 0; i < 64; i++) {
@@ -228,6 +213,7 @@
         }
         document.getElementById('turn-info').innerText = currentTurn === 'W' ? "WHITE'S TURN" : "BLACK'S TURN";
     }
+
     function movePieceWithAnimation(from, to) {
         if (!gameStarted) return;
         const fromSq = document.querySelector(`[data-idx="${from}"]`);
@@ -236,7 +222,6 @@
         const wasCapture = !!boardState[to];
 
         if (!pieceEl) {
-            // Fallback (should never trigger on valid move)
             boardState[to] = boardState[from];
             boardState[from] = null;
             currentTurn = currentTurn === 'W' ? 'B' : 'W';
@@ -247,23 +232,32 @@
             return;
         }
 
-        // === SMOOTH GLIDE ANIMATION ===
-        const rectFrom = fromSq.getBoundingClientRect();
-        const rectTo = toSq.getBoundingClientRect();
-        const dx = rectTo.left - rectFrom.left;
-        const dy = rectTo.top - rectFrom.top;
+        const boardRect = boardEl.getBoundingClientRect();
+        const fromRect = fromSq.getBoundingClientRect();
+        const toRect = toSq.getBoundingClientRect();
 
-        // Force starting position
-        pieceEl.style.transition = 'none';
-        pieceEl.style.transform = 'translate(0px, 0px)';
-        void pieceEl.offsetWidth; // Trigger reflow
+        const startX = fromRect.left - boardRect.left;
+        const startY = fromRect.top - boardRect.top;
+        const endX = toRect.left - boardRect.left;
+        const endY = toRect.top - boardRect.top;
 
-        // Animate glide with the exact same smooth curve you already defined
-        pieceEl.style.transition = 'transform 0.48s var(--smooth)';
-        pieceEl.style.transform = `translate(${dx}px, ${dy}px)`;
+        const movingPiece = fromSq.removeChild(pieceEl);
+        boardEl.appendChild(movingPiece);
 
-        // After glide finishes, commit the move
+        movingPiece.style.position = 'absolute';
+        movingPiece.style.left = `${startX}px`;
+        movingPiece.style.top = `${startY}px`;
+        movingPiece.style.zIndex = '1000';
+        movingPiece.style.transition = 'none';
+
+        void movingPiece.offsetWidth;
+
+        movingPiece.style.transition = `left 0.48s var(--smooth), top 0.48s var(--smooth)`;
+        movingPiece.style.left = `${endX}px`;
+        movingPiece.style.top = `${endY}px`;
+
         setTimeout(() => {
+            if (movingPiece.parentNode) movingPiece.parentNode.removeChild(movingPiece);
             boardState[to] = boardState[from];
             boardState[from] = null;
             currentTurn = currentTurn === 'W' ? 'B' : 'W';
@@ -273,6 +267,7 @@
             if (isAIActive && currentTurn === 'B') setTimeout(aiLogic, 700);
         }, 490);
     }
+
     function spawnVFX(idx, isCapture) {
         const sq = document.querySelector(`[data-idx="${idx}"]`);
         if (!sq) return;
@@ -286,6 +281,7 @@
             setTimeout(() => icon.remove(), 900);
         }, 1400);
     }
+
     function isPathClear(f, t) {
         const r1 = Math.floor(f/8), c1 = f%8, r2 = Math.floor(t/8), c2 = t%8;
         const dr = Math.sign(r2-r1), dc = Math.sign(c2-c1);
@@ -296,6 +292,7 @@
         }
         return true;
     }
+
     function isValid(f, t) {
         if (f === t) return false;
         const p = boardState[f], tar = boardState[t];
@@ -312,10 +309,10 @@
         }
         return false;
     }
+
     function handleSquare(i) {
         if (!gameStarted || (currentTurn === 'B' && isAIActive)) return;
         const p = boardState[i], isW = p ? p === p.toUpperCase() : null;
-
         if (selectedSq === null) {
             if (p && ((currentTurn === 'W' && isW) || (currentTurn === 'B' && !isW))) {
                 selectedSq = i;
@@ -325,17 +322,15 @@
             }
         } else {
             if (isValid(selectedSq, i)) {
-                // VALID MOVE → glide smoothly, then commit
                 movePieceWithAnimation(selectedSq, i);
                 selectedSq = null;
-                // IMPORTANT: do NOT call render() here — the animation will handle it at the end
             } else {
-                // Invalid click → just deselect
                 selectedSq = null;
                 render();
             }
         }
     }
+
     function aiLogic() {
         let moves = [];
         for(let f=0; f<64; f++) {
@@ -360,8 +355,8 @@
         else moves.sort(() => Math.random() - 0.5);
         const chosen = moves[0];
         movePieceWithAnimation(chosen.f, chosen.t);
-        // NO manual turn flip here — movePieceWithAnimation now handles it cleanly after the glide
     }
+
     function updateDots(idx) {
         document.querySelectorAll('.ctrl-dot').forEach(d => d.classList.remove('ctrl-dot'));
         for (let i = 0; i < 64; i++) {
@@ -371,6 +366,7 @@
             }
         }
     }
+
     document.addEventListener('mouseover', (e) => {
         const sq = e.target.closest('.sq'); if (!sq) return;
         const p = boardState[sq.dataset.idx]; if (!p) return;
@@ -392,6 +388,7 @@
             else if (selectedSq !== null) updateDots(selectedSq);
         }
     });
+
     function checkGameEnd() {
         const kingPos = findKing(currentTurn);
         if (kingPos === -1) return;
@@ -406,11 +403,13 @@
             }
         }
     }
+
     function findKing(color) {
         const king = color === 'W' ? 'K' : 'k';
         for(let i=0; i<64; i++) if(boardState[i] === king) return i;
         return -1;
     }
+
     function isSquareAttacked(pos, byColor) {
         for(let f=0; f<64; f++) {
             if(boardState[f] && ((boardState[f] === boardState[f].toUpperCase()) === (byColor === 'W'))) {
@@ -419,6 +418,7 @@
         }
         return false;
     }
+
     function hasAnyLegalMoves(color) {
         for(let f=0; f<64; f++) {
             if(boardState[f] && ((boardState[f] === boardState[f].toUpperCase()) === (color === 'W'))) {
@@ -427,17 +427,20 @@
         }
         return false;
     }
+
     function showEndScreen(title, subtitle) {
         document.getElementById('end-title').innerText = title;
         document.getElementById('end-subtitle').innerText = subtitle;
         document.getElementById('end-overlay').style.display = 'flex';
     }
+
     function restartGame() {
         document.getElementById('end-overlay').style.display = 'none';
         init();
         gameStarted = false;
         document.getElementById('play-btn').classList.remove('locked');
     }
+
     function toggleSettings() { document.getElementById('settings-panel').classList.toggle('open'); }
     function toggleAI() {
         isAIActive = document.getElementById('ai-toggle').value === 'ai';
@@ -464,33 +467,41 @@
         gameStarted = false;
         document.getElementById('play-btn').classList.remove('locked');
     }
+
+    // ==================== HELP MENU FUNCTIONS ====================
     function openHelp() {
         const overlay = document.getElementById('help-overlay');
         overlay.style.display = 'flex';
         setTimeout(() => overlay.classList.add('active'), 10);
         showTab('pieces', document.querySelector('.tab-btn'));
     }
+
     function closeHelp() {
         const overlay = document.getElementById('help-overlay');
         overlay.classList.remove('active');
         setTimeout(() => overlay.style.display = 'none', 500);
     }
+
     function showTab(t, b) {
         document.querySelectorAll('.tab-btn').forEach(x => x.style.borderColor = '#333');
         b.style.borderColor = 'var(--n-green)';
         document.getElementById('help-text').innerHTML = helpData[t];
     }
+
     function expandDef(card) {
         document.getElementById('expansion-text').innerHTML = card.innerHTML;
         document.getElementById('expansion-overlay').style.display = 'flex';
         setTimeout(() => document.getElementById('expansion-overlay').classList.add('active'), 10);
     }
+
     function closeExpansion() {
         const overlay = document.getElementById('expansion-overlay');
         overlay.classList.remove('active');
         setTimeout(() => overlay.style.display = 'none', 400);
     }
-    // 3 dots trigger
+    // ============================================================
+
+    // 3 dots menu
     document.getElementById('play-btn').addEventListener('click', (e) => {
         if (!gameStarted) return;
         const menu = document.getElementById('play-menu');
@@ -500,6 +511,7 @@
     document.addEventListener('click', (e) => {
         if (!e.target.closest('#play-btn')) document.getElementById('play-menu').style.display = 'none';
     });
+
     setTimeout(() => { document.getElementById('boot').style.display = 'none'; }, 3000);
     init();
 </script>

@@ -29,13 +29,13 @@
         #settings-panel.open #gear-icon { transform: rotate(180deg); color: var(--n-green); }
         .ai-config { margin-top: 20px; border: 1px solid #222; padding: 20px; border-radius: 10px; }
         select { background: #111; color: var(--n-blue); border: 1px solid var(--n-blue); padding: 10px; width: 100%; margin-top: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        #difficulty-box, #time-box {
+        #difficulty-box {
             margin-top: 15px; padding: 15px; background: #0a0a0a; border: 1px solid #333;
             border-radius: 8px; display: none; flex-direction: column; gap: 8px;
             opacity: 0; transform: translateY(-15px); transition: all 0.45s var(--smooth);
         }
-        #difficulty-box.show, #time-box.show { display: flex; opacity: 1; transform: translateY(0); }
-        .diff-option, .time-option { padding: 10px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: all 0.2s; }
+        #difficulty-box.show { display: flex; opacity: 1; transform: translateY(0); }
+        .diff-option { padding: 10px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: all 0.2s; }
         #play-btn {
             background: var(--n-green); color: #000; border: none; padding: 15px;
             font-weight: 900; cursor: pointer; border-radius: 10px; width: 100%;
@@ -252,7 +252,8 @@
 
         void movingPiece.offsetWidth;
 
-        movingPiece.style.transition = `left 0.48s var(--smooth), top 0.48s var(--smooth)`;
+        // Smoother glide with soft landing
+        movingPiece.style.transition = `left 0.55s var(--smooth), top 0.55s var(--smooth)`;
         movingPiece.style.left = `${endX}px`;
         movingPiece.style.top = `${endY}px`;
 
@@ -265,7 +266,7 @@
             if (wasCapture) spawnVFX(to, true);
             checkGameEnd();
             if (isAIActive && currentTurn === 'B') setTimeout(aiLogic, 700);
-        }, 490);
+        }, 580);
     }
 
     function spawnVFX(idx, isCapture) {
@@ -468,7 +469,7 @@
         document.getElementById('play-btn').classList.remove('locked');
     }
 
-    // ==================== HELP MENU FUNCTIONS ====================
+    // ==================== HELP MENU ====================
     function openHelp() {
         const overlay = document.getElementById('help-overlay');
         overlay.style.display = 'flex';
@@ -499,7 +500,7 @@
         overlay.classList.remove('active');
         setTimeout(() => overlay.style.display = 'none', 400);
     }
-    // ============================================================
+    // ===================================================
 
     // 3 dots menu
     document.getElementById('play-btn').addEventListener('click', (e) => {

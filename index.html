@@ -12,6 +12,7 @@
         body, html { margin: 0; padding: 0; background: #000; color: white; font-family: 'Segoe UI', Tahoma, sans-serif; overflow: hidden; height: 100vh; width: 100vw; }
         #boot { position: fixed; inset: 0; background: black; z-index: 100000; display: flex; justify-content: center; align-items: center; }
         .equinox-text { font-size: 32px; letter-spacing: 12px; font-weight: 200; color: #fff; }
+
         #settings-panel {
             position: fixed; top: 0; right: -400px; width: 400px; height: 100vh;
             background: #050505; border-left: 2px solid var(--n-blue);
@@ -27,15 +28,7 @@
         }
         #gear-icon { font-size: 45px; color: var(--n-blue); transition: transform 0.6s var(--smooth); }
         #settings-panel.open #gear-icon { transform: rotate(180deg); color: var(--n-green); }
-        .ai-config { margin-top: 20px; border: 1px solid #222; padding: 20px; border-radius: 10px; }
-        select { background: #111; color: var(--n-blue); border: 1px solid var(--n-blue); padding: 10px; width: 100%; margin-top: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        #difficulty-box {
-            margin-top: 15px; padding: 15px; background: #0a0a0a; border: 1px solid #333;
-            border-radius: 8px; display: none; flex-direction: column; gap: 8px;
-            opacity: 0; transform: translateY(-15px); transition: all 0.45s var(--smooth);
-        }
-        #difficulty-box.show { display: flex; opacity: 1; transform: translateY(0); }
-        .diff-option { padding: 10px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: all 0.2s; }
+
         #play-btn {
             background: var(--n-green); color: #000; border: none; padding: 15px;
             font-weight: 900; cursor: pointer; border-radius: 10px; width: 100%;
@@ -43,13 +36,17 @@
         }
         #play-btn.locked { filter: grayscale(1) brightness(0.7); cursor: not-allowed; }
         #play-btn::after { content: '⋮'; font-size: 28px; position: absolute; right: 20px; top: 50%; transform: translateY(-50%); }
+
         #play-menu {
-            position: absolute; top: 100%; right: 20px; background: #111; border: 2px solid var(--n-blue);
-            border-radius: 8px; padding: 8px 0; width: 220px; display: none; z-index: 46000;
-            box-shadow: 0 0 20px var(--n-blue);
+            position: absolute; top: 100%; left: 0; right: 0;
+            background: #111; border: 2px solid var(--n-blue);
+            border-radius: 8px; padding: 8px 0; width: 100%; 
+            display: none; z-index: 46000; box-shadow: 0 0 20px var(--n-blue);
+            margin-top: 8px;
         }
         .menu-item { padding: 12px 20px; cursor: pointer; transition: 0.2s; }
         .menu-item:hover { background: #222; color: var(--n-green); }
+
         #game { display: flex; width: 100vw; height: 100vh; justify-content: center; align-items: center; background: radial-gradient(circle, #0d0d0d 0%, #000 100%); }
         .board { width: 600px; height: 600px; display: grid; grid-template: repeat(8, 1fr) / repeat(8, 1fr); border: 4px solid #1a1a1a; background: #000; position: relative; }
         .sq { width: 75px; height: 75px; display: flex; justify-content: center; align-items: center; cursor: pointer; position: relative; overflow: hidden; }
@@ -61,24 +58,10 @@
         .hl-pawn-blue { box-shadow: inset 0 0 25px var(--n-blue) !important; border: 1px solid var(--n-blue) !important; }
         .selected { background: rgba(0, 242, 255, 0.25) !important; outline: 3px solid var(--n-blue); }
         .ctrl-dot::after { content: ''; position: absolute; width: 22px; height: 22px; border: 3px solid var(--n-blue); border-radius: 50%; box-shadow: 0 0 15px var(--n-blue); pointer-events: none; z-index: 50; }
-        .piece {
-            font-size: 50px; user-select: none; z-index: 10; pointer-events: none;
-            position: relative;
-        }
+        .piece { font-size: 50px; user-select: none; z-index: 10; pointer-events: none; position: relative; }
         .white-p { color: #fff; text-shadow: 0 0 10px #fff; }
         .black-p { color: #666; text-shadow: 0 0 10px #000; }
-        .engine-icon {
-            position: absolute; top: -12px; right: -12px; font-size: 34px; z-index: 100;
-            animation: videoIconPop 0.65s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
-            pointer-events: none;
-        }
-        @keyframes videoIconPop {
-            0% { transform: scale(0) rotate(-180deg); opacity: 0; }
-            50% { transform: scale(1.6) rotate(20deg); }
-            100% { transform: scale(1) rotate(0deg); opacity: 1; }
-        }
-        .engine-icon.fade-out { animation: iconFade 0.9s forwards; }
-        @keyframes iconFade { to { transform: scale(0.4) rotate(90deg); opacity: 0; } }
+
         /* Help Menu */
         #help-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); z-index: 55000; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.5s var(--smooth); }
         #help-overlay.active { opacity: 1; display: flex; }
@@ -113,6 +96,7 @@
 <body>
     <div id="boot"><div class="equinox-text">EQUINOX SYSTEM</div></div>
     <div id="turn-info">WHITE'S TURN</div>
+
     <div id="settings-panel">
         <div id="gear-handle" onclick="toggleSettings()">
             <span id="gear-icon">⚙</span>
@@ -136,11 +120,13 @@
             </div>
         </div>
     </div>
+
     <div id="play-menu">
         <div class="menu-item" onclick="resignGame()">Resign</div>
         <div class="menu-item" onclick="openHelp()">Archived Help</div>
         <div class="menu-item" onclick="resetBoard()">Reset</div>
     </div>
+
     <!-- Help Menu -->
     <div id="help-overlay">
         <div id="help-container">
@@ -155,6 +141,7 @@
             <div id="help-text" class="help-content"></div>
         </div>
     </div>
+
     <!-- Expansion -->
     <div id="expansion-overlay">
         <div id="expansion-box">
@@ -162,12 +149,14 @@
             <div id="expansion-text" style="font-size: 22px; line-height: 1.8; color: #eee;"></div>
         </div>
     </div>
+
     <!-- End Screen -->
     <div id="end-overlay">
         <div id="end-title"></div>
         <div id="end-subtitle"></div>
         <button id="end-btn" onclick="restartGame()">ANOTHER SESSION</button>
     </div>
+
     <div id="game"><div class="board" id="board"></div></div>
 
 <script>
@@ -367,6 +356,7 @@
         }
     }
 
+    // Mouse hover highlights
     document.addEventListener('mouseover', (e) => {
         const sq = e.target.closest('.sq'); if (!sq) return;
         const p = boardState[sq.dataset.idx]; if (!p) return;
@@ -381,6 +371,7 @@
         const sq = e.target.closest('.sq');
         if (sq) sq.className = sq.className.split(' ').filter(c => !c.startsWith('hl-')).join(' ');
     });
+
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Control') {
             ctrlLocked = !ctrlLocked;
@@ -501,15 +492,18 @@
     }
     // ===================================================
 
-    // 3 dots menu
+    // 3 dots menu (fixed positioning)
     document.getElementById('play-btn').addEventListener('click', (e) => {
         if (!gameStarted) return;
         const menu = document.getElementById('play-menu');
-        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
         e.stopImmediatePropagation();
     });
+
     document.addEventListener('click', (e) => {
-        if (!e.target.closest('#play-btn')) document.getElementById('play-menu').style.display = 'none';
+        if (!e.target.closest('#play-btn')) {
+            document.getElementById('play-menu').style.display = 'none';
+        }
     });
 
     setTimeout(() => { document.getElementById('boot').style.display = 'none'; }, 3000);

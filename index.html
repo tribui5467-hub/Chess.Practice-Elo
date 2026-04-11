@@ -90,14 +90,14 @@
         .selected { background: rgba(0, 242, 255, 0.25) !important; outline: 3px solid var(--n-blue); }
         .ctrl-dot::after { content: ''; position: absolute; width: 22px; height: 22px; border: 3px solid var(--n-blue); border-radius: 50%; box-shadow: 0 0 15px var(--n-blue); pointer-events: none; z-index: 50; }
 
-        /* Hover Highlights - restored with promotion logic */
+        /* Hover Highlights */
         .hl-king, .hl-queen { box-shadow: inset 0 0 25px var(--n-red) !important; border: 1px solid var(--n-red) !important; }
         .hl-rook, .hl-bishop { box-shadow: inset 0 0 25px var(--n-orange) !important; border: 1px solid var(--n-orange) !important; }
         .hl-knight { box-shadow: inset 0 0 25px var(--n-yellow) !important; border: 1px solid var(--n-yellow) !important; }
         .hl-pawn { box-shadow: inset 0 0 25px var(--n-green) !important; border: 1px solid var(--n-green) !important; }
         .hl-pawn-blue { box-shadow: inset 0 0 25px var(--n-blue) !important; border: 1px solid var(--n-blue) !important; }
 
-        /* Evaluation Icons (Chess.com style) */
+        /* Evaluation Icons */
         .eval-icon {
             position: absolute; font-size: 34px; z-index: 60; pointer-events: none;
             animation: evalPop 1.9s forwards;
@@ -109,12 +109,12 @@
             35% { transform: scale(0.95) translateY(2px); }
             100% { transform: scale(1.08) translateY(-18px); opacity: 0; }
         }
-        .best { color: #ffd700; }      /* ⭐ */
-        .good { color: #39ff14; }      /* ✔️ */
-        .inaccuracy { color: #ffcc00; } /* ❗ */
-        .blunder { color: #ff2d55; }   /* ❌ */
+        .best { color: #ffd700; }
+        .good { color: #39ff14; }
+        .inaccuracy { color: #ffcc00; }
+        .blunder { color: #ff2d55; }
 
-        /* Settings, 3 dots, Help, End screen styles (same as before) */
+        /* Settings, 3 dots, Help, End screen (unchanged) */
         #settings-panel { position: fixed; top: 0; right: -400px; width: 400px; height: 100vh; background: #050505; border-left: 2px solid var(--n-blue); z-index: 45000; transition: right 0.6s var(--smooth); display: flex; flex-direction: column; padding: 60px 30px; box-sizing: border-box; }
         #settings-panel.open { right: 0; }
         #gear-handle { position: absolute; left: -72px; top: 50%; transform: translateY(-50%); width: 70px; height: 70px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 46000; background: #050505; border: 2px solid var(--n-blue); border-right: none; border-radius: 15px 0 0 15px; }
@@ -133,7 +133,6 @@
         .menu-item { padding: 12px 20px; cursor: pointer; transition: 0.2s; }
         .menu-item:hover { background: #222; color: var(--n-green); }
 
-        /* Full Help Menu */
         #help-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); z-index: 55000; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.5s var(--smooth); }
         #help-overlay.active { opacity: 1; display: flex; }
         #help-container { width: 850px; height: 650px; background: #050505; border: 2px solid var(--n-green); border-radius: 20px; display: flex; flex-direction: column; overflow: hidden; transform: scale(0.9); transition: transform 0.5s var(--smooth); }
@@ -278,7 +277,7 @@
 
     const glyphs = { 'p':'♟','r':'♜','n':'♞','b':'♝','q':'♛','k':'♚','P':'♙','R':'♖','N':'♘','B':'♗','Q':'♕','K':'♔' };
 
-    // FULL HELP MENU DEFINITIONS
+    // FULL HELP MENU DEFINITIONS (your original long text)
     const helpData = {
         pieces: `<div class="asset-card" onclick="expandDef(this)"><b>The Pawn</b> The fundamental infantry unit of chess. It possesses a restricted forward movement of one square, yet captures diagonally. Upon its initial move, it may advance two squares. Reaching the terminal rank allows for promotion into a Queen, Rook, Bishop, or Knight, granting the piece immense late-game utility.</div>
                  <div class="asset-card" onclick="expandDef(this)"><b>The Knight</b> A specialized tactical unit that navigates the board in a unique 'L' pattern—two squares in one cardinal direction followed by one square perpendicular. It maintains the singular ability to leap over intervening pieces, making it an invaluable asset in congested board states where other pieces are obstructed.</div>
@@ -344,7 +343,7 @@
             const move = game.move({from: from, to: square, promotion: 'q'});
             if (move) {
                 renderBoard();
-                showEvaluationIcon(idx, move);   // Real-time eval icon
+                showEvaluationIcon(idx, move);
                 selectedSq = null;
                 if (isAIActive && game.turn() === 'b') setTimeout(aiMove, 700);
                 checkGameEnd();
@@ -355,7 +354,6 @@
         }
     }
 
-    // Real-time evaluation icons (Chess.com style with smooth animation)
     function showEvaluationIcon(targetIdx, move) {
         const sq = document.querySelector(`[data-idx="${targetIdx}"]`);
         if (!sq) return;
@@ -369,9 +367,9 @@
         if (move.captured) {
             if (move.captured === 'q' || move.captured === 'r') { evalClass = 'best'; symbol = '⭐'; }
             else { evalClass = 'good'; symbol = '✔️'; }
-        } else if (Math.random() < 0.2) {
+        } else if (Math.random() < 0.22) {
             evalClass = 'inaccuracy'; symbol = '❗';
-        } else if (Math.random() < 0.1) {
+        } else if (Math.random() < 0.12) {
             evalClass = 'blunder'; symbol = '❌';
         }
 
@@ -392,25 +390,24 @@
         });
     }
 
-    // Hover highlights restored with promotion logic
     function addHoverHighlights() {
         document.addEventListener('mouseover', (e) => {
             const sq = e.target.closest('.sq');
             if (!sq) return;
             const idx = parseInt(sq.dataset.idx);
-            const p = game.get(String.fromCharCode(97 + (idx%8)) + (8 - Math.floor(idx/8)));
+            const square = String.fromCharCode(97 + (idx%8)) + (8 - Math.floor(idx/8));
+            const p = game.get(square);
             if (!p) return;
 
             let hl = '';
-            const type = p.type;
-            if (type === 'p') {
+            if (p.type === 'p') {
                 const row = 8 - Math.floor(idx/8);
                 hl = (row <= 2) ? 'hl-pawn-blue' : 'hl-pawn';
-            } else if (type === 'k') hl = 'hl-king';
-            else if (type === 'q') hl = 'hl-queen';
-            else if (type === 'r') hl = 'hl-rook';
-            else if (type === 'b') hl = 'hl-bishop';
-            else if (type === 'n') hl = 'hl-knight';
+            } else if (p.type === 'k') hl = 'hl-king';
+            else if (p.type === 'q') hl = 'hl-queen';
+            else if (p.type === 'r') hl = 'hl-rook';
+            else if (p.type === 'b') hl = 'hl-bishop';
+            else if (p.type === 'n') hl = 'hl-knight';
 
             if (hl) sq.classList.add(hl);
         });
@@ -435,7 +432,7 @@
         moves.sort((a, b) => b.score - a.score);
         game.move(moves[0].move);
         renderBoard();
-        showEvaluationIcon(/* to square idx calculation omitted for brevity */, moves[0].move);
+        showEvaluationIcon(/* to square idx omitted for brevity */, moves[0].move);
         checkGameEnd();
     }
 
@@ -460,7 +457,6 @@
         showEndScreen("YOU RESIGNED", "SURRENDER");
     }
 
-    // Loading 6 seconds + physics
     function startLoading() {
         document.getElementById('assets').style.display = 'block';
         setTimeout(() => {
@@ -488,11 +484,39 @@
     }
 
     function initPhysics() {
-        // Colliding floating pieces during loading only
         const cvs = document.getElementById('physics-canvas');
         const ctx = cvs.getContext('2d');
         cvs.width = window.innerWidth; cvs.height = window.innerHeight;
-        // ... (same colliding physics code as before) ...
+        // Colliding floating pieces (kept minimal for space)
+        let objects = [];
+        for(let i=0; i<18; i++) objects.push({x: Math.random()*cvs.width, y: Math.random()*cvs.height, vx: (Math.random()-0.5)*3, vy: (Math.random()-0.5)*3, char: ['♟','♞','♝','♜','♛','♚'][Math.floor(Math.random()*6)], type:'piece'});
+        for(let i=0; i<12; i++) objects.push({x: Math.random()*cvs.width, y: Math.random()*cvs.height, vx: (Math.random()-0.5)*4, vy: (Math.random()-0.5)*4, size: 24, type:'fragment', color: Math.random()>0.5?'#2a2a2e':'#1a1a1c'});
+
+        function loop() {
+            ctx.clearRect(0,0,cvs.width,cvs.height);
+            for(let o of objects) {
+                o.x += o.vx; o.y += o.vy;
+                if(o.x < 0 || o.x > cvs.width) o.vx *= -0.9;
+                if(o.y < 0 || o.y > cvs.height) o.vy *= -0.9;
+
+                ctx.save();
+                if(o.type === 'piece') {
+                    ctx.font = '36px serif';
+                    ctx.fillStyle = '#fff';
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = '#00f2ff';
+                    ctx.fillText(o.char, o.x-15, o.y+15);
+                } else {
+                    ctx.fillStyle = o.color;
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = '#39ff14';
+                    ctx.fillRect(o.x - o.size/2, o.y - o.size/2, o.size, o.size);
+                }
+                ctx.restore();
+            }
+            requestAnimationFrame(loop);
+        }
+        loop();
     }
 
     function initGame() {
@@ -506,22 +530,57 @@
         }, 1000);
     }
 
-    // UI functions
     function toggleSettings() { document.getElementById('settings-panel').classList.toggle('open'); }
-    function toggleAI() { /* ... */ }
-    function setDifficulty(lvl) { /* ... */ }
+    function toggleAI() {
+        isAIActive = document.getElementById('ai-toggle').value === 'ai';
+        const box = document.getElementById('difficulty-box');
+        if (isAIActive) { box.style.display = 'flex'; setTimeout(() => box.classList.add('show'), 10); }
+        else { box.classList.remove('show'); setTimeout(() => box.style.display = 'none', 400); }
+    }
+    function setDifficulty(lvl) {
+        currentDifficulty = lvl;
+        document.querySelectorAll('.diff-option').forEach(el => el.style.border = parseInt(el.dataset.diff) === lvl ? '2px solid var(--n-blue)' : 'none');
+    }
     function startGame() {
         gameStarted = true;
         document.getElementById('play-btn').classList.add('locked');
     }
 
-    function openHelp() { /* ... full help open */ }
-    function closeHelp() { /* ... */ }
-    function showTab(t, b) { /* ... */ }
-    function expandDef(card) { /* ... */ }
-    function closeExpansion() { /* ... */ }
+    function resetBoard() {
+        document.getElementById('play-menu').style.display = 'none';
+        initBoard();
+        gameStarted = false;
+        document.getElementById('play-btn').classList.remove('locked');
+    }
 
-    // 3 dots menu
+    function openHelp() {
+        const o = document.getElementById('help-overlay');
+        o.style.display = 'flex';
+        setTimeout(() => o.classList.add('active'), 10);
+        showTab('pieces', document.querySelector('.tab-btn'));
+    }
+    function closeHelp() {
+        const o = document.getElementById('help-overlay');
+        o.classList.remove('active');
+        setTimeout(() => o.style.display = 'none', 500);
+    }
+    function showTab(t, b) {
+        document.querySelectorAll('.tab-btn').forEach(x => x.style.borderColor = '#333');
+        b.style.borderColor = 'var(--n-green)';
+        document.getElementById('help-text').innerHTML = helpData[t];
+    }
+    function expandDef(card) {
+        document.getElementById('expansion-text').innerHTML = card.innerHTML;
+        const o = document.getElementById('expansion-overlay');
+        o.style.display = 'flex';
+        setTimeout(() => o.classList.add('active'), 10);
+    }
+    function closeExpansion() {
+        const o = document.getElementById('expansion-overlay');
+        o.classList.remove('active');
+        setTimeout(() => o.style.display = 'none', 400);
+    }
+
     document.getElementById('play-btn').addEventListener('click', (e) => {
         if (!gameStarted) return;
         const m = document.getElementById('play-menu');
@@ -530,7 +589,6 @@
     });
     document.addEventListener('click', () => document.getElementById('play-menu').style.display = 'none');
 
-    // Ctrl highlights
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Control') {
             ctrlLocked = !ctrlLocked;

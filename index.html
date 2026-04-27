@@ -8,11 +8,11 @@
         :root {
             --n-blue: #00f2ff; --n-green: #39FF14; --n-red: #fa412d;
             --n-orange: #f4943c; --n-yellow: #f1c40f;
-            --smooth: cubic-bezier(0.25, 0.8, 0.25, 1);
+            --smooth: cubic-bezier(0.23, 1, 0.32, 1);
         }
         body, html { margin:0; padding:0; background:#000; color:white; font-family:'Segoe UI',Tahoma,sans-serif; overflow:hidden; height:100vh; width:100vw; }
 
-        /* BOOT - unchanged */
+        /* BOOT */
         #boot { position:fixed; inset:0; background:black; z-index:100000; display:flex; justify-content:center; align-items:center; transition:opacity 1.2s cubic-bezier(0.4,0,0.2,1); }
         .equinox-text { font-size:32px; letter-spacing:12px; font-weight:200; color:#fff; position:relative; clip-path:inset(0 100% 0 0); animation:solaris-reveal 2.5s cubic-bezier(0.4,0,0.2,1) forwards; }
         .equinox-text::after { content:"EQUINOX GAMES"; position:absolute; inset:0; color:var(--n-blue); filter:blur(12px); clip-path:inset(0 100% 0 0); animation:solaris-shine 2.5s cubic-bezier(0.4,0,0.2,1) forwards; }
@@ -28,7 +28,7 @@
         @keyframes aura-glow { from { opacity:0; transform:scale(0.4); } to { opacity:1; transform:scale(1); } }
         @keyframes aura-color-pulse { 0% { border-color:var(--n-blue); box-shadow:0 0 20px var(--n-blue); } 100% { border-color:var(--n-green); box-shadow:0 0 45px var(--n-green); transform:scale(1.1); } }
 
-        /* LOADING */
+        /* LOADING - matching video (title, description, rainbow bar, centered skip) */
         #assets { position:fixed; inset:0; background:#050608; z-index:90000; display:none; opacity:0; transition:1.5s; flex-direction:column; justify-content:center; align-items:center; }
         #physics-canvas { position:absolute; inset:0; }
         .overlay { position:relative; z-index:10; text-align:center; max-width:720px; padding:0 40px; }
@@ -48,7 +48,7 @@
         }
         #fill { position:absolute; left:0; top:0; height:100%; width:0%; background:linear-gradient(90deg, #00f2ff, #39ff14, #ffcc00); transition:width 0.1s linear; }
         #percent { position:absolute; width:100%; text-align:center; line-height:28px; font-weight:bold; color:white; text-shadow:0 0 8px #000; z-index:2; }
-        #skip-btn { margin-top:20px; padding:10px 40px; background:transparent; border:2px solid var(--n-blue); color:var(--n-blue); border-radius:30px; cursor:pointer; font-weight:bold; transition:all 0.3s; }
+        #skip-btn { margin-top:20px; padding:10px 40px; background:transparent; border:2px solid var(--n-blue); color:var(--n-blue); border-radius:30px; cursor:pointer; font-weight:bold; transition:all 0.3s; display:block; margin-left:auto; margin-right:auto; }
         #skip-btn:hover { background:var(--n-blue); color:#000; }
 
         /* GAME */
@@ -58,20 +58,20 @@
         .board { width:600px; height:600px; display:grid; grid-template:repeat(8,1fr)/repeat(8,1fr); border:4px solid #1a1a1a; background:#000; position:relative; }
         .sq { width:75px; height:75px; display:flex; justify-content:center; align-items:center; cursor:pointer; position:relative; overflow:hidden; transition:background 0.2s; }
         .w { background:#2a2a2e; } .b { background:#1a1a1c; }
-        .piece { font-size:50px; user-select:none; z-index:10; pointer-events:none; transition:all 0.65s cubic-bezier(0.25,0.8,0.25,1); }
+        .piece { font-size:50px; user-select:none; z-index:10; pointer-events:none; transition:all 0.75s cubic-bezier(0.23,1,0.32,1); } /* smooth glide */
         .white-p { color:#fff; text-shadow:0 0 12px #fff; }
         .black-p { color:#666; text-shadow:0 0 12px #000; }
         .selected { background:rgba(0,242,255,0.25)!important; outline:3px solid var(--n-blue); }
         .ctrl-dot::after { content:''; position:absolute; width:22px; height:22px; border:3px solid var(--n-blue); border-radius:50%; box-shadow:0 0 15px var(--n-blue); pointer-events:none; z-index:50; }
 
-        /* Hover Highlights - FIXED: green default, blue only near promotion */
+        /* Hover - green default, blue only near promotion for white pawns */
         .hl-king, .hl-queen { box-shadow:inset 0 0 25px var(--n-red)!important; border:1px solid var(--n-red)!important; }
         .hl-rook, .hl-bishop { box-shadow:inset 0 0 25px var(--n-orange)!important; border:1px solid var(--n-orange)!important; }
         .hl-knight { box-shadow:inset 0 0 25px var(--n-yellow)!important; border:1px solid var(--n-yellow)!important; }
         .hl-pawn { box-shadow:inset 0 0 25px var(--n-green)!important; border:1px solid var(--n-green)!important; }
         .hl-pawn-blue { box-shadow:inset 0 0 25px var(--n-blue)!important; border:1px solid var(--n-blue)!important; }
 
-        /* Evaluation Icons - Chess.com style with zoom+spin */
+        /* Evaluation Icons */
         .eval-icon { position:absolute; font-size:42px; z-index:60; pointer-events:none; animation:chesscomPop 1.9s forwards; text-shadow:0 0 12px #000; }
         @keyframes chesscomPop {
             0% { transform:scale(0.2) rotate(-25deg) translateY(35px); opacity:0; }
@@ -80,7 +80,7 @@
             100% { transform:scale(1.05) rotate(0) translateY(-22px); opacity:0; }
         }
 
-        /* Original Settings Panel */
+        /* Settings - clean original style */
         #settings-panel { position:fixed; top:0; right:-400px; width:400px; height:100vh; background:#050505; border-left:2px solid var(--n-blue); z-index:45000; transition:right 0.6s var(--smooth); display:flex; flex-direction:column; padding:60px 30px; box-sizing:border-box; }
         #settings-panel.open { right:0; }
         #gear-handle { position:absolute; left:-72px; top:50%; transform:translateY(-50%); width:70px; height:70px; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:46000; background:#050505; border:2px solid var(--n-blue); border-right:none; border-radius:15px 0 0 15px; }
@@ -103,7 +103,7 @@
         .menu-item { padding:12px 20px; cursor:pointer; transition:0.2s; }
         .menu-item:hover { background:#222; color:var(--n-green); }
 
-        /* Full Help Menu with your long definitions */
+        /* Help Menu */
         #help-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(15px); z-index:55000; display:none; align-items:center; justify-content:center; opacity:0; transition:opacity 0.5s var(--smooth); }
         #help-overlay.active { opacity:1; display:flex; }
         #help-container { width:850px; height:650px; background:#050505; border:2px solid var(--n-green); border-radius:20px; display:flex; flex-direction:column; overflow:hidden; transform:scale(0.9); transition:transform 0.5s var(--smooth); }
@@ -165,11 +165,11 @@
 
     <!-- GAME -->
     <div id="turn-info">
-        <span id="timer-display"></span>
+        <span id="timer-display">Unlimited</span>
     </div>
     <div id="game"><div class="board" id="board"></div></div>
 
-    <!-- SETTINGS - original style -->
+    <!-- SETTINGS -->
     <div id="settings-panel">
         <div id="gear-handle" onclick="toggleSettings()">
             <span id="gear-icon">⚙</span>
@@ -196,19 +196,19 @@
         </div>
     </div>
 
-    <!-- 3 DOTS DROPDOWN -->
+    <!-- 3 DOTS MENU -->
     <div id="play-menu">
         <div class="menu-item" onclick="resignGame()">Resign</div>
         <div class="menu-item" onclick="openHelp()">Help</div>
         <div class="menu-item" onclick="resetBoard()">Reset Board</div>
     </div>
 
-    <!-- FULL HELP MENU - your long definitions restored -->
+    <!-- FULL HELP MENU -->
     <div id="help-overlay">
         <div id="help-container">
             <div class="help-header">
                 <div>
-                    <button class="tab-btn" onclick="showTab('pieces',this)">Assets</button>
+                    <button class="tab-btn" onclick="showTab('pieces',this)">Pieces</button>
                     <button class="tab-btn" onclick="showTab('icons',this)">Icons</button>
                     <button class="tab-btn" onclick="showTab('mechanics',this)">Mechanics</button>
                 </div>
@@ -218,7 +218,7 @@
         </div>
     </div>
 
-    <!-- EXPANSION & END -->
+    <!-- EXPANSION -->
     <div id="expansion-overlay">
         <div id="expansion-box">
             <button class="close-expanded" onclick="closeExpansion()">✕</button>
@@ -226,6 +226,7 @@
         </div>
     </div>
 
+    <!-- END SCREEN -->
     <div id="end-overlay">
         <button class="close-end" onclick="closeEndScreen()">✕</button>
         <div id="end-title"></div>
@@ -244,7 +245,6 @@
 
     const glyphs = { 'p':'♟','r':'♜','n':'♞','b':'♝','q':'♛','k':'♚','P':'♙','R':'♖','N':'♘','B':'♗','Q':'♕','K':'♔' };
 
-    // Full help definitions - exactly as in your code
     const helpData = {
         pieces: `<div class="asset-card" onclick="expandDef(this)"><b>The Pawn</b> The fundamental infantry unit of chess. It possesses a restricted forward movement of one square, yet captures diagonally. Upon its initial move, it may advance two squares. Reaching the terminal rank allows for promotion into a Queen, Rook, Bishop, or Knight, granting the piece immense late-game utility.</div>
                  <div class="asset-card" onclick="expandDef(this)"><b>The Knight</b> A specialized tactical unit that navigates the board in a unique 'L' pattern—two squares in one cardinal direction followed by one square perpendicular. It maintains the singular ability to leap over intervening pieces, making it an invaluable asset in congested board states where other pieces are obstructed.</div>
@@ -315,23 +315,17 @@
         }
     }
 
-    // Evaluation icons with Chess.com style
     function showEvaluationIcon(targetIdx, move) {
         const sq = document.querySelector(`[data-idx="${targetIdx}"]`);
         if (!sq) return;
         const icon = document.createElement('div');
         icon.className = 'eval-icon';
-
         let symbol = '👍';
-        if (move.captured) {
-            if (move.captured === 'q' || move.captured === 'r') symbol = '⭐';
-            else symbol = '👍';
-        } else if (Math.random() < 0.22) symbol = '❗';
+        if (move.captured) symbol = (move.captured === 'q' || move.captured === 'r') ? '⭐' : '👍';
+        else if (Math.random() < 0.22) symbol = '❗';
         else if (Math.random() < 0.12) symbol = '??';
         else if (Math.random() < 0.08) symbol = 'X';
         else if (Math.random() < 0.06) symbol = '!!';
-        else if (Math.random() < 0.05) symbol = '!';
-
         icon.innerHTML = symbol;
         sq.appendChild(icon);
         setTimeout(() => icon.remove(), 1900);
@@ -355,20 +349,17 @@
             const square = String.fromCharCode(97 + (idx%8)) + (8 - Math.floor(idx/8));
             const p = game.get(square);
             if (!p) return;
-
             let hl = '';
             if (p.type === 'p') {
                 const row = 8 - Math.floor(idx/8);
-                hl = (row <= 2) ? 'hl-pawn-blue' : 'hl-pawn';   // FIXED: green default
+                hl = (row <= 2) ? 'hl-pawn-blue' : 'hl-pawn';
             } else if (p.type === 'k') hl = 'hl-king';
             else if (p.type === 'q') hl = 'hl-queen';
             else if (p.type === 'r') hl = 'hl-rook';
             else if (p.type === 'b') hl = 'hl-bishop';
             else if (p.type === 'n') hl = 'hl-knight';
-
             if (hl) sq.classList.add(hl);
         });
-
         document.addEventListener('mouseout', (e) => {
             const sq = e.target.closest('.sq');
             if (sq) sq.className = sq.className.split(' ').filter(c => !c.startsWith('hl-')).join(' ');
@@ -446,7 +437,6 @@
         let objects = [];
         for(let i=0; i<18; i++) objects.push({x:Math.random()*cvs.width, y:Math.random()*cvs.height, vx:(Math.random()-0.5)*3, vy:(Math.random()-0.5)*3, char:['♟','♞','♝','♜','♛','♚'][Math.floor(Math.random()*6)], type:'piece'});
         for(let i=0; i<12; i++) objects.push({x:Math.random()*cvs.width, y:Math.random()*cvs.height, vx:(Math.random()-0.5)*4, vy:(Math.random()-0.5)*4, size:24, type:'fragment', color:Math.random()>0.5?'#2a2a2e':'#1a1a1c'});
-
         function loop() {
             ctx.clearRect(0,0,cvs.width,cvs.height);
             for(let o of objects) {

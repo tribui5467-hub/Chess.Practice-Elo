@@ -54,7 +54,7 @@
         .more-btn {
             opacity: 0; transition: all 0.3s; background: rgba(0,0,0,0.7);
             width: 28px; height: 28px; border-radius: 50%; display: flex;
-            align-items: center; justify-content: center; font-size: 1.2rem;
+            align-items: center; justify-content: center; font-size: 1.2rem; color: white;
         }
         .game-card:hover .more-btn { opacity: 1; }
 
@@ -77,11 +77,14 @@
 </head>
 <body class="p-4">
     <canvas id="particle-canvas"></canvas>
+
+    <!-- Download Popup -->
     <div id="downloadPopup" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[300] hidden flex items-center justify-center">
-        <!-- your original popup -->
         <div class="bg-slate-900 border border-white/10 p-8 rounded-3xl max-w-md text-center shadow-2xl">
             <h2 class="text-2xl mb-4 text-white">Algebra Practise Downloadable File</h2>
-            <p class="text-lg mb-6">You can now download the site as a file on your computer! <br>Download it <span class="download-here-link" onclick="downloadFile()">here</span>.</p>
+            <p class="text-lg mb-6">You can now download the site as a file on your computer! <br>
+               Download it <span class="download-here-link" onclick="downloadFile()">here</span>.
+            </p>
             <div class="flex items-center justify-center gap-3 mb-6">
                 <input type="checkbox" id="dontShowAgain" class="w-4 h-4 cursor-pointer">
                 <label for="dontShowAgain" class="text-sm opacity-80 cursor-pointer">Do not show again</label>
@@ -103,7 +106,8 @@
         <i class="fas fa-circle-info nav-icon" onclick="toggleInfo()" title="Info"></i>
         <div class="relative">
             <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-sm opacity-50"></i>
-            <input type="text" id="searchInput" placeholder="Search games or genres..." class="bg-white/5 border border-white/10 py-1 pl-9 pr-4 rounded-full focus:outline-none focus:ring-1 focus:ring-primary text-sm w-48 md:w-64">
+            <input type="text" id="searchInput" placeholder="Search games or genres..." 
+                   class="bg-white/5 border border-white/10 py-1 pl-9 pr-4 rounded-full focus:outline-none focus:ring-1 focus:ring-primary text-sm w-48 md:w-64">
         </div>
         <i class="fas fa-sliders nav-icon" onclick="toggleSettings()"></i>
     </header>
@@ -113,7 +117,7 @@
         <div id="gameGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-5"></div>
     </main>
 
-    <!-- Details Modal -->
+    <!-- Game Details Modal -->
     <div id="gameDetailsModal" class="fixed inset-0 bg-black/90 backdrop-blur-md hidden flex items-center justify-center z-[150]">
         <div class="bg-slate-900 border border-white/10 rounded-3xl max-w-md w-full mx-4 p-8" onclick="event.stopPropagation()">
             <div class="flex justify-between items-start mb-6">
@@ -128,8 +132,8 @@
         </div>
     </div>
 
-    <!-- Your original modals (infoTab, settingsPanel, gameModal) - unchanged -->
-    <!-- Paste them exactly from your first message here -->
+    <!-- === YOUR ORIGINAL MODALS (paste them here) === -->
+    <!-- infoTab, settingsPanel, gameModal from your first message -->
 
 <script>
     const repoOwner = "hazzatazza";
@@ -142,9 +146,38 @@
     let currentFilter = 'games';
     let currentCategory = 'All';
 
-    // === YOUR ORIGINAL FUNCTIONS (unchanged) ===
-    function closePopup() { /* your code */ }
-    async function downloadFile() { /* your code */ }
+    function closePopup() {
+        if (document.getElementById('dontShowAgain').checked) {
+            localStorage.setItem('hideDownloadPopup', 'true');
+        }
+        document.getElementById('downloadPopup').classList.add('hidden');
+    }
+
+    async function downloadFile() {
+        try {
+            const shaResponse = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/commits?t=${Date.now()}`);
+            const commits = await shaResponse.json();
+            const sha = commits[0].sha;
+            const fileUrl = `https://cdn.jsdelivr.net/gh/${repoOwner}/${repoName}@${sha}/algebraofficialfile.html`;
+           
+            const response = await fetch(fileUrl);
+            if (!response.ok) throw new Error('Fetch failed');
+           
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'algebraofficialfile.html';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        } catch (e) {
+            console.error("Download failed", e);
+            alert("Download failed.");
+        }
+    }
+
     async function loadData() {
         try {
             document.getElementById('mainLogoImg').src = cdnBase + 'logo.png';
@@ -164,6 +197,7 @@
         } catch (error) { console.error("Error loading data:", error); }
     }
 
+    // Category Tabs + Render Games + Card Creation (same as before)
     function renderCategoryTabs() {
         const container = document.getElementById('categoryTabs');
         container.innerHTML = '';
@@ -276,15 +310,19 @@
         document.getElementById('gameDetailsModal').classList.add('hidden');
     }
 
-    // === Keep ALL your original functions below (openRandomGame, toggleFullscreen, openAboutBlank, etc.) ===
-    // Paste the rest of your script from the very first message here
+    // Paste all your other original functions here (toggleSettings, toggleInfo, openRandomGame, etc.)
 
     window.onload = () => {
-        // your original onload
-        if (localStorage.getItem('hideDownloadPopup') !== 'true') document.getElementById('downloadPopup').classList.remove('hidden');
+        if (localStorage.getItem('hideDownloadPopup') !== 'true') {
+            document.getElementById('downloadPopup').classList.remove('hidden');
+        }
+        const savedColor = localStorage.getItem('user_p_color') || '#a855f7';
+        updatePrimary(savedColor);
+        document.getElementById('primaryPicker').value = savedColor;
         loadData();
-        // ... rest of your onload
+        initPts(); draw();
     };
+
     document.getElementById('searchInput').oninput = (e) => renderGames(currentFilter, e.target.value);
 </script>
 </body>

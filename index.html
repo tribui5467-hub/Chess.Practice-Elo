@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chess Practice | Elo</title>
-    <link id="favicon" rel="icon" type="image/webp" href="noFilter.webp">
+<link id="favicon" rel="icon" type="image/webp" href="noFilter.webp">
     <link href="https://fonts.googleapis.com/css2?family=Chewy&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -13,69 +13,98 @@
         :root { --primary: #a855f7; --accent: #22c55e; --bg: #020617; --text: #ffffff; --card: rgba(30, 41, 59, 0.5); }
         body {
             background-color: var(--bg); color: var(--text); font-family: 'Chewy', cursive;
-            min-height: 100vh; background-size: cover; background-position: center;
+            transition: all 0.3s ease; overflow-x: hidden; min-height: 100vh;
+            background-size: cover; background-position: center; background-attachment: fixed;
         }
-        .game-card {
+        #particle-canvas { position: fixed; top: 0; left: 0; z-index: -1; pointer-events: none; }
+       
+        .main-logo-container { display: flex; justify-content: center; padding-top: 40px; margin-bottom: -10px; }
+        .main-logo { width: 350px; height: auto; filter: drop-shadow(0 0 15px var(--primary)); cursor: pointer; transition: transform 0.3s ease, filter 0.3s ease; }
+        .main-logo:hover { transform: scale(1.05); }
+        .island-header {
+            background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 99px;
+            padding: 10px 28px; display: flex; align-items: center; gap: 20px;
+            margin: 20px auto 40px; width: fit-content; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .nav-icon { font-size: 1.5rem; cursor: pointer; transition: color 0.2s; opacity: 0.7; }
+        .nav-icon:hover { color: var(--primary) !important; opacity: 1; }
+       
+        .penguin-nav-btn { height: 40px; width: 40px; object-fit: contain; cursor: pointer; transition: filter 0.3s; }
+        .penguin-nav-btn:hover { filter: drop-shadow(0 0 8px var(--primary)); }
+
+        .game-card, .sidebar-card, .backup-card {
             position: relative; aspect-ratio: 1/1; overflow: hidden; border-radius: 1.2rem;
-            border: 2px solid transparent; transition: all 0.3s;
+            border: 2px solid transparent; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             background: var(--card); cursor: pointer;
         }
-        .game-card:hover { border-color: var(--primary); transform: scale(1.03); box-shadow: 0 0 15px var(--primary); }
-        .game-card img { width: 100%; height: 100%; object-fit: cover; }
+        .game-card:hover, .sidebar-card:hover, .backup-card:hover { border-color: var(--primary); transform: scale(1.03); box-shadow: 0 0 15px var(--primary); }
+        .game-card img, .sidebar-card img { width: 100%; height: 100%; object-fit: cover; }
+       
+        .backup-card { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; text-align: center; padding: 20px; }
+        .backup-card i { font-size: 3.5rem; color: var(--primary); }
+        .backup-label { color: #fff; font-size: 1.1rem; }
 
         .card-title {
             position: absolute; bottom: -100%; left: 0; width: 100%;
             background: linear-gradient(transparent, rgba(0,0,0,0.9));
-            padding: 20px 12px 10px; transition: bottom 0.3s; font-size: 0.85rem;
+            padding: 20px 12px 10px; transition: bottom 0.3s ease; font-size: 0.85rem;
             display: flex; justify-content: space-between; align-items: center;
         }
         .game-card:hover .card-title { bottom: 0; }
 
         .more-btn {
-            opacity: 0; transition: 0.3s; background: rgba(0,0,0,0.7);
-            width: 28px; height: 28px; border-radius: 50%; display: flex;
-            align-items: center; justify-content: center; font-size: 1.2rem;
+            opacity: 0; transition: all 0.3s; background: rgba(0,0,0,0.7);
+            width: 30px; height: 30px; border-radius: 50%; display: flex;
+            align-items: center; justify-content: center; font-size: 1.3rem;
         }
         .game-card:hover .more-btn { opacity: 1; }
 
         .category-tabs { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin: 25px 0 35px; }
         .cat-tab {
-            padding: 8px 20px; border-radius: 9999px; background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.1); cursor: pointer;
+            padding: 8px 22px; border-radius: 9999px; background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: all 0.3s;
         }
-        .cat-tab.active { background: var(--primary); color: black; }
+        .cat-tab.active { background: var(--primary); color: black; box-shadow: 0 0 15px var(--primary); }
+
+        .group-header { grid-column: 1/-1; color: var(--primary); font-size: 2rem; margin: 30px 0 15px 10px; text-shadow: 0 0 10px var(--primary); }
     </style>
 </head>
 <body class="p-4">
-
-    <canvas id="particle-canvas" class="fixed top-0 left-0 z-[-1] pointer-events-none"></canvas>
+    <canvas id="particle-canvas"></canvas>
 
     <!-- Download Popup -->
     <div id="downloadPopup" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[300] hidden flex items-center justify-center">
-        <div class="bg-slate-900 border border-white/10 p-8 rounded-3xl max-w-md text-center">
-            <h2 class="text-2xl mb-4">Algebra Practise Downloadable File</h2>
-            <p class="mb-6">Download it <span class="text-blue-400 underline cursor-pointer" onclick="downloadFile()">here</span>.</p>
-            <button onclick="closePopup()" class="bg-white/10 px-8 py-2 rounded-full">Close</button>
+        <div class="bg-slate-900 border border-white/10 p-8 rounded-3xl max-w-md text-center shadow-2xl">
+            <h2 class="text-2xl mb-4 text-white">Algebra Practise Downloadable File</h2>
+            <p class="text-lg mb-6">You can now download the site as a file on your computer! <br>
+               Download it <span class="download-here-link" onclick="downloadFile()">here</span>.
+            </p>
+            <div class="flex items-center justify-center gap-3 mb-6">
+                <input type="checkbox" id="dontShowAgain" class="w-4 h-4 cursor-pointer">
+                <label for="dontShowAgain" class="text-sm opacity-80 cursor-pointer">Do not show again</label>
+            </div>
+            <button onclick="closePopup()" class="bg-white/10 px-8 py-2 rounded-full hover:bg-white/20 transition-all">Close</button>
         </div>
     </div>
 
-    <div class="main-logo-container text-center mb-4">
-        <img id="mainLogoImg" src="" alt="Logo" class="inline-block w-80" onclick="location.reload()">
+    <div class="main-logo-container">
+        <img id="mainLogoImg" src="" alt="Logo" class="main-logo" onclick="location.reload()">
     </div>
 
-    <header class="island-header mx-auto flex items-center gap-4 bg-white/5 backdrop-blur-md px-6 py-3 rounded-full w-fit">
-        <img id="penguinHeadImg" src="" class="h-9 cursor-pointer" onclick="location.reload()">
-        <i class="fas fa-gamepad nav-icon text-xl" onclick="renderGames('games')"></i>
-        <i class="fas fa-th-large nav-icon text-xl" onclick="renderGames('apps')"></i>
-        <i class="fas fa-dice nav-icon text-xl" onclick="openRandomGame()"></i>
-        <i class="fas fa-link nav-icon text-xl" onclick="renderGames('backups')"></i>
-        <i class="fas fa-circle-info nav-icon text-xl" onclick="toggleInfo()"></i>
-        
-        <div class="relative ml-4">
-            <input type="text" id="searchInput" placeholder="Search games or genres..." 
-                   class="bg-white/10 border border-white/20 pl-10 py-2 rounded-full w-64 focus:outline-none">
+    <header class="island-header">
+        <img id="penguinHeadImg" src="" onclick="location.reload()" class="penguin-nav-btn" title="Home">
+        <div class="h-6 w-[1px] bg-white/20"></div>
+        <i class="fas fa-gamepad nav-icon" onclick="renderGames('games')" title="Games"></i>
+        <i class="fas fa-th-large nav-icon" onclick="renderGames('apps')" title="Apps"></i>
+        <i class="fas fa-dice nav-icon" onclick="openRandomGame()" title="Random Game"></i>
+        <i class="fas fa-link nav-icon" onclick="renderGames('backups')" title="Backups"></i>
+        <i class="fas fa-circle-info nav-icon" onclick="toggleInfo()" title="Info"></i>
+        <div class="relative">
+            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-sm opacity-50"></i>
+            <input type="text" id="searchInput" placeholder="Search games or genres..." class="bg-white/5 border border-white/10 py-1 pl-9 pr-4 rounded-full focus:outline-none focus:ring-1 focus:ring-primary text-sm w-64">
         </div>
-        <i class="fas fa-sliders nav-icon text-xl" onclick="toggleSettings()"></i>
+        <i class="fas fa-sliders nav-icon" onclick="toggleSettings()"></i>
     </header>
 
     <main class="max-w-7xl mx-auto">
@@ -84,149 +113,169 @@
     </main>
 
     <!-- Details Modal -->
-    <div id="gameDetailsModal" class="fixed inset-0 bg-black/90 hidden flex items-center justify-center z-[200]">
-        <div class="bg-slate-900 p-8 rounded-3xl max-w-md w-full">
-            <h2 id="detailsTitle" class="text-2xl mb-4 text-purple-400"></h2>
-            <img id="detailsThumb" class="w-full rounded-2xl mb-4">
-            <p><strong>Genre:</strong> <span id="detailsGenre"></span></p>
-            <p id="detailsDesc" class="mt-3 text-gray-300"></p>
-            <div class="mt-6 flex gap-3">
-                <button onclick="playFromDetails()" class="flex-1 bg-green-500 text-black py-3 rounded-2xl font-bold">▶ Play</button>
-                <button onclick="closeDetailsModal()" class="flex-1 bg-white/10 py-3 rounded-2xl">Close</button>
+    <div id="gameDetailsModal" class="fixed inset-0 bg-black/90 backdrop-blur-md hidden flex items-center justify-center z-[150]">
+        <div class="bg-slate-900 border border-white/10 rounded-3xl max-w-md w-full mx-4 p-8">
+            <div class="flex justify-between mb-6">
+                <h2 id="detailsTitle" class="text-3xl" style="color: var(--primary);"></h2>
+                <button onclick="closeDetailsModal()" class="text-4xl text-gray-400 hover:text-white">×</button>
             </div>
+            <img id="detailsThumb" class="w-full rounded-2xl mb-6" style="max-height: 280px; object-fit: cover;">
+            <p class="mb-2"><strong>Genre:</strong> <span id="detailsGenre" class="text-lg"></span></p>
+            <p id="detailsDesc" class="text-gray-300 leading-relaxed mb-6"></p>
+            <button onclick="playFromDetails()" class="w-full bg-green-500 text-black py-3 rounded-2xl font-bold mb-3">▶ Play Game</button>
+            <button onclick="closeDetailsModal()" class="w-full bg-white/10 py-3 rounded-2xl hover:bg-white/20">Close</button>
         </div>
     </div>
 
+    <!-- === PASTE YOUR ORIGINAL infoTab, settingsPanel, gameModal HERE === -->
+    <!-- (Copy from your first message) -->
+
 <script>
-// ==================== YOUR ORIGINAL CODE + FIXES ====================
-const repoOwner = "hazzatazza";
-const repoName = "algebruh-practise";
-const cdnBase = `https://cdn.jsdelivr.net/gh/${repoOwner}/${repoName}@main/`;
+    const repoOwner = "hazzatazza";
+    const repoName = "algebruh-practise";
+    const cdnBase = `https://cdn.jsdelivr.net/gh/${repoOwner}/${repoName}@main/`;
+   
+    let games = [];
+    let backups = [];
+    let currentLatestSha = "";
+    let currentFilter = 'games';
+    let currentCategory = 'All';
 
-let games = [], backups = [], currentFilter = 'games', currentCategory = 'All';
+    // === Original functions ===
+    function closePopup() {
+        if (document.getElementById('dontShowAgain').checked) localStorage.setItem('hideDownloadPopup', 'true');
+        document.getElementById('downloadPopup').classList.add('hidden');
+    }
 
-async function loadData() {
-    try {
-        document.getElementById('mainLogoImg').src = cdnBase + 'logo.png';
-        document.getElementById('penguinHeadImg').src = cdnBase + 'penguinhead.png';
+    async function downloadFile() { /* your original downloadFile */ }
 
-        const shaRes = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/commits?t=${Date.now()}`);
-        const sha = (await shaRes.json())[0].sha;
+    async function loadData() {
+        try {
+            document.getElementById('mainLogoImg').src = cdnBase + 'logo.png';
+            document.getElementById('penguinHeadImg').src = cdnBase + 'penguinhead.png';
+           
+            const shaResponse = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/commits?t=${Date.now()}`);
+            const commits = await shaResponse.json();
+            currentLatestSha = commits[0].sha;
 
-        games = await (await fetch(`https://cdn.jsdelivr.net/gh/${repoOwner}/${repoName}@${sha}/games.json`)).json();
-        backups = await (await fetch(`https://cdn.jsdelivr.net/gh/${repoOwner}/${repoName}@${sha}/links.json`)).json();
+            games = await (await fetch(`https://cdn.jsdelivr.net/gh/${repoOwner}/${repoName}@${currentLatestSha}/games.json`)).json();
+            backups = await (await fetch(`https://cdn.jsdelivr.net/gh/${repoOwner}/${repoName}@${currentLatestSha}/links.json`)).json();
 
-        renderCategoryTabs();
-        renderGames('games');
-    } catch(e) { console.error(e); }
-}
+            renderCategoryTabs();
+            renderGames('games');
+        } catch (error) { console.error(error); }
+    }
 
-function renderCategoryTabs() {
-    const cont = document.getElementById('categoryTabs');
-    cont.innerHTML = '';
-    const cats = ['All', ...new Set(games.map(g => g.category || 'Uncategorized'))];
-    cats.forEach(cat => {
-        const el = document.createElement('div');
-        el.className = `cat-tab px-5 py-2 ${cat === currentCategory ? 'active' : ''}`;
-        el.textContent = cat;
-        el.onclick = () => { currentCategory = cat; renderCategoryTabs(); renderGames(currentFilter); };
-        cont.appendChild(el);
-    });
-}
+    function renderCategoryTabs() {
+        const container = document.getElementById('categoryTabs');
+        container.innerHTML = '';
+        const categories = ['All', ...new Set(games.map(g => g.category || 'Uncategorized'))];
+        categories.forEach(cat => {
+            const tab = document.createElement('div');
+            tab.className = `cat-tab ${cat === currentCategory ? 'active' : ''}`;
+            tab.textContent = cat;
+            tab.onclick = () => { currentCategory = cat; renderCategoryTabs(); renderGames(currentFilter); };
+            container.appendChild(tab);
+        });
+    }
 
-function renderGames(filter = 'games', search = '') {
-    currentFilter = filter;
-    const grid = document.getElementById('gameGrid');
-    grid.innerHTML = '';
+    function renderGames(filter = 'games', search = '') {
+        currentFilter = filter;
+        const grid = document.getElementById('gameGrid');
+        grid.innerHTML = '';
 
-    let items = filter === 'backups' ? backups : games.filter(item => {
-        if (search) {
-            const s = search.toLowerCase();
-            return item.title.toLowerCase().includes(s) || (item.genre||'').toLowerCase().includes(s);
+        let items = filter === 'backups' ? backups : games.filter(item => {
+            if (filter === 'apps' && item.type !== 'app') return false;
+            if (filter === 'games' && item.type === 'app') return false;
+            if (search) {
+                const term = search.toLowerCase();
+                return item.title.toLowerCase().includes(term) || (item.genre && item.genre.toLowerCase().includes(term));
+            }
+            if (currentCategory !== 'All' && (item.category || 'Uncategorized') !== currentCategory) return false;
+            return true;
+        });
+
+        if (filter === 'backups') {
+            // your backup code
+            return;
         }
-        if (currentCategory !== 'All' && (item.category || 'Uncategorized') !== currentCategory) return false;
-        return true;
-    });
 
-    if (filter === 'backups') {
-        // backup cards...
-        return;
+        if (currentCategory === 'All') {
+            const grouped = {};
+            items.forEach(item => {
+                const cat = item.category || 'Uncategorized';
+                if (!grouped[cat]) grouped[cat] = [];
+                grouped[cat].push(item);
+            });
+            Object.keys(grouped).sort().forEach(cat => {
+                const header = document.createElement('div');
+                header.className = 'group-header';
+                header.textContent = cat.toUpperCase();
+                grid.appendChild(header);
+                grouped[cat].forEach(item => createGameCard(item, grid));
+            });
+        } else {
+            items.forEach(item => createGameCard(item, grid));
+        }
     }
 
-    if (currentCategory === 'All') {
-        const grouped = {};
-        items.forEach(g => {
-            const c = g.category || 'Uncategorized';
-            grouped[c] = grouped[c] || [];
-            grouped[c].push(g);
-        });
-        Object.keys(grouped).sort().forEach(cat => {
-            const h = document.createElement('div');
-            h.className = "col-span-full text-purple-400 text-2xl mt-8 mb-3";
-            h.textContent = cat.toUpperCase();
-            grid.appendChild(h);
-            grouped[cat].forEach(game => createCard(game, grid));
-        });
-    } else {
-        items.forEach(game => createCard(game, grid));
+    function createGameCard(item, grid) {
+        const card = document.createElement('div');
+        card.className = 'game-card';
+        card.innerHTML = `
+            <img src="${cdnBase}${item.thumb}" loading="lazy">
+            <div class="card-title">
+                <span>${item.title}</span>
+                <div onclick="event.stopImmediatePropagation(); showGameDetails('${item.id}')" class="more-btn">⋯</div>
+            </div>
+        `;
+        card.onclick = (e) => {
+            if (!e.target.closest('.more-btn')) openGame(item.id);
+        };
+        grid.appendChild(card);
     }
-}
 
-function createCard(game, grid) {
-    const card = document.createElement('div');
-    card.className = 'game-card';
-    card.innerHTML = `
-        <img src="${cdnBase}${game.thumb}" loading="lazy">
-        <div class="card-title">
-            <span>${game.title}</span>
-            <span onclick="event.stopImmediatePropagation(); showGameDetails('${game.id}')" class="more-btn">⋯</span>
-        </div>
-    `;
-    card.onclick = (e) => {
-        if (!e.target.closest('.more-btn')) openGame(game.id);
+    function openGame(id) {
+        const game = games.find(g => g.id === id);
+        if(!game) return;
+        // Your original openGame code
+        document.getElementById('modalTitle').textContent = game.title;
+        document.getElementById('modalIcon').src = cdnBase + game.thumb;
+        document.getElementById('iframeContainer').innerHTML = `<iframe id="gameIframe" src="${game.url}" class="w-full h-full border-none" allowfullscreen></iframe>`;
+        document.getElementById('gameModal').classList.remove('hidden');
+    }
+
+    function showGameDetails(id) {
+        const game = games.find(g => g.id === id);
+        if (!game) return;
+        document.getElementById('detailsTitle').textContent = game.title;
+        document.getElementById('detailsThumb').src = cdnBase + game.thumb;
+        document.getElementById('detailsGenre').textContent = game.genre || "Unknown";
+        document.getElementById('detailsDesc').textContent = game.description || "No description available.";
+        document.getElementById('gameDetailsModal').classList.remove('hidden');
+    }
+
+    function playFromDetails() {
+        closeDetailsModal();
+        const title = document.getElementById('detailsTitle').textContent;
+        const game = games.find(g => g.title === title);
+        if (game) openGame(game.id);
+    }
+
+    function closeDetailsModal() {
+        document.getElementById('gameDetailsModal').classList.add('hidden');
+    }
+
+    // Paste the rest of your original script (openRandomGame, toggleSettings, toggleInfo, particles, etc.)
+
+    window.onload = () => {
+        if (localStorage.getItem('hideDownloadPopup') !== 'true') {
+            document.getElementById('downloadPopup').classList.remove('hidden');
+        }
+        loadData();
     };
-    grid.appendChild(card);
-}
 
-function openGame(id) {
-    const game = games.find(g => g.id === id);
-    if (!game) return;
-    // Your original game modal code here
-    alert("Opening: " + game.title); // temporary - replace with your real modal code
-}
-
-function showGameDetails(id) {
-    const game = games.find(g => g.id === id);
-    if (!game) return;
-    document.getElementById('detailsTitle').textContent = game.title;
-    document.getElementById('detailsThumb').src = cdnBase + game.thumb;
-    document.getElementById('detailsGenre').textContent = game.genre || "Unknown";
-    document.getElementById('detailsDesc').textContent = game.description || "No description.";
-    document.getElementById('gameDetailsModal').classList.remove('hidden');
-}
-
-function playFromDetails() {
-    closeDetailsModal();
-    // Add real openGame logic here if needed
-}
-
-function closeDetailsModal() {
-    document.getElementById('gameDetailsModal').classList.add('hidden');
-}
-
-function closePopup() {
-    document.getElementById('downloadPopup').classList.add('hidden');
-}
-
-// Load everything
-window.onload = () => {
-    if (localStorage.getItem('hideDownloadPopup') !== 'true') {
-        document.getElementById('downloadPopup').classList.remove('hidden');
-    }
-    loadData();
-};
-
-document.getElementById('searchInput').oninput = (e) => renderGames(currentFilter, e.target.value);
+    document.getElementById('searchInput').oninput = (e) => renderGames(currentFilter, e.target.value);
 </script>
 </body>
 </html>

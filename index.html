@@ -177,6 +177,7 @@
 
 <script>
    <script>
+<script>
     const repoOwner = "tribui5467-hub";
     const repoName = "Equinox-Assets_-Chess.Practice-Elo-";
     const cdnBase = `https://cdn.jsdelivr.net/gh/${repoOwner}/${repoName}@main/`;
@@ -188,9 +189,7 @@
     let currentCategory = 'All';
 
     function closePopup() {
-        if (document.getElementById('dontShowAgain').checked) {
-            localStorage.setItem('hideDownloadPopup', 'true');
-        }
+        if (document.getElementById('dontShowAgain').checked) localStorage.setItem('hideDownloadPopup', 'true');
         document.getElementById('downloadPopup').classList.add('hidden');
     }
 
@@ -202,8 +201,6 @@
             const fileUrl = `https://cdn.jsdelivr.net/gh/${repoOwner}/${repoName}@${sha}/algebraofficialfile.html`;
             
             const response = await fetch(fileUrl);
-            if (!response.ok) throw new Error('File not found');
-            
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -214,43 +211,41 @@
             window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
         } catch(e) {
-            alert("Download failed. Make sure 'algebraofficialfile.html' exists in the repo.");
+            alert("Download failed.");
         }
     }
 
     async function loadData() {
         try {
-            const logoImg = document.getElementById('mainLogoImg');
-            const penguinImg = document.getElementById('penguinHeadImg');
+            // Logo & Penguin
+            const logo = document.getElementById('mainLogoImg');
+            const penguin = document.getElementById('penguinHeadImg');
+            
+            logo.src = cdnBase + 'logo.png';
+            penguin.src = cdnBase + 'penguinhead.png';
 
-            logoImg.src = cdnBase + 'logo.png';
-            penguinImg.src = cdnBase + 'penguinhead.png';
+            logo.onerror = () => logo.src = 'https://via.placeholder.com/350x150/6b21a8/white?text=Chess+Practice';
+            penguin.onerror = () => penguin.style.display = 'none';
 
-            // Fallbacks
-            logoImg.onerror = () => {
-                logoImg.src = 'https://via.placeholder.com/350x120/6b21a8/ffffff?text=Chess+Practice+%7C+Elo';
-            };
-            penguinImg.onerror = () => penguinImg.style.display = 'none';
-
-            // Get latest commit
-            const shaResponse = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/commits?t=${Date.now()}`);
-            const commits = await shaResponse.json();
+            // Get latest version
+            const shaRes = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/commits?t=${Date.now()}`);
+            const commits = await shaRes.json();
             currentLatestSha = commits[0].sha;
 
-            // Load games
-            const gamesResponse = await fetch(`https://cdn.jsdelivr.net/gh/${repoOwner}/${repoName}@${currentLatestSha}/games.json`);
-            games = await gamesResponse.json();
+            // Load games.json
+            const gamesRes = await fetch(`https://cdn.jsdelivr.net/gh/${repoOwner}/${repoName}@${currentLatestSha}/games.json`);
+            games = await gamesRes.json();
 
             renderCategoryTabs();
             renderGames('games');
 
         } catch (error) {
-            console.error("Load error:", error);
-            alert("Could not load games.json. Make sure it exists in your repo.");
+            console.error(error);
+            alert("Failed to load. Check console (F12) and make sure games.json exists.");
         }
     }
 
-    // Keep all your other functions (renderCategoryTabs, renderGames, createGameCard, etc.) as they are
+    // === Keep all your other functions below (renderCategoryTabs, renderGames, etc.) ===
 
     window.onload = () => {
         if (localStorage.getItem('hideDownloadPopup') !== 'true') {
@@ -262,5 +257,4 @@
     };
 
     document.getElementById('searchInput').oninput = (e) => renderGames(currentFilter, e.target.value);
-    window.onresize = initPts;
 </script>

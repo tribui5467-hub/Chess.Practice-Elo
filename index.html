@@ -176,193 +176,91 @@
     </div>
 
 <script>
+   <script>
     const repoOwner = "tribui5467-hub";
     const repoName = "Equinox-Assets_-Chess.Practice-Elo-";
     const cdnBase = `https://cdn.jsdelivr.net/gh/${repoOwner}/${repoName}@main/`;
-   
+  
     let games = [];
     let backups = [];
     let currentLatestSha = "";
     let currentFilter = 'games';
     let currentCategory = 'All';
 
-    // Original functions (kept intact)
     function closePopup() {
-        if (document.getElementById('dontShowAgain').checked) localStorage.setItem('hideDownloadPopup', 'true');
+        if (document.getElementById('dontShowAgain').checked) {
+            localStorage.setItem('hideDownloadPopup', 'true');
+        }
         document.getElementById('downloadPopup').classList.add('hidden');
     }
 
-    async function downloadFile() { /* your original downloadFile */ 
-        // ... (kept as is)
+    async function downloadFile() {
         try {
             const shaResponse = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/commits?t=${Date.now()}`);
             const commits = await shaResponse.json();
             const sha = commits[0].sha;
             const fileUrl = `https://cdn.jsdelivr.net/gh/${repoOwner}/${repoName}@${sha}/algebraofficialfile.html`;
+            
             const response = await fetch(fileUrl);
+            if (!response.ok) throw new Error('File not found');
+            
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url; a.download = 'algebraofficialfile.html';
-            document.body.appendChild(a); a.click(); window.URL.revokeObjectURL(url); document.body.removeChild(a);
-        } catch(e) { alert("Download failed."); }
+            a.href = url;
+            a.download = 'chess-practice.html';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        } catch(e) {
+            alert("Download failed. Make sure 'algebraofficialfile.html' exists in the repo.");
+        }
     }
 
     async function loadData() {
         try {
-            document.getElementById('mainLogoImg').src = cdnBase + 'logo.png';
-            document.getElementById('penguinHeadImg').src = cdnBase + 'penguinhead.png';
-           
+            const logoImg = document.getElementById('mainLogoImg');
+            const penguinImg = document.getElementById('penguinHeadImg');
+
+            logoImg.src = cdnBase + 'logo.png';
+            penguinImg.src = cdnBase + 'penguinhead.png';
+
+            // Fallbacks
+            logoImg.onerror = () => {
+                logoImg.src = 'https://via.placeholder.com/350x120/6b21a8/ffffff?text=Chess+Practice+%7C+Elo';
+            };
+            penguinImg.onerror = () => penguinImg.style.display = 'none';
+
+            // Get latest commit
             const shaResponse = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/commits?t=${Date.now()}`);
             const commits = await shaResponse.json();
             currentLatestSha = commits[0].sha;
+
+            // Load games
             const gamesResponse = await fetch(`https://cdn.jsdelivr.net/gh/${repoOwner}/${repoName}@${currentLatestSha}/games.json`);
             games = await gamesResponse.json();
-            const linksResponse = await fetch(`https://cdn.jsdelivr.net/gh/${repoOwner}/${repoName}@${currentLatestSha}/links.json`);
-            backups = await linksResponse.json();
 
             renderCategoryTabs();
             renderGames('games');
-        } catch (error) { console.error("Error loading data:", error); }
-    }
 
-    // New Features
-    function renderCategoryTabs() {
-        const container = document.getElementById('categoryTabs');
-        container.innerHTML = '';
-        const categories = ['All', ...new Set(games.map(g => g.category || 'Uncategorized'))];
-        categories.forEach(cat => {
-            const tab = document.createElement('div');
-            tab.className = `cat-tab ${cat === currentCategory ? 'active' : ''}`;
-            tab.textContent = cat;
-            tab.onclick = () => { currentCategory = cat; renderCategoryTabs(); renderGames(currentFilter); };
-            container.appendChild(tab);
-        });
-    }
-
-    function renderGames(filter = 'games', search = '') {
-        currentFilter = filter;
-        const grid = document.getElementById('gameGrid');
-        grid.innerHTML = '';
-
-        let items = filter === 'backups' ? backups : games;
-
-        items = items.filter(item => {
-            if (filter === 'apps' && item.type !== 'app') return false;
-            if (filter === 'games' && item.type === 'app') return false;
-            if (search) {
-                const term = search.toLowerCase();
-                return (item.title && item.title.toLowerCase().includes(term)) || 
-                       (item.genre && item.genre.toLowerCase().includes(term));
-            }
-            if (currentCategory !== 'All' && (item.category || 'Uncategorized') !== currentCategory) return false;
-            return true;
-        });
-
-        if (filter === 'backups') {
-            // your original backups rendering
-            items.forEach(item => {
-                const card = document.createElement('div');
-                card.className = 'backup-card';
-                card.onclick = () => window.open(item.url, '_blank');
-                card.innerHTML = `<i class="fas ${item.icon}"></i><div class="backup-label">${item.title}</div>`;
-                grid.appendChild(card);
-            });
-            return;
-        }
-
-        if (currentCategory === 'All') {
-            const grouped = {};
-            items.forEach(item => {
-                const cat = item.category || 'Uncategorized';
-                if (!grouped[cat]) grouped[cat] = [];
-                grouped[cat].push(item);
-            });
-            Object.keys(grouped).sort().forEach(category => {
-                const header = document.createElement('div');
-                header.className = 'group-header';
-                header.textContent = category.toUpperCase();
-                grid.appendChild(header);
-                grouped[category].forEach(item => createGameCard(item, grid));
-            });
-        } else {
-            items.forEach(item => createGameCard(item, grid));
+        } catch (error) {
+            console.error("Load error:", error);
+            alert("Could not load games.json. Make sure it exists in your repo.");
         }
     }
 
-    function createGameCard(item, grid) {
-        const card = document.createElement('div');
-        card.className = 'game-card';
-        card.innerHTML = `
-            <img src="${cdnBase}${item.thumb}" loading="lazy">
-            <div class="card-title">
-                <span>${item.title}</span>
-                <div onclick="event.stopImmediatePropagation(); showGameDetails('${item.id}')" class="more-btn">⋯</div>
-            </div>
-        `;
-        card.onclick = (e) => {
-            if (!e.target.closest('.more-btn')) openGame(item.id);
-        };
-        grid.appendChild(card);
-    }
-
-    function showGameDetails(id) {
-        const game = games.find(g => g.id === id);
-        if (!game) return;
-        document.getElementById('detailsTitle').textContent = game.title;
-        document.getElementById('detailsThumb').src = cdnBase + game.thumb;
-        document.getElementById('detailsGenre').textContent = game.genre || "Unknown";
-        document.getElementById('detailsDesc').textContent = game.description || "No description available.";
-        document.getElementById('gameDetailsModal').classList.remove('hidden');
-    }
-
-    function playFromDetails() {
-        closeDetailsModal();
-        const title = document.getElementById('detailsTitle').textContent;
-        const game = games.find(g => g.title === title);
-        if (game) openGame(game.id);
-    }
-
-    function closeDetailsModal() {
-        document.getElementById('gameDetailsModal').classList.add('hidden');
-    }
-
-    // === YOUR ORIGINAL FUNCTIONS (unchanged) ===
-    function openGame(id) {
-        const game = games.find(g => g.id === id);
-        if(!game) return;
-        document.getElementById('modalTitle').textContent = game.title;
-        document.getElementById('modalIcon').src = cdnBase + game.thumb;
-        document.getElementById('iframeContainer').innerHTML = `<iframe id="gameIframe" src="${game.url}" class="w-full h-full border-none" allowfullscreen></iframe>`;
-        document.getElementById('gameModal').classList.remove('hidden');
-        // suggested games...
-    }
-
-    function closeGame() { /* original */ document.getElementById('gameModal').classList.add('hidden'); document.getElementById('iframeContainer').innerHTML = ''; }
-
-    function openRandomGame() { if(games.length > 0) openGame(games[Math.floor(Math.random() * games.length)].id); }
-
-    // ... (All your other original functions: toggleFullscreen, openAboutBlank, applyCloak, updatePrimary, toggleParticles, toggleSettings, toggleInfo, setBg, resetBg, particles, etc. are kept below)
+    // Keep all your other functions (renderCategoryTabs, renderGames, createGameCard, etc.) as they are
 
     window.onload = () => {
         if (localStorage.getItem('hideDownloadPopup') !== 'true') {
             document.getElementById('downloadPopup').classList.remove('hidden');
         }
-        const savedColor = localStorage.getItem('user_p_color') || '#a855f7';
-        updatePrimary(savedColor);
-        document.getElementById('primaryPicker').value = savedColor;
-        const sBg = localStorage.getItem('user_bg');
-        if(sBg) document.body.style.backgroundImage = `url('${sBg}')`;
-        const sTitle = localStorage.getItem('user_cloak_title');
-        const sIcon = localStorage.getItem('user_cloak_icon');
-        if(sTitle) document.title = sTitle;
-        if(sIcon) document.getElementById('favicon').href = sIcon;
         loadData();
-        initPts(); draw();
+        initPts(); 
+        draw();
     };
 
     document.getElementById('searchInput').oninput = (e) => renderGames(currentFilter, e.target.value);
     window.onresize = initPts;
 </script>
-</body>
-</html>

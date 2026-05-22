@@ -32,14 +32,18 @@
        
         .penguin-nav-btn { height: 40px; width: 40px; object-fit: contain; cursor: pointer; transition: filter 0.3s; }
         .penguin-nav-btn:hover { filter: drop-shadow(0 0 8px var(--primary)); }
-        .game-card {
+        .game-card, .backup-card {
             position: relative; aspect-ratio: 1/1; overflow: hidden; border-radius: 1.2rem;
             border: 2px solid transparent; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             background: var(--card); cursor: pointer;
         }
-        .game-card:hover { border-color: var(--primary); transform: scale(1.03); box-shadow: 0 0 15px var(--primary); }
+        .game-card:hover, .backup-card:hover { border-color: var(--primary); transform: scale(1.03); box-shadow: 0 0 15px var(--primary); }
         .game-card img { width: 100%; height: 100%; object-fit: cover; }
        
+        .backup-card { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; text-align: center; padding: 20px; }
+        .backup-card i { font-size: 3.5rem; color: var(--primary); }
+        .backup-label { color: #fff; font-size: 1.1rem; }
+
         .card-title {
             position: absolute; bottom: -100%; left: 0; width: 100%;
             background: linear-gradient(transparent, rgba(0,0,0,0.9));
@@ -67,7 +71,7 @@
             background: var(--primary); color: black; border-color: var(--primary); box-shadow: 0 0 15px var(--primary);
         }
         .group-header {
-            grid-column: 1 / -1; color: var(--primary); font-size: 1.9rem; 
+            grid-column: 1 / -1; color: var(--primary); font-size: 1.9rem;
             margin: 30px 0 15px 10px; text-shadow: 0 0 10px var(--primary);
         }
     </style>
@@ -75,13 +79,11 @@
 <body class="p-4">
     <canvas id="particle-canvas"></canvas>
 
-    <!-- Original Download Popup -->
+    <!-- Download Popup -->
     <div id="downloadPopup" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[300] hidden flex items-center justify-center">
         <div class="bg-slate-900 border border-white/10 p-8 rounded-3xl max-w-md text-center shadow-2xl">
             <h2 class="text-2xl mb-4 text-white">Algebra Practise Downloadable File</h2>
-            <p class="text-lg mb-6">You can now download the site as a file on your computer! <br>
-               Download it <span class="download-here-link" onclick="downloadFile()">here</span>.
-            </p>
+            <p class="text-lg mb-6">You can now download the site as a file on your computer! <br>Download it <span class="download-here-link" onclick="downloadFile()">here</span>.</p>
             <div class="flex items-center justify-center gap-3 mb-6">
                 <input type="checkbox" id="dontShowAgain" class="w-4 h-4 cursor-pointer">
                 <label for="dontShowAgain" class="text-sm opacity-80 cursor-pointer">Do not show again</label>
@@ -129,11 +131,11 @@
         </div>
     </div>
 
-    <!-- === YOUR ORIGINAL MODALS === -->
+    <!-- Original Modals -->
     <div id="infoTab" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[200] hidden flex items-center justify-center" onclick="toggleInfo()">
         <div class="bg-slate-900 border border-white/10 p-8 rounded-3xl max-w-md text-center shadow-2xl" onclick="event.stopPropagation()">
             <h2 class="text-3xl mb-4" style="color: var(--primary);">About Chess Practice | Elo</h2>
-            <p class="text-lg leading-relaxed mb-4">Chess Practice | Elo was created as an extension of Equinox blacksite as part of Project Subterranean...</p>
+            <p class="text-lg leading-relaxed mb-4">Chess Practice | Elo was created as an extension of Equinox blacksite...</p>
             <p class="text-lg mb-6">Request games <a href="https://docs.google.com/forms/d/e/1FAIpQLScww3MHYoLogsOX5WcBctTbzVTUkXwoEeiOxenN0i8gxiOtpg/viewform?usp=header" target="_blank" class="text-blue-500 underline">here</a></p>
             <div class="flex flex-col gap-3">
                 <button onclick="downloadFile()" class="flex items-center justify-center gap-2 py-3 rounded-xl text-white font-bold" style="background-color: var(--primary);">Download Offline File</button>
@@ -143,16 +145,26 @@
     </div>
 
     <div id="settingsPanel" class="fixed top-0 right-0 h-full w-80 bg-slate-900 border-l border-white/10 p-8 transform translate-x-full shadow-2xl overflow-y-auto">
-        <!-- Your original settings content -->
         <div class="flex justify-between items-center mb-8">
             <h2 class="text-3xl">Settings</h2>
             <button onclick="toggleSettings()"><i class="fas fa-times text-xl"></i></button>
         </div>
-        <!-- ... rest of your settings ... -->
+        <div class="space-y-6">
+            <div>
+                <label class="block text-xs opacity-50 mb-2 uppercase">Theme Color</label>
+                <input type="color" id="primaryPicker" value="#a855f7" oninput="updatePrimary(this.value)" class="w-full h-10 rounded-lg cursor-pointer">
+            </div>
+            <div class="flex items-center justify-between bg-white/5 p-3 rounded-xl">
+                <span>Particles</span>
+                <button id="partToggle" onclick="toggleParticles()" style="color: var(--primary);">ON</button>
+            </div>
+            <button onclick="setBg()" class="w-full bg-white/10 py-3 rounded-xl text-sm">Set Background Image</button>
+            <button onclick="resetBg()" class="w-full bg-red-500/10 text-red-400 py-2 rounded-xl text-xs">Reset Background</button>
+            <button onclick="openAboutBlank()" class="w-full bg-white/10 py-3 rounded-xl text-sm">Open in About:Blank</button>
+        </div>
     </div>
 
     <div id="gameModal" class="fixed inset-0 z-[110] hidden bg-black/95 flex flex-col">
-        <!-- Your original game modal -->
         <div class="game-container">
             <div class="bg-black rounded-2xl overflow-hidden border border-white/5">
                 <div id="iframeContainer" class="w-full h-full"></div>
@@ -165,7 +177,7 @@
         <div class="h-20 px-8 flex items-center justify-between bg-white/5 backdrop-blur-md">
             <div class="flex items-center gap-4">
                 <img id="modalIcon" src="" class="h-10 w-10 rounded-lg object-cover">
-                <h3 id="modalTitle" class="text-xl">Game Title</h3>
+                <h3 id="modalTitle" class="text-xl"></h3>
             </div>
             <div class="flex items-center gap-8">
                 <button onclick="openAboutBlank()" class="nav-icon"><i class="fas fa-mask text-xl"></i></button>
@@ -176,25 +188,23 @@
     </div>
 
 <script>
-const repoOwner = "tribui5467-hub"; 
-const repoName = "Equinox-Assets_-Chess.Practice-Elo-"; 
-const cdnBase = `https://cdn.jsdelivr.net/gh/${repoOwner}/${repoName}@main/`;
-
+    const repoOwner = "tribui5467-hub";
+    const repoName = "Equinox-Assets_-Chess.Practice-Elo-";
+    const cdnBase = `https://cdn.jsdelivr.net/gh/${repoOwner}/${repoName}@main/`;
    
     let games = [];
     let backups = [];
     let currentLatestSha = "";
     let currentFilter = 'games';
     let currentCategory = 'All';
+    let particlesEnabled = true;
 
-    // Original functions (kept intact)
     function closePopup() {
         if (document.getElementById('dontShowAgain').checked) localStorage.setItem('hideDownloadPopup', 'true');
         document.getElementById('downloadPopup').classList.add('hidden');
     }
 
-    async function downloadFile() { /* your original downloadFile */ 
-        // ... (kept as is)
+    async function downloadFile() {
         try {
             const shaResponse = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/commits?t=${Date.now()}`);
             const commits = await shaResponse.json();
@@ -227,7 +237,6 @@ const cdnBase = `https://cdn.jsdelivr.net/gh/${repoOwner}/${repoName}@main/`;
         } catch (error) { console.error("Error loading data:", error); }
     }
 
-    // New Features
     function renderCategoryTabs() {
         const container = document.getElementById('categoryTabs');
         container.innerHTML = '';
@@ -253,20 +262,18 @@ const cdnBase = `https://cdn.jsdelivr.net/gh/${repoOwner}/${repoName}@main/`;
             if (filter === 'games' && item.type === 'app') return false;
             if (search) {
                 const term = search.toLowerCase();
-                return (item.title && item.title.toLowerCase().includes(term)) || 
-                       (item.genre && item.genre.toLowerCase().includes(term));
+                return (item.title && item.title.toLowerCase().includes(term)) || (item.genre && item.genre.toLowerCase().includes(term));
             }
             if (currentCategory !== 'All' && (item.category || 'Uncategorized') !== currentCategory) return false;
             return true;
         });
 
         if (filter === 'backups') {
-            // your original backups rendering
             items.forEach(item => {
                 const card = document.createElement('div');
                 card.className = 'backup-card';
                 card.onclick = () => window.open(item.url, '_blank');
-                card.innerHTML = `<i class="fas ${item.icon}"></i><div class="backup-label">${item.title}</div>`;
+                card.innerHTML = `<i class="fas ${item.icon || 'fa-link'}"></i><div class="backup-label">${item.title}</div>`;
                 grid.appendChild(card);
             });
             return;
@@ -328,7 +335,6 @@ const cdnBase = `https://cdn.jsdelivr.net/gh/${repoOwner}/${repoName}@main/`;
         document.getElementById('gameDetailsModal').classList.add('hidden');
     }
 
-    // === YOUR ORIGINAL FUNCTIONS (unchanged) ===
     function openGame(id) {
         const game = games.find(g => g.id === id);
         if(!game) return;
@@ -336,14 +342,86 @@ const cdnBase = `https://cdn.jsdelivr.net/gh/${repoOwner}/${repoName}@main/`;
         document.getElementById('modalIcon').src = cdnBase + game.thumb;
         document.getElementById('iframeContainer').innerHTML = `<iframe id="gameIframe" src="${game.url}" class="w-full h-full border-none" allowfullscreen></iframe>`;
         document.getElementById('gameModal').classList.remove('hidden');
-        // suggested games...
     }
 
-    function closeGame() { /* original */ document.getElementById('gameModal').classList.add('hidden'); document.getElementById('iframeContainer').innerHTML = ''; }
+    function closeGame() {
+        document.getElementById('gameModal').classList.add('hidden');
+        document.getElementById('iframeContainer').innerHTML = '';
+    }
 
-    function openRandomGame() { if(games.length > 0) openGame(games[Math.floor(Math.random() * games.length)].id); }
+    function openRandomGame() {
+        if(games.length > 0) openGame(games[Math.floor(Math.random() * games.length)].id);
+    }
 
-    // ... (All your other original functions: toggleFullscreen, openAboutBlank, applyCloak, updatePrimary, toggleParticles, toggleSettings, toggleInfo, setBg, resetBg, particles, etc. are kept below)
+    // Particle System + Other Original Functions
+    let pts = [];
+    const canvas = document.getElementById('particle-canvas');
+    const ctx = canvas.getContext('2d');
+
+    function initPts() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        pts = Array(40).fill().map(() => ({ x:Math.random()*canvas.width, y:Math.random()*canvas.height, s:Math.random()*2, v:Math.random()*0.5+0.2 }));
+    }
+
+    function draw() {
+        if(!particlesEnabled) { ctx.clearRect(0,0,canvas.width,canvas.height); return requestAnimationFrame(draw); }
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary');
+        pts.forEach(p => { p.y -= p.v; if(p.y<0) p.y=canvas.height; ctx.beginPath(); ctx.arc(p.x,p.y,p.s,0,7); ctx.fill(); });
+        requestAnimationFrame(draw);
+    }
+
+    function toggleParticles() {
+        particlesEnabled = !particlesEnabled;
+        document.getElementById('partToggle').textContent = particlesEnabled ? 'ON' : 'OFF';
+    }
+
+    function toggleSettings() {
+        const panel = document.getElementById('settingsPanel');
+        panel.style.transform = panel.style.transform === 'translateX(0%)' ? 'translateX(100%)' : 'translateX(0%)';
+    }
+
+    function toggleInfo() {
+        document.getElementById('infoTab').classList.toggle('hidden');
+    }
+
+    function updatePrimary(color) {
+        document.documentElement.style.setProperty('--primary', color);
+        localStorage.setItem('user_p_color', color);
+    }
+
+    function setBg() {
+        const url = prompt("Enter Image URL:");
+        if(url) {
+            document.body.style.backgroundImage = `url('${url}')`;
+            localStorage.setItem('user_bg', url);
+        }
+    }
+
+    function resetBg() {
+        document.body.style.backgroundImage = 'none';
+        localStorage.removeItem('user_bg');
+    }
+
+    function openAboutBlank() {
+        const iframe = document.getElementById('gameIframe');
+        const targetUrl = iframe ? iframe.src : window.location.href;
+        const win = window.open();
+        if (!win) return alert("Please allow popups!");
+        const doc = win.document;
+        doc.title = document.title;
+        const outerIframe = doc.createElement('iframe');
+        outerIframe.style.width = "100%"; outerIframe.style.height = "100%"; outerIframe.style.border = "none";
+        outerIframe.style.position = "fixed"; outerIframe.style.top = "0"; outerIframe.style.left = "0";
+        outerIframe.src = targetUrl;
+        doc.body.appendChild(outerIframe);
+    }
+
+    function toggleFullscreen() {
+        const el = document.getElementById('gameIframe');
+        if (el && el.requestFullscreen) el.requestFullscreen();
+    }
 
     window.onload = () => {
         if (localStorage.getItem('hideDownloadPopup') !== 'true') {
@@ -358,8 +436,10 @@ const cdnBase = `https://cdn.jsdelivr.net/gh/${repoOwner}/${repoName}@main/`;
         const sIcon = localStorage.getItem('user_cloak_icon');
         if(sTitle) document.title = sTitle;
         if(sIcon) document.getElementById('favicon').href = sIcon;
+
         loadData();
-        initPts(); draw();
+        initPts();
+        draw();
     };
 
     document.getElementById('searchInput').oninput = (e) => renderGames(currentFilter, e.target.value);

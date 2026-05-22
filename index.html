@@ -80,8 +80,7 @@
     <div id="downloadPopup" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[300] hidden flex items-center justify-center">
         <div class="bg-slate-900 border border-white/10 p-8 rounded-3xl max-w-md text-center shadow-2xl">
             <h2 class="text-2xl mb-4 text-white">Algebra Practise Downloadable File</h2>
-            <p class="text-lg mb-6">You can now download the site as a file on your computer! <br>
-               Download it <span class="download-here-link" onclick="downloadFile()">here</span>.</p>
+            <p class="text-lg mb-6">You can now download the site as a file on your computer! <br>Download it <span class="download-here-link" onclick="downloadFile()">here</span>.</p>
             <div class="flex items-center justify-center gap-3 mb-6">
                 <input type="checkbox" id="dontShowAgain" class="w-4 h-4 cursor-pointer">
                 <label for="dontShowAgain" class="text-sm opacity-80 cursor-pointer">Do not show again</label>
@@ -109,7 +108,7 @@
         <i class="fas fa-sliders nav-icon" onclick="toggleSettings()"></i>
     </header>
 
-    <main class="max-w-7xl mx-auto pt-8">
+    <main class="max-w-7xl mx-auto pt-6">
         <div id="categoryTabs" class="category-tabs"></div>
         <div id="gameGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-5"></div>
     </main>
@@ -129,36 +128,15 @@
         </div>
     </div>
 
-    <!-- Original Modals (kept short) -->
-    <div id="infoTab" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[200] hidden flex items-center justify-center" onclick="toggleInfo()">
-        <div class="bg-slate-900 border border-white/10 p-8 rounded-3xl max-w-md text-center shadow-2xl" onclick="event.stopPropagation()">
-            <h2 class="text-3xl mb-4" style="color: var(--primary);">About Chess Practice | Elo</h2>
-            <p class="text-lg mb-6">Request games <a href="https://docs.google.com/forms/d/e/1FAIpQLScww3MHYoLogsOX5WcBctTbzVTUkXwoEeiOxenN0i8gxiOtpg/viewform?usp=header" target="_blank" class="text-blue-500 underline">here</a></p>
-            <button onclick="toggleInfo()" class="bg-white/10 px-6 py-2 rounded-full hover:bg-white/20">Close</button>
-        </div>
-    </div>
-
-    <div id="settingsPanel" class="fixed top-0 right-0 h-full w-80 bg-slate-900 border-l border-white/10 p-8 transform translate-x-full shadow-2xl overflow-y-auto">
-        <div class="flex justify-between items-center mb-8">
-            <h2 class="text-3xl">Settings</h2>
-            <button onclick="toggleSettings()"><i class="fas fa-times text-xl"></i></button>
-        </div>
-        <div class="space-y-6">
-            <div>
-                <label class="block text-xs opacity-50 mb-2 uppercase">Theme Color</label>
-                <input type="color" id="primaryPicker" value="#a855f7" oninput="updatePrimary(this.value)" class="w-full h-10 rounded-lg cursor-pointer">
-            </div>
-            <div class="flex items-center justify-between bg-white/5 p-3 rounded-xl">
-                <span>Particles</span>
-                <button id="partToggle" onclick="toggleParticles()" style="color: var(--primary);">ON</button>
-            </div>
-        </div>
-    </div>
-
+    <!-- Game Modal (Original Style) -->
     <div id="gameModal" class="fixed inset-0 z-[110] hidden bg-black/95 flex flex-col">
-        <div class="game-container flex-1">
+        <div class="game-container flex-1 grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4 p-4">
             <div class="bg-black rounded-2xl overflow-hidden border border-white/5 h-full">
                 <div id="iframeContainer" class="w-full h-full"></div>
+            </div>
+            <div class="sidebar hidden lg:flex flex-col gap-4 overflow-y-auto pr-2">
+                <h3 class="text-xl" style="color: var(--primary);">More Like This</h3>
+                <div id="suggestedGames" class="grid grid-cols-2 gap-3"></div>
             </div>
         </div>
         <div class="h-20 px-8 flex items-center justify-between bg-white/5 backdrop-blur-md">
@@ -167,7 +145,8 @@
                 <h3 id="modalTitle" class="text-xl"></h3>
             </div>
             <div class="flex items-center gap-8">
-                <button onclick="toggleFullscreen()" class="nav-icon"><i class="fas fa-expand"></i></button>
+                <button onclick="openAboutBlank()" class="nav-icon" title="Cloak"><i class="fas fa-mask text-xl"></i></button>
+                <button onclick="toggleFullscreen()" class="nav-icon"><i class="fas fa-expand text-xl"></i></button>
                 <button onclick="closeGame()" class="text-red-500 text-2xl"><i class="fas fa-times"></i></button>
             </div>
         </div>
@@ -339,7 +318,7 @@
         if(games.length > 0) openGame(games[Math.floor(Math.random() * games.length)].id);
     }
 
-    // Particle System
+    // Particles
     const canvas = document.getElementById('particle-canvas');
     const ctx = canvas.getContext('2d');
     let pts = [];
@@ -375,6 +354,25 @@
     function updatePrimary(color) {
         document.documentElement.style.setProperty('--primary', color);
         localStorage.setItem('user_p_color', color);
+    }
+
+    function openAboutBlank() {
+        const iframe = document.getElementById('gameIframe');
+        const targetUrl = iframe ? iframe.src : window.location.href;
+        const win = window.open();
+        if (!win) return alert("Please allow popups!");
+        const doc = win.document;
+        doc.title = document.title;
+        const outerIframe = doc.createElement('iframe');
+        outerIframe.style.width = "100%"; outerIframe.style.height = "100%"; outerIframe.style.border = "none";
+        outerIframe.style.position = "fixed"; outerIframe.style.top = "0"; outerIframe.style.left = "0";
+        outerIframe.src = targetUrl;
+        doc.body.appendChild(outerIframe);
+    }
+
+    function toggleFullscreen() {
+        const el = document.getElementById('gameIframe');
+        if (el && el.requestFullscreen) el.requestFullscreen();
     }
 
     window.onload = () => {

@@ -108,7 +108,10 @@
             <div id="tabContent1" class="hidden">
                 <h3 class="text-xl mb-4">Live Analytics</h3>
                 <canvas id="analyticsChart" height="180"></canvas>
-                <p class="mt-4 text-sm"><strong>Current Online:</strong> <span id="livePlayers" class="text-green-400">1,284</span></p>
+                <div class="mt-4 grid grid-cols-2 gap-4 text-sm">
+                    <div><strong class="text-green-400">● Playing Now:</strong> <span id="playingNow">842</span></div>
+                    <div><strong class="text-gray-400">● Tab Open:</strong> <span id="tabOpen">1,237</span></div>
+                </div>
             </div>
 
             <div id="tabContent2" class="hidden">
@@ -313,15 +316,20 @@
             data: {
                 labels: ['1h ago', '45m', '30m', '15m', 'Now'],
                 datasets: [{
-                    label: 'Players Online',
-                    data: [1240, 1380, 1190, 1450, 1284],
+                    label: 'Playing',
+                    data: [680, 720, 650, 810, 842],
                     borderColor: '#22c55e',
-                    tension: 0.4,
-                    fill: true,
-                    backgroundColor: 'rgba(34, 197, 94, 0.1)'
+                    backgroundColor: 'rgba(34, 197, 94, 0.2)',
+                    tension: 0.4
+                }, {
+                    label: 'Tab Open',
+                    data: [1240, 1380, 1190, 1450, 1284],
+                    borderColor: '#9ca3af',
+                    backgroundColor: 'rgba(156, 163, 175, 0.2)',
+                    tension: 0.4
                 }]
             },
-            options: { responsive: true, plugins: { legend: { display: false } } }
+            options: { responsive: true, plugins: { legend: { display: true, position: 'top' } } }
         });
     }
 
@@ -401,9 +409,7 @@
         closeDetailsModal();
         const title = document.getElementById('detailsTitle').textContent;
         const game = games.find(g => g.title === title);
-        if (game) {
-            openGame(game.id);
-        }
+        if (game) openGame(game.id);
     }
 
     function closeDetailsModal() {

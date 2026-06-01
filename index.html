@@ -473,7 +473,7 @@ function createGameCard(item, grid) {
         <img src="${cdnBase}${item.thumb}" loading="lazy">
         <div class="card-title">
             <span>${item.title}</span>
-            <div onclick="event.stopImmediatePropagation(); showGameDetails('${item.id}')" class="more-btn">⋯</div>
+            <div onclick="event.stopImmediatePropagation(); showGameDetails('${item.id}')" class="more-btn">⋮</div>
         </div>
     `;
     card.onclick = (e) => {

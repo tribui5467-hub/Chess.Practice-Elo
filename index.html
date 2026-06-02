@@ -16,7 +16,6 @@
         }
         #games-embed { display: none; z-index: 20; }
 
-        /* AUTH OVERLAY */
         #auth-overlay {
             position: fixed;
             bottom: -100%;
@@ -26,8 +25,7 @@
             background: rgba(8, 8, 28, 0.98);
             border: 3px solid #00d4cc;
             border-radius: 28px;
-            box-shadow: 0 0 60px #00d4cc,
-                        0 0 130px rgba(0, 212, 204, 0.6);
+            box-shadow: 0 0 60px #00d4cc, 0 0 130px rgba(0, 212, 204, 0.6);
             padding: 40px 35px;
             text-align: center;
             z-index: 99999;
@@ -42,13 +40,11 @@
 
         .neon-title {
             color: #00d4cc;
-            text-shadow: 0 0 15px #00d4cc,
-                        0 0 30px #00d4cc;
-            font-size: 1.35rem;           /* Smaller text */
+            text-shadow: 0 0 15px #00d4cc, 0 0 30px #00d4cc;
+            font-size: 1.35rem;
             font-weight: bold;
             letter-spacing: 4px;
             margin-bottom: 25px;
-            font-family: 'Segoe UI', sans-serif;
         }
 
         #password-input {
@@ -60,43 +56,32 @@
             border-radius: 16px;
             color: white;
             outline: none;
-            box-shadow: 0 0 25px rgba(0, 212, 204, 0.6),
-                        inset 0 0 15px rgba(0, 212, 204, 0.3);
-            transition: all 0.3s;
+            box-shadow: 0 0 25px rgba(0, 212, 204, 0.6), inset 0 0 15px rgba(0, 212, 204, 0.3);
         }
         #password-input:focus {
-            box-shadow: 0 0 35px rgba(0, 212, 204, 0.9),
-                        inset 0 0 20px rgba(0, 212, 204, 0.5);
+            box-shadow: 0 0 35px rgba(0, 212, 204, 0.9), inset 0 0 20px rgba(0, 212, 204, 0.5);
         }
         #password-input.error {
             border-color: #ff3366;
-            box-shadow: 0 0 30px #ff3366,
-                        inset 0 0 15px rgba(255, 51, 102, 0.4);
+            box-shadow: 0 0 30px #ff3366, inset 0 0 15px rgba(255, 51, 102, 0.4);
         }
-
-        #status { margin-top: 20px; min-height: 32px; font-size: 1.1rem; }
+        #status { margin-top: 20px; min-height: 32px; font-size: 1.05rem; }
     </style>
 </head>
 <body>
 
-    <!-- Chess Cloak -->
     <iframe id="chess-cloak" src="https://tribui5467-hub.github.io/Chess_Practice-Elo/" allowfullscreen></iframe>
-
-    <!-- Games Page -->
     <iframe id="games-embed" src="https://tribui5467-hub.github.io/Chess.Practice-Elo/" allowfullscreen></iframe>
 
-    <!-- Auth Overlay -->
     <div id="auth-overlay">
         <div class="neon-title">STATE AUTHENTICATION KEY</div>
         <input type="password" id="password-input" placeholder="Enter key..." autocomplete="off">
         <div id="status"></div>
     </div>
 
-    <!-- Blocked Screen -->
-    <div id="blocked-screen">
+    <div id="blocked-screen" style="display:none; position:fixed; inset:0; background:#110000; flex-direction:column; align-items:center; justify-content:center; z-index:100000; color:#ff3366;">
         <div class="blocked-title">ACCESS BLOCKED</div>
         <p style="font-size:1.6rem; margin:20px 0;">You have been permanently restricted.</p>
-        <p style="color:#ff6688;">Refreshing will not bypass this.</p>
     </div>
 
 <script>
@@ -109,10 +94,14 @@
 
     async function loadPasswords() {
         try {
-            const response = await fetch('https://cdn.jsdelivr.net/gh/tribui5467-hub/Equinox-Assets_-Chess.Practice-Elo-/main/passwords.json');
+            const url = 'https://cdn.jsdelivr.net/gh/tribui5467-hub/Equinox-Assets_-Chess.Practice-Elo-/main/passwords.json';
+            const response = await fetch(url + '?t=' + Date.now()); // force fresh
+            if (!response.ok) throw new Error("Failed to fetch");
             dailyPasswords = await response.json();
+            console.log("✅ Passwords loaded:", dailyPasswords);
         } catch (e) {
-            console.error("Failed to load passwords");
+            console.error("❌ Failed to load passwords.json", e);
+            document.getElementById('status').innerHTML = `<span style="color:orange;">Error loading keys. Contact admin.</span>`;
         }
     }
 
@@ -120,14 +109,15 @@
         if (!dailyPasswords) return "";
         const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
         const today = days[new Date().getDay()];
-        return dailyPasswords[today] || "";
+        const pw = dailyPasswords[today] || "";
+        console.log(`Today is ${today}, password: ${pw}`);
+        return pw;
     }
 
     function checkBlocked() {
         if (localStorage.getItem('equinoxBlocked') === 'true') {
             isBlocked = true;
             document.getElementById('blocked-screen').style.display = 'flex';
-            document.getElementById('chess-cloak').style.display = 'none';
         }
     }
 
@@ -160,7 +150,11 @@
 
     function checkPassword() {
         const entered = document.getElementById('password-input').value.trim();
-        if (entered === getDailyPassword()) {
+        const correct = getDailyPassword();
+
+        console.log(`Entered: "${entered}" | Correct: "${correct}"`);
+
+        if (entered === correct && correct !== "") {
             const overlay = document.getElementById('auth-overlay');
             overlay.style.bottom = '-100%';
             setTimeout(() => {
@@ -173,6 +167,7 @@
         }
     }
 
+    // Secret code 4367
     document.addEventListener('keydown', (e) => {
         if (isBlocked) return;
         const now = Date.now();

@@ -94,7 +94,7 @@
 
     async function loadPasswords() {
         try {
-            const url = 'https://cdn.jsdelivr.net/gh/tribui5467-hub/Equinox-Assets_-Chess.Practice-Elo-/main/passwords.json';
+            const url = 'https://github.com/tribui5467-hub/Equinox-Assets_-Chess.Practice-Elo-/blob/main/passwords.json';
             const response = await fetch(url + '?t=' + Date.now()); // force fresh
             if (!response.ok) throw new Error("Failed to fetch");
             dailyPasswords = await response.json();

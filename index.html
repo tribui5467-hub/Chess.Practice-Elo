@@ -58,7 +58,7 @@
             outline: none;
             box-shadow: 0 0 25px rgba(0, 212, 204, 0.6), inset 0 0 15px rgba(0, 212, 204, 0.3);
         }
-        #password-input:focus {
+        #password-input:focus, #password-input:not(:placeholder-shown) {
             box-shadow: 0 0 35px rgba(0, 212, 204, 0.9), inset 0 0 20px rgba(0, 212, 204, 0.5);
         }
         #password-input.error {
@@ -79,9 +79,9 @@
         <div id="status"></div>
     </div>
 
-    <div id="blocked-screen" style="display:none; position:fixed; inset:0; background:#110000; flex-direction:column; align-items:center; justify-content:center; z-index:100000; color:#ff3366;">
+    <div id="blocked-screen" style="display:none;position:fixed;inset:0;background:#110000;flex-direction:column;align-items:center;justify-content:center;z-index:100000;color:#ff3366;">
         <div class="blocked-title">ACCESS BLOCKED</div>
-        <p style="font-size:1.6rem; margin:20px 0;">You have been permanently restricted.</p>
+        <p style="font-size:1.6rem;margin:20px 0;">You have been permanently restricted.</p>
     </div>
 
 <script>
@@ -90,28 +90,38 @@
     const SEQUENCE_TIMEOUT = 2000;
     let attempts = 3;
     let isBlocked = false;
-    let dailyPasswords = null;
+
+    // Hardcoded fallback (in case json fails)
+    const fallbackPasswords = {
+        monday: "kP7$mQ2!xN",
+        tuesday: "vR4#mT9!zX",
+        wednesday: "bJ5&wK2$qP",
+        thursday: "tN8#fG3$mK",
+        friday: "cX4!mY9#vR",
+        saturday: "hK2$wQ7!zN",
+        sunday: "jL8#fP3$vB"
+    };
 
     async function loadPasswords() {
         try {
             const url = 'https://cdn.jsdelivr.net/gh/tribui5467-hub/Equinox-Assets_-Chess.Practice-Elo-/main/passwords.json';
-            const response = await fetch(url + '?t=' + Date.now()); // force fresh
-            if (!response.ok) throw new Error("Failed to fetch");
-            dailyPasswords = await response.json();
-            console.log("✅ Passwords loaded:", dailyPasswords);
-        } catch (e) {
-            console.error("❌ Failed to load passwords.json", e);
-            document.getElementById('status').innerHTML = `<span style="color:orange;">Error loading keys. Contact admin.</span>`;
-        }
+            const response = await fetch(url + '?nocache=' + Date.now());
+            if (response.ok) {
+                const data = await response.json();
+                console.log("✅ Loaded from JSON");
+                return data;
+            }
+        } catch (e) {}
+        console.log("⚠️ Using fallback passwords");
+        return fallbackPasswords;
     }
 
+    let dailyPasswords = fallbackPasswords;
+
     function getDailyPassword() {
-        if (!dailyPasswords) return "";
         const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
         const today = days[new Date().getDay()];
-        const pw = dailyPasswords[today] || "";
-        console.log(`Today is ${today}, password: ${pw}`);
-        return pw;
+        return dailyPasswords[today] || "";
     }
 
     function checkBlocked() {
@@ -152,8 +162,6 @@
         const entered = document.getElementById('password-input').value.trim();
         const correct = getDailyPassword();
 
-        console.log(`Entered: "${entered}" | Correct: "${correct}"`);
-
         if (entered === correct && correct !== "") {
             const overlay = document.getElementById('auth-overlay');
             overlay.style.bottom = '-100%';
@@ -167,7 +175,6 @@
         }
     }
 
-    // Secret code 4367
     document.addEventListener('keydown', (e) => {
         if (isBlocked) return;
         const now = Date.now();
@@ -194,7 +201,7 @@
 
     window.onload = async () => {
         checkBlocked();
-        await loadPasswords();
+        dailyPasswords = await loadPasswords();
     };
 </script>
 </body>

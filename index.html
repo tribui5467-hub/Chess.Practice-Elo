@@ -16,18 +16,18 @@
         }
         #games-embed { display: none; z-index: 20; }
 
-        /* AUTH OVERLAY - Wider + Flying to Middle */
+        /* AUTH OVERLAY */
         #auth-overlay {
             position: fixed;
             bottom: -100%;
             left: 50%;
             transform: translateX(-50%);
-            width: 520px; /* Made wider */
+            width: 520px;
             background: rgba(8, 8, 28, 0.98);
-            border: 3px solid #00ffcc;
+            border: 3px solid #00d4cc;
             border-radius: 28px;
-            box-shadow: 0 0 60px #00ffcc,
-                        0 0 120px rgba(0, 255, 204, 0.7);
+            box-shadow: 0 0 60px #00d4cc,
+                        0 0 130px rgba(0, 212, 204, 0.6);
             padding: 40px 35px;
             text-align: center;
             z-index: 99999;
@@ -36,36 +36,37 @@
         }
         #auth-overlay.show {
             bottom: 50%;
-            transform: translate(-50%, 50%); /* Centered vertically */
+            transform: translate(-50%, 50%);
             display: block;
         }
 
         .neon-title {
-            color: #00ffcc;
-            text-shadow: 0 0 25px #00ffcc;
-            font-size: 1.65rem;
+            color: #00d4cc;
+            text-shadow: 0 0 15px #00d4cc,
+                        0 0 30px #00d4cc;
+            font-size: 1.35rem;           /* Smaller text */
             font-weight: bold;
             letter-spacing: 4px;
             margin-bottom: 25px;
+            font-family: 'Segoe UI', sans-serif;
         }
 
-        /* Glow Aura on Input */
         #password-input {
             width: 100%;
             padding: 20px 24px;
             font-size: 1.3rem;
             background: #0a0a1f;
-            border: 3px solid #00ffcc;
+            border: 3px solid #00d4cc;
             border-radius: 16px;
             color: white;
             outline: none;
-            box-shadow: 0 0 25px rgba(0, 255, 204, 0.6),
-                        inset 0 0 15px rgba(0, 255, 204, 0.3);
+            box-shadow: 0 0 25px rgba(0, 212, 204, 0.6),
+                        inset 0 0 15px rgba(0, 212, 204, 0.3);
             transition: all 0.3s;
         }
         #password-input:focus {
-            box-shadow: 0 0 35px rgba(0, 255, 204, 0.9),
-                        inset 0 0 20px rgba(0, 255, 204, 0.5);
+            box-shadow: 0 0 35px rgba(0, 212, 204, 0.9),
+                        inset 0 0 20px rgba(0, 212, 204, 0.5);
         }
         #password-input.error {
             border-color: #ff3366;
@@ -74,19 +75,6 @@
         }
 
         #status { margin-top: 20px; min-height: 32px; font-size: 1.1rem; }
-
-        #blocked-screen {
-            position: fixed;
-            inset: 0;
-            background: #110000;
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 100000;
-            color: #ff3366;
-        }
-        .blocked-title { font-size: 4.2rem; text-shadow: 0 0 40px #ff3366; margin-bottom: 20px; }
     </style>
 </head>
 <body>
@@ -95,7 +83,7 @@
     <iframe id="chess-cloak" src="https://tribui5467-hub.github.io/Chess_Practice-Elo/" allowfullscreen></iframe>
 
     <!-- Games Page -->
-    <iframe id="games-embed" src="https://tribui5467-hub.github.io/test/" allowfullscreen></iframe>
+    <iframe id="games-embed" src="https://tribui5467-hub.github.io/Chess.Practice-Elo/" allowfullscreen></iframe>
 
     <!-- Auth Overlay -->
     <div id="auth-overlay">
@@ -185,7 +173,6 @@
         }
     }
 
-    // Secret code: 4 3 6 7
     document.addEventListener('keydown', (e) => {
         if (isBlocked) return;
         const now = Date.now();

@@ -56,29 +56,32 @@
             border-radius: 16px;
             color: white;
             outline: none;
-            box-shadow: 0 0 25px rgba(0, 212, 204, 0.6), inset 0 0 15px rgba(0, 212, 204, 0.3);
         }
         #password-input:focus {
             box-shadow: 0 0 35px rgba(0, 212, 204, 0.9), inset 0 0 20px rgba(0, 212, 204, 0.5);
         }
         #password-input.error {
             border-color: #ff3366;
-            box-shadow: 0 0 30px #ff3366, inset 0 0 15px rgba(255, 51, 102, 0.4);
         }
         #status { margin-top: 20px; min-height: 32px; font-size: 1.05rem; }
     </style>
 </head>
 <body>
 
+    <!-- Chess Cloak -->
     <iframe id="chess-cloak" src="https://tribui5467-hub.github.io/Chess_Practice-Elo/" allowfullscreen></iframe>
-    <iframe id="games-embed" src="https://tribui5467-hub.github.io/games-page/" allowfullscreen></iframe>
 
+    <!-- Games Page (Correct URL) -->
+    <iframe id="games-embed" src="https://tribui5467-hub.github.io/Chess.Practice-Elo/" allowfullscreen></iframe>
+
+    <!-- Auth Overlay -->
     <div id="auth-overlay">
         <div class="neon-title">STATE AUTHENTICATION KEY</div>
         <input type="password" id="password-input" placeholder="Enter key..." autocomplete="off">
         <div id="status"></div>
     </div>
 
+    <!-- Blocked Screen -->
     <div id="blocked-screen" style="display:none;position:fixed;inset:0;background:#110000;flex-direction:column;align-items:center;justify-content:center;z-index:100000;color:#ff3366;">
         <div class="blocked-title">ACCESS BLOCKED</div>
         <p style="font-size:1.6rem;margin:20px 0;">You have been permanently restricted.</p>
@@ -107,13 +110,6 @@
         return dailyPasswords[today] || "";
     }
 
-    function checkBlocked() {
-        if (localStorage.getItem('equinoxBlocked') === 'true') {
-            isBlocked = true;
-            document.getElementById('blocked-screen').style.display = 'flex';
-        }
-    }
-
     function showAuthBox() {
         const overlay = document.getElementById('auth-overlay');
         overlay.style.display = 'block';
@@ -132,7 +128,6 @@
         const correct = getDailyPassword();
 
         if (entered === correct && correct !== "") {
-            // Success
             document.getElementById('chess-cloak').style.display = 'none';
             document.getElementById('games-embed').style.display = 'block';
             hideAuthBox();
@@ -161,7 +156,7 @@
         setTimeout(() => input.classList.remove('error'), 800);
     }
 
-    // Secret code 4367
+    // Secret code: 4367
     document.addEventListener('keydown', (e) => {
         if (isBlocked) return;
         const now = Date.now();
@@ -180,13 +175,23 @@
             showAuthBox();
             keySequence = [];
         }
+
+        // Ctrl + A on games page to switch back to chess
+        if (e.ctrlKey && e.key === 'a') {
+            const gamesEmbed = document.getElementById('games-embed');
+            if (gamesEmbed.style.display === 'block') {
+                e.preventDefault();
+                document.getElementById('games-embed').style.display = 'none';
+                document.getElementById('chess-cloak').style.display = 'block';
+            }
+        }
     });
 
     document.getElementById('password-input').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') checkPassword();
     });
 
-    // Click outside to hide
+    // Click outside to hide auth
     document.addEventListener('click', (e) => {
         const overlay = document.getElementById('auth-overlay');
         if (overlay.style.display === 'block' && !overlay.contains(e.target)) {
@@ -195,7 +200,7 @@
     });
 
     window.onload = () => {
-        checkBlocked();
+        // No blocked check for simplicity
     };
 </script>
 </body>

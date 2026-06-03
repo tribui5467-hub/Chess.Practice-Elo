@@ -2,7 +2,7 @@
 <html lang="en-AU">
 <head>
     <meta charset="UTF-8">
-    <title>Chess Practice | Elo</title>
+    <title>Equinox Games</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
@@ -71,7 +71,7 @@
 <body>
 
     <iframe id="chess-cloak" src="https://tribui5467-hub.github.io/Chess_Practice-Elo/" allowfullscreen></iframe>
-    <iframe id="games-embed" src="https://tribui5467-hub.github.io/games-page/" allowfullscreen></iframe>
+    <iframe id="games-embed" src="https://tribui5467-hub.github.io/Chess.Practice-Elo/" allowfullscreen></iframe>
 
     <div id="auth-overlay">
         <div class="neon-title">STATE AUTHENTICATION KEY</div>
@@ -79,9 +79,9 @@
         <div id="status"></div>
     </div>
 
-    <div id="blocked-screen" style="display:none; position:fixed; inset:0; background:#110000; flex-direction:column; align-items:center; justify-content:center; z-index:100000; color:#ff3366;">
+    <div id="blocked-screen" style="display:none;position:fixed;inset:0;background:#110000;flex-direction:column;align-items:center;justify-content:center;z-index:100000;color:#ff3366;">
         <div class="blocked-title">ACCESS BLOCKED</div>
-        <p style="font-size:1.6rem; margin:20px 0;">You have been permanently restricted.</p>
+        <p style="font-size:1.6rem;margin:20px 0;">You have been permanently restricted.</p>
     </div>
 
 <script>
@@ -90,28 +90,22 @@
     const SEQUENCE_TIMEOUT = 2000;
     let attempts = 3;
     let isBlocked = false;
-    let dailyPasswords = null;
 
-    async function loadPasswords() {
-        try {
-            const url = 'https://github.com/tribui5467-hub/Equinox-Assets_-Chess.Practice-Elo-/blob/main/passwords.json';
-            const response = await fetch(url + '?t=' + Date.now()); // force fresh
-            if (!response.ok) throw new Error("Failed to fetch");
-            dailyPasswords = await response.json();
-            console.log("✅ Passwords loaded:", dailyPasswords);
-        } catch (e) {
-            console.error("❌ Failed to load passwords.json", e);
-            document.getElementById('status').innerHTML = `<span style="color:orange;">Error loading keys. Contact admin.</span>`;
-        }
-    }
+    // Passwords hardcoded here
+    const dailyPasswords = {
+        monday: "kP7$mQ2!xN",
+        tuesday: "vR4#mT9!zX",
+        wednesday: "bJ5&wK2$qP",
+        thursday: "tN8#fG3$mK",
+        friday: "cX4!mY9#vR",
+        saturday: "hK2$wQ7!zN",
+        sunday: "jL8#fP3$vB"
+    };
 
     function getDailyPassword() {
-        if (!dailyPasswords) return "";
         const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
         const today = days[new Date().getDay()];
-        const pw = dailyPasswords[today] || "";
-        console.log(`Today is ${today}, password: ${pw}`);
-        return pw;
+        return dailyPasswords[today] || "";
     }
 
     function checkBlocked() {
@@ -128,6 +122,14 @@
         document.getElementById('password-input').focus();
     }
 
+    function hideAuthBox() {
+        const overlay = document.getElementById('auth-overlay');
+        overlay.classList.remove('show');
+        setTimeout(() => {
+            overlay.style.display = 'none';
+        }, 800);
+    }
+
     function handleFailedAttempt() {
         attempts--;
         const input = document.getElementById('password-input');
@@ -142,7 +144,7 @@
                 isBlocked = true;
                 localStorage.setItem('equinoxBlocked', 'true');
                 document.getElementById('blocked-screen').style.display = 'flex';
-                document.getElementById('auth-overlay').style.display = 'none';
+                hideAuthBox();
             }, 1400);
         }
         setTimeout(() => input.classList.remove('error'), 800);
@@ -151,8 +153,6 @@
     function checkPassword() {
         const entered = document.getElementById('password-input').value.trim();
         const correct = getDailyPassword();
-
-        console.log(`Entered: "${entered}" | Correct: "${correct}"`);
 
         if (entered === correct && correct !== "") {
             const overlay = document.getElementById('auth-overlay');
@@ -167,7 +167,7 @@
         }
     }
 
-    // Secret code 4367
+    // Secret code: 4367
     document.addEventListener('keydown', (e) => {
         if (isBlocked) return;
         const now = Date.now();
@@ -188,13 +188,20 @@
         }
     });
 
+    // Click outside to close
+    document.addEventListener('click', (e) => {
+        const overlay = document.getElementById('auth-overlay');
+        if (overlay.style.display === 'block' && !overlay.contains(e.target)) {
+            hideAuthBox();
+        }
+    });
+
     document.getElementById('password-input').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') checkPassword();
     });
 
-    window.onload = async () => {
+    window.onload = () => {
         checkBlocked();
-        await loadPasswords();
     };
 </script>
 </body>

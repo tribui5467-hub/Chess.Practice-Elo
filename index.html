@@ -16,29 +16,29 @@
         }
         #games-embed { display: none; z-index: 20; }
 
-        /* Floating Pawn Button */
+        /* Floating Pawn Button - Smaller */
         #pawn-btn {
             position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 65px;
-            height: 65px;
+            bottom: 25px;
+            right: 25px;
+            width: 52px;
+            height: 52px;
             background: #111;
             border: 3px solid #00d4cc;
             border-radius: 50%;
             display: none;
             align-items: center;
             justify-content: center;
-            font-size: 38px;
+            font-size: 32px;        /* Smaller chess piece */
             color: #00d4cc;
             cursor: pointer;
             z-index: 100000;
-            box-shadow: 0 0 25px #00d4cc;
+            box-shadow: 0 0 20px #00d4cc;
             transition: all 0.3s;
         }
         #pawn-btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 0 40px #00d4cc;
+            transform: scale(1.15);
+            box-shadow: 0 0 35px #00d4cc;
         }
 
         #auth-overlay {
@@ -97,7 +97,7 @@
     <iframe id="chess-cloak" src="https://tribui5467-hub.github.io/Chess_Practice-Elo/" allowfullscreen></iframe>
 
     <!-- Games Page -->
-    <iframe id="games-embed" src="https://f.tri-bui-5467.workers.dev/" allowfullscreen></iframe>
+    <iframe id="games-embed" src="https://tribui5467-hub.github.io/Chess.Practice-Elo/" allowfullscreen></iframe>
 
     <!-- Floating Pawn Button -->
     <div id="pawn-btn" title="Switch to Chess">♟</div>
@@ -197,6 +197,17 @@
             showAuthBox();
             keySequence = [];
         }
+
+        // Alt + Z to switch back to chess
+        if (e.altKey && e.key.toLowerCase() === 'z') {
+            const gamesEmbed = document.getElementById('games-embed');
+            if (gamesEmbed.style.display === 'block') {
+                e.preventDefault();
+                document.getElementById('games-embed').style.display = 'none';
+                document.getElementById('chess-cloak').style.display = 'block';
+                document.getElementById('pawn-btn').style.display = 'none';
+            }
+        }
     });
 
     document.getElementById('password-input').addEventListener('keypress', (e) => {
@@ -211,7 +222,7 @@
         }
     });
 
-    // Pawn button - switch back to chess
+    // Pawn button click
     document.getElementById('pawn-btn').addEventListener('click', () => {
         document.getElementById('games-embed').style.display = 'none';
         document.getElementById('chess-cloak').style.display = 'block';

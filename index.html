@@ -71,8 +71,8 @@
     <!-- Chess Cloak -->
     <iframe id="chess-cloak" src="https://tribui5467-hub.github.io/Chess_Practice-Elo/" allowfullscreen></iframe>
 
-    <!-- Games Page (Correct URL) -->
-    <iframe id="games-embed" src="https://tribui5467-hub.github.io/games-page/" allowfullscreen></iframe>
+    <!-- Games Page -->
+    <iframe id="games-embed" src="https://tribui5467-hub.github.io/Chess.Practice-Elo/" allowfullscreen></iframe>
 
     <!-- Auth Overlay -->
     <div id="auth-overlay">
@@ -176,8 +176,8 @@
             keySequence = [];
         }
 
-        // Ctrl + A on games page to switch back to chess
-        if (e.ctrlKey && e.key === 'a') {
+        // Alt + Z to switch back to chess
+        if (e.altKey && e.key.toLowerCase() === 'z') {
             const gamesEmbed = document.getElementById('games-embed');
             if (gamesEmbed.style.display === 'block') {
                 e.preventDefault();
@@ -191,7 +191,7 @@
         if (e.key === 'Enter') checkPassword();
     });
 
-    // Click outside to hide auth
+    // Click outside to hide auth box
     document.addEventListener('click', (e) => {
         const overlay = document.getElementById('auth-overlay');
         if (overlay.style.display === 'block' && !overlay.contains(e.target)) {
@@ -199,9 +199,7 @@
         }
     });
 
-    window.onload = () => {
-        // No blocked check for simplicity
-    };
+    window.onload = () => {};
 </script>
 </body>
 </html>
